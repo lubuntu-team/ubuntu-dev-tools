@@ -27,9 +27,9 @@ Approach:
 3. Verify checksums.
 """
 
-from urllib.error import URLError, HTTPError
+from urllib.error import (URLError, HTTPError)
 from urllib.parse import urlparse
-from urllib.request import ProxyHandler, build_opener, urlopen
+from urllib.request import urlopen
 import codecs
 import hashlib
 import json
@@ -42,10 +42,13 @@ from debian.changelog import Changelog
 import debian.deb822
 import httplib2
 
+from contextlib import closing
+
 from ubuntutools.config import UDTConfig
 from ubuntutools.lp.lpapicache import (Launchpad, Distribution,
                                        SourcePackagePublishingHistory,
                                        BinaryPackagePublishingHistory)
+from ubuntutools.lp.udtexceptions import PackageNotFoundException
 from ubuntutools.logger import Logger
 from ubuntutools.version import Version
 
@@ -131,49 +134,56 @@ class SourcePackage(object):
         self._lp = lp
         self.workdir = workdir
         self.quiet = quiet
+        self._dsc_source = dscfile
 
         # Cached values:
+        self._distribution = None
         self._component = component
         self._dsc = None
         self._spph = None
-
-        # State:
-        self._dsc_fetched = False
+        self._version = Version(version) if version else None
 
         # Mirrors
-        self._dsc_source = dscfile
         self.mirrors = list(mirrors)
         if self.distribution:
             self.masters = [UDTConfig.defaults['%s_MIRROR'
                                                % self.distribution.upper()]]
-        if dscfile is not None:
-            if self.source is None:
-                self.source = 'unknown'
-            if version is None:
-                version = 'unknown'
 
-        self.version = Version(version)
-
-        # uses default proxies from the environment
-        proxy = ProxyHandler()
-        self.url_opener = build_opener(proxy)
+        # if a dsc was specified, pull it to get the source/version info
+        if self._dsc_source:
+            self.pull_dsc()
 
     @property
     def lp_spph(self):
         "Return the LP Source Package Publishing History entry"
-        if not self._spph:
-            if not Launchpad.logged_in:
-                if self._lp:
-                    Launchpad.login_existing(self._lp)
-                else:
-                    Launchpad.login_anonymously()
-            spph = Distribution(self.distribution).getArchive().getPublishedSources(
-                source_name=self.source,
-                version=self.version.full_version,
-                exact_match=True,
-            )
-            self._spph = SourcePackagePublishingHistory(spph[0])
-        return self._spph
+        if self._spph:
+            return self._spph
+
+        if not Launchpad.logged_in:
+            if self._lp:
+                Launchpad.login_existing(self._lp)
+            else:
+                Launchpad.login_anonymously()
+
+        distro = self.getDistribution()
+        archive = self.getArchive()
+        params = {'exact_match': True, 'order_by_date': True}
+        params['version'] = self._version.full_version
+        spphs = archive.getPublishedSources(source_name=self.source, **params)
+        if spphs:
+            self._spph = SourcePackagePublishingHistory(spphs[0])
+            return self._spph
+
+        msg = "No {} package found".format(self.source)
+        msg += " for version {}".format(self._version.full_version)
+        raise PackageNotFoundException(msg)
+
+    @property
+    def version(self):
+        "Return Package version"
+        if not self._version:
+            self._version = Version(self.lp_spph.getVersion())
+        return self._version
 
     @property
     def component(self):
@@ -199,6 +209,15 @@ class SourcePackage(object):
         if self._dsc is None:
             self.pull_dsc()
         return self._dsc
+
+    def getDistribution(self):
+        if not self._distribution:
+            self._distribution = Distribution(self.distribution)
+
+        return self._distribution
+
+    def getArchive(self):
+        return self.getDistribution().getArchive()
 
     def _mirror_url(self, mirror, filename):
         "Build a source package URL on a mirror"
@@ -264,13 +283,12 @@ class SourcePackage(object):
                 raise DownloadError("%s: %s %s" % (url, response.status,
                                                    response.reason))
         self._dsc = Dsc(body)
-        self._dsc_fetched = True
 
     def _check_dsc(self, verify_signature=False):
         "Check that the dsc matches what we are expecting"
         assert self._dsc is not None
         self.source = self.dsc['Source']
-        self.version = Version(self.dsc['Version'])
+        self._version = Version(self.dsc['Version'])
 
         valid = False
         message = None
@@ -312,6 +330,43 @@ class SourcePackage(object):
         with open(self.dsc_pathname, 'wb') as f:
             f.write(self.dsc.raw_text)
 
+    def _download_file_helper(self, f, pathname, size):
+        "Perform the dowload."
+        BLOCKSIZE = 16 * 1024
+
+        with open(pathname, 'wb') as out:
+            if not (Logger.isEnabledFor(logging.INFO) and
+                    sys.stderr.isatty() and
+                    size):
+                shutil.copyfileobj(f, out, BLOCKSIZE)
+                return
+
+            XTRALEN = len('[] 99%')
+            downloaded = 0
+            bar_width = 60
+            term_width = os.get_terminal_size(sys.stderr.fileno())[0]
+            if term_width < bar_width + XTRALEN + 1:
+                bar_width = term_width - XTRALEN - 1
+
+            try:
+                while True:
+                    block = f.read(BLOCKSIZE)
+                    if not block:
+                        break
+                    out.write(block)
+                    downloaded += len(block)
+                    pct = float(downloaded) / size
+                    bar = ('=' * int(pct * bar_width))[:-1] + '>'
+                    fmt = '[{bar:<%d}]{pct:>3}%%\r' % bar_width
+                    sys.stderr.write(fmt.format(bar=bar, pct=int(pct * 100)))
+                    sys.stderr.flush()
+            finally:
+                sys.stderr.write(' ' * (bar_width + XTRALEN) + '\r')
+                if downloaded < size:
+                    Logger.error('Partial download: %0.3f MiB of %0.3f MiB' %
+                                 (downloaded / 1024.0 / 1024,
+                                  size / 1024.0 / 1024))
+
     def _download_file(self, url, filename, verify=True):
         "Download url to filename in workdir."
         pathname = os.path.join(self.workdir, filename)
@@ -325,51 +380,32 @@ class SourcePackage(object):
             assert len(size) == 1
             size = int(size[0])
 
-        parsed = urlparse(url)
-
-        if parsed.scheme == 'file':
-            in_ = open(parsed.path, 'rb')
-            if not size:
-                size = int(os.stat(parsed.path).st_size)
+        if urlparse(url).scheme in ["", "file"]:
+            frompath = os.path.abspath(urlparse(url).path)
+            Logger.info("Copying %s from %s" % (filename, frompath))
+            shutil.copyfile(frompath, pathname)
         else:
             try:
-                in_ = self.url_opener.open(url)
-                Logger.debug("Using URL '%s'", url)
-            except URLError as e:
-                Logger.debug("URLError opening '%s': %s", url, e)
-                return False
-            if not size:
-                contentlen = in_.info().get('Content-Length')
-                if not contentlen:
-                    Logger.error("Invalid response, no Content-Length")
+                with closing(urlopen(url)) as f:
+                    Logger.debug("Using URL '%s'", f.geturl())
+                    if not size:
+                        try:
+                            size = int(f.info().get('Content-Length'))
+                        except (AttributeError, TypeError, ValueError):
+                            pass
+
+                    Logger.info('Downloading %s from %s%s' %
+                                (filename, urlparse(url).hostname,
+                                 ' (%0.3f MiB)' % (size / 1024.0 / 1024)
+                                 if size else ''))
+
+                    self._download_file_helper(f, pathname, size)
+            except HTTPError as e:
+                # It's ok if the file isn't found; we try multiple places to download
+                if e.code == 404:
                     return False
-                size = int(contentlen)
+                raise e
 
-        if not self.quiet:
-            Logger.normal('Downloading %s from %s (%0.3f MiB)',
-                          filename, parsed.hostname, size / 1024.0 / 1024)
-
-        downloaded = 0
-        bar_width = 60
-        try:
-            with open(pathname, 'wb') as out:
-                while True:
-                    block = in_.read(10240)
-                    if block == b'':
-                        break
-                    downloaded += len(block)
-                    out.write(block)
-                    if not self.quiet:
-                        percent = downloaded * 100 // size
-                        bar = '=' * int(round(downloaded * bar_width / size))
-                        bar = (bar + '>' + ' ' * bar_width)[:bar_width]
-                        Logger.stdout.write('[%s] %#3i%%\r' % (bar, percent))
-                        Logger.stdout.flush()
-            in_.close()
-        finally:
-            if not self.quiet:
-                Logger.stdout.write(' ' * (bar_width + 7) + '\r')
-                Logger.stdout.flush()
         if verify and not self.dsc.verify_file(pathname):
             Logger.error('Checksum for %s does not match.', filename)
             return False
@@ -630,7 +666,8 @@ class FakeSPPH(object):
                                self.name + '_' + pkgversion,
                                'changelog' + extension)
             try:
-                self._changelog = urlopen(url).read()
+                with closing(urlopen(url)) as f:
+                    self._changelog = f.read()
             except HTTPError as error:
                 print(('%s: %s' % (url, error)), file=sys.stderr)
                 return None

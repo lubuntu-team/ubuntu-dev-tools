@@ -234,8 +234,6 @@ class DebianLocalSourcePackageTestCase(LocalSourcePackageTestCase):
         sequence = [self.urlopen_null,
                     self.urlopen_404,
                     self.urlopen_404,
-                    self.urlopen_404,
-                    self.urlopen_404,
                     lambda x: BytesIO(
                         b'{"fileinfo": {"hashabc": [{"name": "example_1.0.orig.tar.gz"}]}}'),
                     self.urlopen_file('example_1.0.orig.tar.gz'),
