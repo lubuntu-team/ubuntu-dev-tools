@@ -29,13 +29,14 @@ import smtplib
 import socket
 import tempfile
 
-from debian.changelog import Changelog, Version
+from debian.changelog import Changelog
 from distro_info import DebianDistroInfo, DistroDataOutdated
 
 from ubuntutools.archive import rmadison, FakeSPPH
 from ubuntutools.lp.udtexceptions import PackageNotFoundException
 from ubuntutools.logger import Logger
 from ubuntutools.question import confirmation_prompt, YesNoQuestion
+from ubuntutools.version import Version
 from ubuntutools import subprocess
 
 if sys.version_info[0] >= 3:

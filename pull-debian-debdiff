@@ -20,17 +20,17 @@
 import optparse
 import sys
 
-import debian.debian_support
 import debian.changelog
 
 from ubuntutools.archive import DebianSourcePackage, DownloadError
 from ubuntutools.config import UDTConfig
 from ubuntutools.logger import Logger
+from ubuntutools.version import Version
 
 
 def previous_version(package, version, distance):
     "Given an (extracted) package, determine the version distance versions ago"
-    upver = debian.debian_support.Version(version).upstream_version
+    upver = Version(version).upstream_version
     filename = '%s-%s/debian/changelog' % (package, upver)
     changelog_file = open(filename, 'r')
     changelog = debian.changelog.Changelog(changelog_file.read())

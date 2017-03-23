@@ -42,15 +42,15 @@ except ImportError:
 import re
 import sys
 
-from debian.changelog import Changelog, Version
+from debian.changelog import Changelog
 import debian.deb822
-import debian.debian_support
 import httplib2
 
 from ubuntutools.config import UDTConfig
 from ubuntutools.lp.lpapicache import (Launchpad, Distribution,
                                        SourcePackagePublishingHistory)
 from ubuntutools.logger import Logger
+from ubuntutools.version import Version
 from ubuntutools import subprocess
 
 if sys.version_info[0] >= 3:
@@ -160,7 +160,7 @@ class SourcePackage(object):
             if version is None:
                 version = 'unknown'
 
-        self.version = debian.debian_support.Version(version)
+        self.version = Version(version)
 
         # uses default proxies from the environment
         proxy = ProxyHandler()
@@ -194,10 +194,7 @@ class SourcePackage(object):
     @property
     def dsc_name(self):
         "Return the source package dsc filename for the given package"
-        version = self.version.upstream_version
-        if self.version.debian_version:
-            version += '-' + self.version.debian_version
-        return '%s_%s.dsc' % (self.source, version)
+        return '%s_%s.dsc' % (self.source, self.version.strip_epoch())
 
     @property
     def dsc_pathname(self):
@@ -271,7 +268,7 @@ class SourcePackage(object):
         "Check that the dsc matches what we are expecting"
         assert self._dsc is not None
         self.source = self.dsc['Source']
-        self.version = debian.debian_support.Version(self.dsc['Version'])
+        self.version = Version(self.dsc['Version'])
 
         valid = False
         message = None

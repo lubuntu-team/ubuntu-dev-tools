@@ -18,13 +18,13 @@ import os.path
 import shutil
 import subprocess
 
-import debian.debian_support
+from ubuntutools.version import Version
 
 
 class ExamplePackage(object):
     def __init__(self, source='example', version='1.0-1'):
         self.source = source
-        self.version = debian.debian_support.Version(version)
+        self.version = Version(version)
         self.srcdir = os.path.join('test-data', '%s-%s' % (source,
                                    self.version.upstream_version))
         if os.path.exists(self.srcdir):

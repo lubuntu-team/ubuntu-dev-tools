@@ -30,12 +30,13 @@ from __future__ import print_function
 import collections
 import sys
 
-from debian.changelog import Changelog, Version
+from debian.changelog import Changelog
 from httplib2 import Http, HttpLib2Error
 from launchpadlib.launchpad import Launchpad as LP
 from launchpadlib.errors import HTTPError
 from lazr.restfulclient.resource import Entry
 
+from ubuntutools.version import Version
 from ubuntutools.lp import (service, api_version)
 from ubuntutools.lp.udtexceptions import (AlreadyLoggedInError,
                                           ArchiveNotFoundException,

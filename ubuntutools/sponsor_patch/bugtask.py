@@ -23,11 +23,11 @@ try:
 except ImportError:
     from urllib import unquote, urlretrieve
 
-import debian.debian_support
 import distro_info
 import httplib2
 
 from ubuntutools.logger import Logger
+from ubuntutools.version import Version
 
 
 def is_sync(bug):
@@ -152,7 +152,7 @@ class BugTask(object):
 
     def get_version(self):
         source_package_version = self.get_source().source_package_version
-        return debian.debian_support.Version(source_package_version)
+        return Version(source_package_version)
 
     def get_latest_released_version(self):
         source = self.get_source(True)
@@ -160,7 +160,7 @@ class BugTask(object):
             version = '~'
         else:
             version = source.source_package_version
-        return debian.debian_support.Version(version)
+        return Version(version)
 
     def get_debian_source_series(self):
         title = self.bug_task.bug.title.lower().split()

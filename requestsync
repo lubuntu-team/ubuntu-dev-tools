@@ -30,13 +30,13 @@ import optparse
 import os
 import sys
 
-from debian.changelog import Version
 from distro_info import UbuntuDistroInfo
 
 from ubuntutools.config import UDTConfig, ubu_email
 from ubuntutools.lp import udtexceptions
 from ubuntutools.misc import require_utf8
 from ubuntutools.question import confirmation_prompt, EditBugReport
+from ubuntutools.version import Version
 
 #
 # entry point
