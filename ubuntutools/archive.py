@@ -138,6 +138,7 @@ class SourcePackage(object):
 
         self.source = package
         self._lp = lp
+        self.binary = None
         self.workdir = workdir
         self.quiet = quiet
         self._series = series
@@ -194,6 +195,35 @@ class SourcePackage(object):
         if spphs:
             self._spph = SourcePackagePublishingHistory(spphs[0])
             return self._spph
+
+        if not self.binary:
+            if series:
+                arch_series = series.getArchSeries()
+                params['distro_arch_series'] = arch_series()
+                del params['distro_series']
+            bpphs = archive.getPublishedBinaries(binary_name=self.source, **params)
+            if bpphs:
+                bpph = BinaryPackagePublishingHistory(bpphs[0])
+                self.binary = self.source
+                self.source = bpph.getSourcePackageName()
+                Logger.normal("Using source package '{}' for binary package '{}'"
+                              .format(self.source, self.binary))
+                try:
+                    spph = bpph.getBuild().getSourcePackagePublishingHistory()
+                except Exception:
+                    spph = None
+                if spph:
+                    self._spph = spph
+                    return self._spph
+                else:
+                    # binary build didn't include source link, unfortunately
+                    # so try again with the updated self.source name
+                    if not self._version:
+                        # Get version first if user didn't specify it, as some
+                        # binaries have their version hardcoded in their name,
+                        # such as the kernel package
+                        self._version = Version(bpph.getVersion())
+                    return self.lp_spph
 
         msg = "No {} package found".format(self.source)
         if self._version:
