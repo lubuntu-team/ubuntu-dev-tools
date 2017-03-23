@@ -125,15 +125,23 @@ class SourcePackage(object):
     distribution = None
 
     def __init__(self, package=None, version=None, component=None,
-                 dscfile=None, lp=None, mirrors=(), workdir='.', quiet=False):
-        "Can be initialised either using package, version or dscfile"
-        assert ((package is not None and version is not None)
-                or dscfile is not None)
+                 dscfile=None, lp=None, mirrors=(), workdir='.', quiet=False,
+                 series=None, pocket=None):
+        """Can be initialised using either package or dscfile.
+        If package is specified, either the version or series can also be
+        specified; using version will get the specific package version,
+        while using the series will get the latest version from that series.
+        Specifying only the package with no version or series will get the
+        latest version from the development series.
+        """
+        assert (package is not None or dscfile is not None)
 
         self.source = package
         self._lp = lp
         self.workdir = workdir
         self.quiet = quiet
+        self._series = series
+        self._pocket = pocket
         self._dsc_source = dscfile
 
         # Cached values:
@@ -167,15 +175,33 @@ class SourcePackage(object):
 
         distro = self.getDistribution()
         archive = self.getArchive()
+        series = None
         params = {'exact_match': True, 'order_by_date': True}
-        params['version'] = self._version.full_version
+        if self._version:
+            # if version was specified, use that
+            params['version'] = self._version.full_version
+        else:
+            if self._series:
+                # if version not specified, get the latest from this series
+                series = distro.getSeries(self._series)
+            else:
+                # if no version or series, get the latest from devel series
+                series = distro.getDevelopmentSeries()
+            params['distro_series'] = series()
+            if self._pocket:
+                params['pocket'] = self._pocket
         spphs = archive.getPublishedSources(source_name=self.source, **params)
         if spphs:
             self._spph = SourcePackagePublishingHistory(spphs[0])
             return self._spph
 
         msg = "No {} package found".format(self.source)
-        msg += " for version {}".format(self._version.full_version)
+        if self._version:
+            msg += " for version {}".format(self._version.full_version)
+        elif series:
+            msg += " in series {}".format(series.name)
+            if self._pocket:
+                msg += " pocket {}".format(self._pocket)
         raise PackageNotFoundException(msg)
 
     @property
