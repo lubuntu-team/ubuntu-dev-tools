@@ -44,7 +44,8 @@ import httplib2
 
 from ubuntutools.config import UDTConfig
 from ubuntutools.lp.lpapicache import (Launchpad, Distribution,
-                                       SourcePackagePublishingHistory)
+                                       SourcePackagePublishingHistory,
+                                       BinaryPackagePublishingHistory)
 from ubuntutools.logger import Logger
 from ubuntutools.version import Version
 
@@ -224,6 +225,16 @@ class SourcePackage(object):
                 yield self._mirror_url(mirror, name)
         yield self._lp_url(name)
 
+    def _binary_urls(self, name, default_url):
+        "Generator of URLs for name"
+        for mirror in self.mirrors:
+            yield self._mirror_url(mirror, name)
+        for mirror in self.masters:
+            if mirror not in self.mirrors:
+                yield self._mirror_url(mirror, name)
+        yield self._lp_url(name)
+        yield default_url
+
     def pull_dsc(self, verify_signature=False):
         "Retrieve dscfile and parse"
         if self._dsc_source:
@@ -301,28 +312,42 @@ class SourcePackage(object):
         with open(self.dsc_pathname, 'wb') as f:
             f.write(self.dsc.raw_text)
 
-    def _download_file(self, url, filename):
+    def _download_file(self, url, filename, verify=True):
         "Download url to filename in workdir."
         pathname = os.path.join(self.workdir, filename)
-        if self.dsc.verify_file(pathname):
-            Logger.debug('Using existing %s', filename)
-            return True
-        size = [entry['size'] for entry in self.dsc['Files']
-                if entry['name'] == filename]
-        assert len(size) == 1
-        size = int(size[0])
+        size = 0
+        if verify:
+            if self.dsc.verify_file(pathname):
+                Logger.debug('Using existing %s', filename)
+                return True
+            size = [entry['size'] for entry in self.dsc['Files']
+                    if entry['name'] == filename]
+            assert len(size) == 1
+            size = int(size[0])
+
         parsed = urlparse(url)
-        if not self.quiet:
-            Logger.normal('Downloading %s from %s (%0.3f MiB)',
-                          filename, parsed.hostname, size / 1024.0 / 1024)
 
         if parsed.scheme == 'file':
             in_ = open(parsed.path, 'rb')
+            if not size:
+                size = int(os.stat(parsed.path).st_size)
         else:
             try:
                 in_ = self.url_opener.open(url)
-            except URLError:
+                Logger.debug("Using URL '%s'", url)
+            except URLError as e:
+                Logger.debug("URLError opening '%s': %s", url, e)
                 return False
+            if not size:
+                contentlen = in_.info().get('Content-Length')
+                if not contentlen:
+                    Logger.error("Invalid response, no Content-Length")
+                    return False
+                size = int(contentlen)
+
+        if not self.quiet:
+            Logger.normal('Downloading %s from %s (%0.3f MiB)',
+                          filename, parsed.hostname, size / 1024.0 / 1024)
 
         downloaded = 0
         bar_width = 60
@@ -345,7 +370,7 @@ class SourcePackage(object):
             if not self.quiet:
                 Logger.stdout.write(' ' * (bar_width + 7) + '\r')
                 Logger.stdout.flush()
-        if not self.dsc.verify_file(pathname):
+        if verify and not self.dsc.verify_file(pathname):
             Logger.error('Checksum for %s does not match.', filename)
             return False
         return True
@@ -365,6 +390,36 @@ class SourcePackage(object):
                     Logger.normal('URL Error: %s', e.reason)
             else:
                 raise DownloadError('File %s could not be found' % name)
+
+    def pull_binaries(self, arch, name=None):
+        """Pull binary debs into workdir.
+        If name is specified, only binary packages matching the regex are included.
+        Must specify arch, or use 'all' to pull all archs.
+        Returns the number of files downloaded.
+        """
+        total = 0
+
+        if not arch:
+            raise RuntimeError("Must specify arch")
+
+        for bpph in self.lp_spph.getBinaries(arch):
+            if name and not re.match(name, bpph.binary_package_name):
+                continue
+            found = False
+            for url in self._binary_urls(bpph.getFileName(), bpph.getUrl()):
+                try:
+                    if self._download_file(url, bpph.getFileName(), verify=False):
+                        found = True
+                        break
+                except HTTPError as e:
+                    Logger.normal('HTTP Error %i: %s', e.code, str(e))
+                except URLError as e:
+                    Logger.normal('URL Error: %s', e.reason)
+            if found:
+                total += 1
+            else:
+                Logger.normal("Could not download from any location: %s", bpph.getFileName())
+        return total
 
     def verify(self):
         """Verify that the source package in workdir matches the dsc.
