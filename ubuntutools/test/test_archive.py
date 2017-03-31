@@ -85,7 +85,6 @@ class LocalSourcePackageTestCase(unittest.TestCase):
         self.workdir = tempfile.mkdtemp(prefix='udt-test')
 
         self._stubout('ubuntutools.archive.Distribution')
-        self._stubout('ubuntutools.archive.rmadison')
 
         self.mock_http = self._stubout('httplib2.Http.request')
         self.mock_http.side_effect = self.request_proxy

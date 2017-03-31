@@ -31,11 +31,10 @@ import tempfile
 from debian.changelog import Changelog
 from distro_info import DebianDistroInfo, DistroDataOutdated
 
-from ubuntutools.archive import rmadison, FakeSPPH
+from ubuntutools.archive import DebianSourcePackage, UbuntuSourcePackage
 from ubuntutools.lp.udtexceptions import PackageNotFoundException
 from ubuntutools.logger import Logger
 from ubuntutools.question import confirmation_prompt, YesNoQuestion
-from ubuntutools.version import Version
 
 
 __all__ = [
@@ -48,32 +47,21 @@ __all__ = [
 ]
 
 
-def _get_srcpkg(distro, name, release):
-    if distro == 'debian':
-        # Canonicalise release:
-        debian_info = DebianDistroInfo()
-        try:
-            codename = debian_info.codename(release, default=release)
-        except DistroDataOutdated as e:
-            Logger.warn(e)
-
-    lines = list(rmadison(distro, name, suite=codename, arch='source'))
-    if not lines:
-        lines = list(rmadison(distro, name, suite=release, arch='source'))
-        if not lines:
-            raise PackageNotFoundException("'%s' doesn't appear to exist in %s '%s'" %
-                                           (name, distro.capitalize(), release))
-    pkg = max(lines, key=lambda x: Version(x['version']))
-
-    return FakeSPPH(pkg['source'], pkg['version'], pkg['component'], distro)
-
-
 def get_debian_srcpkg(name, release):
-    return _get_srcpkg('debian', name, release)
+    # Canonicalise release:
+    debian_info = DebianDistroInfo()
+    try:
+        codename = debian_info.codename(release, default=release)
+        return DebianSourcePackage(package=name, series=codename).lp_spph
+    except DistroDataOutdated as e:
+        Logger.warn(e)
+    except PackageNotFoundException:
+        pass
+    return DebianSourcePackage(package=name, series=release).lp_spph
 
 
 def get_ubuntu_srcpkg(name, release):
-    return _get_srcpkg('ubuntu', name, release)
+    return UbuntuSourcePackage(package=name, series=release).lp_spph
 
 
 def need_sponsorship(name, component, release):
