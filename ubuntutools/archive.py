@@ -45,7 +45,7 @@ import httplib2
 from contextlib import closing
 
 from ubuntutools.config import UDTConfig
-from ubuntutools.lp.lpapicache import (Launchpad, Distribution,
+from ubuntutools.lp.lpapicache import (Launchpad, Distribution, PersonTeam,
                                        SourcePackagePublishingHistory,
                                        BinaryPackagePublishingHistory)
 from ubuntutools.lp.udtexceptions import (PackageNotFoundException,
@@ -146,6 +146,7 @@ class SourcePackage(object):
         self.workdir = workdir
         self.quiet = quiet
         self._series = series
+        self._use_series = True
         self._pocket = pocket
         self._dsc_source = dscfile
 
@@ -185,7 +186,7 @@ class SourcePackage(object):
         if self._version:
             # if version was specified, use that
             params['version'] = self._version.full_version
-        else:
+        elif self._use_series:
             if self._series:
                 # if version not specified, get the latest from this series
                 series = distro.getSeries(self._series)
@@ -709,15 +710,54 @@ class UbuntuSourcePackage(SourcePackage):
 
 class UbuntuCloudArchiveSourcePackage(UbuntuSourcePackage):
     "Download / unpack an Ubuntu Cloud Archive source package"
-    def __init__(self, uca_release, *args, **kwargs):
+    _ppas = None
+    _ppa_names = None
+
+    def __init__(self, *args, **kwargs):
         super(UbuntuCloudArchiveSourcePackage, self).__init__(*args, **kwargs)
-        self._uca_release = uca_release
+        self._use_series = False  # UCA doesn't really use distro series
+        self._uca_release = self._series
+        self._series = None
         self.masters = ["http://ubuntu-cloud.archive.canonical.com/ubuntu/"]
+
+    @classmethod
+    def getArchives(cls):
+        if not cls._ppas:
+            ppas = filter(lambda p: p.name.endswith('-staging'),
+                          PersonTeam.fetch('ubuntu-cloud-archive').getPPAs())
+            cls._ppas = sorted(ppas, key=lambda p: p.name, reverse=True)
+        return cls._ppas
+
+    @classmethod
+    def getReleaseNames(cls):
+        if not cls._ppa_names:
+            cls._ppa_names = [p.name.split('-', 1)[0] for p in cls.getArchives()]
+        return cls._ppa_names
+
+    @classmethod
+    def getDevelopmentRelease(cls):
+        return cls.getReleaseNames()[0]
+
+    @property
+    def uca_release(self):
+        if not self._uca_release:
+            self._uca_release = self.getDevelopmentRelease()
+            Logger.normal('Using UCA release %s', self._uca_release)
+        return self._uca_release
+
+    def getArchive(self):
+        ppas = {p.name: p for p in self.getArchives()}
+        release = '{}-staging'.format(self.uca_release)
+        if release in ppas:
+            Logger.debug('UCA release {} at {}'.format(self.uca_release,
+                                                       ppas[release]()))
+            return ppas[release]
+        raise SeriesNotFoundException('UCA release {} not found.'.format(self.uca_release))
 
     def _lp_url(self, filename):
         "Build a source package URL on Launchpad"
         return os.path.join('https://launchpad.net', "~ubuntu-cloud-archive",
-                            '+archive', ("%s-staging" % self._uca_release),
+                            '+archive', ("%s-staging" % self.uca_release),
                             '+files', filename)
 
 

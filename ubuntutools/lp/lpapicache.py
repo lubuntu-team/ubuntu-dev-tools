@@ -846,6 +846,7 @@ class PersonTeam(BaseWrapper, metaclass=MetaPersonTeam):
 
     def __init__(self, *args):
         # Don't share _upload between different PersonTeams
+        self._ppas = None
         if '_upload' not in self.__dict__:
             self._upload = dict()
 
@@ -922,6 +923,12 @@ class PersonTeam(BaseWrapper, metaclass=MetaPersonTeam):
             self._upload[index] = canUpload
 
         return canUpload
+
+    def getPPAs(self):
+        if not self._ppas:
+            ppas = Launchpad.load(self._lpobject.ppas_collection_link).entries
+            self._ppas = [Archive(a['self_link']) for a in ppas]
+        return self._ppas
 
 
 class Build(BaseWrapper):
