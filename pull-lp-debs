@@ -1,0 +1,11 @@
+#!/usr/bin/python3
+#
+# pull-lp-debs -- pull deb package files for ubuntu
+# Basic usage: pull-lp-debs <package name> [version|release]
+#
+# See pull-pkg
+
+from ubuntutools.pullpkg import PullPkg
+
+if __name__ == '__main__':
+    PullPkg.main(distro='ubuntu', pull='debs')
