@@ -1,7 +1,5 @@
-#!/usr/bin/python3
-#
-# pull-pkg -- pull package files for debian/ubuntu/uca
-# Basic usage: pull-pkg -D distro -p type <package name> [version] [release]
+# pullpkg.py -- pull package files for debian/ubuntu/uca
+#               modified from ../pull-lp-source and converted to module
 #
 # Copyright (C) 2008,      Iain Lane <iain@orangesquash.org.uk>,
 #               2010-2011, Stefano Rivera <stefanor@ubuntu.com>
@@ -25,19 +23,18 @@
 
 
 import re
-import sys
-from optparse import OptionParser
+from argparse import ArgumentParser
 
 from distro_info import DebianDistroInfo
 
 from ubuntutools.archive import (UbuntuSourcePackage, DebianSourcePackage,
-                                 UbuntuCloudArchiveSourcePackage,
-                                 DownloadError)
+                                 UbuntuCloudArchiveSourcePackage)
 from ubuntutools.config import UDTConfig
 from ubuntutools.lp.lpapicache import (Distribution, Launchpad)
 from ubuntutools.lp.udtexceptions import (SeriesNotFoundException,
                                           PackageNotFoundException,
-                                          PocketDoesNotExistError)
+                                          PocketDoesNotExistError,
+                                          InvalidDistroValueError)
 from ubuntutools.logger import Logger
 from ubuntutools.misc import (split_release_pocket, host_architecture)
 
@@ -47,15 +44,12 @@ PULL_DDEBS = 'ddebs'
 PULL_UDEBS = 'udebs'
 PULL_LIST = 'list'
 
-DEFAULT_PULL = PULL_SOURCE
 VALID_PULLS = [PULL_SOURCE, PULL_DEBS, PULL_DDEBS, PULL_UDEBS, PULL_LIST]
-
 
 DISTRO_DEBIAN = 'debian'
 DISTRO_UBUNTU = 'ubuntu'
 DISTRO_UCA = 'uca'
 
-DEFAULT_DISTRO = DISTRO_UBUNTU
 DISTRO_PKG_CLASS = {
     DISTRO_DEBIAN: DebianSourcePackage,
     DISTRO_UBUNTU: UbuntuSourcePackage,
@@ -64,10 +58,46 @@ DISTRO_PKG_CLASS = {
 VALID_DISTROS = DISTRO_PKG_CLASS.keys()
 
 
+class InvalidPullValueError(ValueError):
+    """ Thrown when --pull value is invalid """
+    pass
+
+
+def create_argparser(default_pull=None, default_distro=None, default_arch=None):
+    help_default_pull = "What to pull: " + ", ".join(VALID_PULLS)
+    if default_pull:
+        help_default_pull += (" (default: %s)" % default_pull)
+    help_default_distro = "Pull from: " + ", ".join(VALID_DISTROS)
+    if default_distro:
+        help_default_distro += (" (default: %s)" % default_distro)
+    if not default_arch:
+        default_arch = host_architecture()
+    help_default_arch = ("Get binary packages for arch (default: %s)" % default_arch)
+
+    parser = ArgumentParser()
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help="Print verbose/debug messages")
+    parser.add_argument('-d', '--download-only', action='store_true',
+                        help="Do not extract the source package")
+    parser.add_argument('-m', '--mirror', action='append',
+                        help='Preferred mirror(s)')
+    parser.add_argument('--no-conf', action='store_true',
+                        help="Don't read config files or environment variables")
+    parser.add_argument('-a', '--arch', default=default_arch,
+                        help=help_default_arch)
+    parser.add_argument('-p', '--pull', default=default_pull,
+                        help=help_default_pull)
+    parser.add_argument('-D', '--distro', default=default_distro,
+                        help=help_default_distro)
+    parser.add_argument('package', help="Package name to pull")
+    parser.add_argument('release', nargs='?', help="Release to pull from")
+    parser.add_argument('version', nargs='?', help="Package version to pull")
+    return parser
+
+
 def parse_pull(pull):
     if not pull:
-        pull = DEFAULT_PULL
-        Logger.normal("Defaulting to pull %s", pull)
+        raise InvalidPullValueError("Must specify --pull")
 
     # allow 'dbgsym' as alias for 'ddebs'
     if pull == 'dbgsym':
@@ -79,16 +109,14 @@ def parse_pull(pull):
         pull = PULL_DEBS
     # verify pull action is valid
     if pull not in VALID_PULLS:
-        Logger.error("Invalid pull action '%s'", pull)
-        sys.exit(1)
+        raise InvalidPullValueError("Invalid pull action '%s'" % pull)
 
     return pull
 
 
 def parse_distro(distro):
     if not distro:
-        distro = DEFAULT_DISTRO
-        Logger.normal("Defaulting to distro %s", distro)
+        raise InvalidDistroValueError("Must specify --distro")
 
     distro = distro.lower()
 
@@ -102,8 +130,7 @@ def parse_distro(distro):
         distro = DISTRO_UCA
     # verify distro is valid
     if distro not in VALID_DISTROS:
-        Logger.error("Invalid distro '%s'", distro)
-        sys.exit(1)
+        raise InvalidDistroValueError("Invalid distro '%s'" % distro)
 
     return distro
 
@@ -132,12 +159,7 @@ def parse_release(release, distro):
             Logger.normal("Using release '%s' for '%s'", codename, release)
             release = codename
 
-    try:
-        d = Distribution(distro)
-        Logger.debug("Distro '%s' is valid", distro)
-    except:
-        Logger.debug("Distro '%s' not valid", distro)
-        raise SeriesNotFoundException("Distro {} not found".format(distro))
+    d = Distribution(distro)
 
     # let SeriesNotFoundException flow up
     d.getSeries(release)
@@ -147,89 +169,76 @@ def parse_release(release, distro):
     return (release, pocket)
 
 
-def main():
-    usage = "Usage: %prog <package> [release[-pocket]|version]"
-    opt_parser = OptionParser(usage)
-    opt_parser.add_option('-v', '--verbose',
-                          dest='verbose', default=False,
-                          action='store_true',
-                          help="Print verbose/debug messages")
-    opt_parser.add_option('-d', '--download-only',
-                          dest='download_only', default=False,
-                          action='store_true',
-                          help="Do not extract the source package")
-    opt_parser.add_option('-m', '--mirror', dest='mirror',
-                          help='Preferred mirror')
-    opt_parser.add_option('--no-conf',
-                          dest='no_conf', default=False, action='store_true',
-                          help="Don't read config files or environment "
-                               "variables")
-    opt_parser.add_option('-a', '--arch',
-                          dest='arch', default=None,
-                          help="Get binary packages for specified architecture "
-                               "(default: {})".format(host_architecture()))
-    opt_parser.add_option('-p', '--pull',
-                          dest='pull', default=None,
-                          help="What to pull: {} (default: {})"
-                               .format(", ".join(VALID_PULLS), DEFAULT_PULL))
-    opt_parser.add_option('-D', '--distro',
-                          dest='distro', default=None,
-                          help="Pull from: {} (default: {})"
-                               .format(", ".join(VALID_DISTROS), DEFAULT_DISTRO))
-    (options, args) = opt_parser.parse_args()
-    if not args:
-        opt_parser.error("Must specify package name")
+def pull(options):
+    # required options asserted below
+    # 'release' and 'version' are optional strings
+    # 'mirror' is optional list of strings
+    # these are type bool
+    assert hasattr(options, 'verbose')
+    assert hasattr(options, 'download_only')
+    assert hasattr(options, 'no_conf')
+    # these are type string
+    assert hasattr(options, 'arch')
+    assert hasattr(options, 'pull')
+    assert hasattr(options, 'distro')
+    assert hasattr(options, 'package')
 
-    distro = parse_distro(options.distro)
-    mirrors = []
+    Logger.set_verbosity(options.verbose)
 
-    config = UDTConfig(options.no_conf)
-    if options.mirror is None:
-        options.mirror = config.get_value(distro.upper() + '_MIRROR')
-    if options.mirror:
-        mirrors.append(options.mirror)
-
-    pull = parse_pull(options.pull)
-    if pull == PULL_DDEBS:
-        ddebs_mirror = config.get_value(distro.upper() + '_DDEBS_MIRROR')
-        if ddebs_mirror:
-            mirrors.append(ddebs_mirror)
+    Logger.debug("pullpkg options: %s", options)
 
     # Login anonymously to LP
     Launchpad.login_anonymously()
 
-    Logger.set_verbosity(options.verbose)
+    pull = parse_pull(options.pull)
 
-    package = str(args[0]).lower()
-    version = None
-    release = None
+    distro = parse_distro(options.distro)
+
+    config = UDTConfig(options.no_conf)
+
+    mirrors = []
+    if hasattr(options, 'mirror') and options.mirror:
+        mirrors += options.mirror
+    if pull == PULL_DDEBS:
+        ddebs_mirror = config.get_value(distro.upper() + '_DDEBS_MIRROR')
+        if ddebs_mirror:
+            mirrors.append(ddebs_mirror)
+    if mirrors:
+        Logger.debug("using mirrors %s", ", ".join(mirrors))
+
+    package = options.package
+    release = getattr(options, 'release', None)
+    version = getattr(options, 'version', None)
     pocket = None
+    dscfile = None
 
-    if len(args) > 1:
+    if package.endswith('.dsc') and not release and not version:
+        dscfile = package
+        package = None
+
+    if release:
         try:
-            (release, pocket) = parse_release(args[1], distro)
-            if len(args) > 2:
-                version = args[2]
+            (release, pocket) = parse_release(release, distro)
         except (SeriesNotFoundException, PocketDoesNotExistError):
-            version = args[1]
-            Logger.debug("Param '%s' not valid series, must be version", version)
-            if len(args) > 2:
+            Logger.debug("Param '%s' not valid series, must be version", release)
+            release, version = version, release
+            if release:
                 try:
-                    (release, pocket) = parse_release(args[2], distro)
+                    (release, pocket) = parse_release(release, distro)
                 except (SeriesNotFoundException, PocketDoesNotExistError):
                     Logger.error("Can't find series for '%s' or '%s'",
-                                 args[1], args[2])
-                    sys.exit(1)
+                                 release, version)
+                    raise
 
     try:
         pkgcls = DISTRO_PKG_CLASS[distro]
         srcpkg = pkgcls(package=package, version=version,
                         series=release, pocket=pocket,
-                        mirrors=mirrors)
+                        mirrors=mirrors, dscfile=dscfile)
         spph = srcpkg.lp_spph
     except PackageNotFoundException as e:
         Logger.error(str(e))
-        sys.exit(1)
+        raise
 
     Logger.normal('Found %s', spph.display_name)
 
@@ -240,40 +249,31 @@ def main():
         Logger.normal("Binary files:")
         for f in spph.getBinaries(options.arch):
             Logger.normal("  %s", f.getFileName())
-        sys.exit(0)
+        return
 
-    try:
-        if pull == PULL_SOURCE:
-            srcpkg.pull()
-            if not options.download_only:
-                srcpkg.unpack()
+    # allow DownloadError to flow up to caller
+    if pull == PULL_SOURCE:
+        srcpkg.pull()
+        if options.download_only:
+            Logger.debug("--download-only specified, not extracting")
         else:
-            name = '.*'
-            if package != spph.getPackageName():
-                Logger.normal("Pulling binary package '%s'", package)
-                Logger.normal("Use package name '%s' to pull all binary packages",
-                              spph.getPackageName())
-                name = package
-            if pull == PULL_DEBS:
-                name = r'{}(?<!-di)(?<!-dbgsym)$'.format(name)
-            elif pull == PULL_DDEBS:
-                name += '-dbgsym$'
-            elif pull == PULL_UDEBS:
-                name += '-di$'
-            else:
-                Logger.error("Unknown action '%s'", pull)
-                sys.exit(1)
-            total = srcpkg.pull_binaries(name=name, arch=options.arch)
-            if total < 1:
-                Logger.error("No %s found for %s", pull, spph.display_name)
-                sys.exit(1)
-    except DownloadError as e:
-        Logger.error('Failed to download: %s', str(e))
-        sys.exit(1)
-
-
-if __name__ == '__main__':
-    try:
-        main()
-    except KeyboardInterrupt:
-        Logger.normal('User abort.')
+            srcpkg.unpack()
+    else:
+        name = '.*'
+        if package != spph.getPackageName():
+            Logger.normal("Pulling only binary package '%s'", package)
+            Logger.normal("Use package name '%s' to pull all binary packages",
+                          spph.getPackageName())
+            name = package
+        if pull == PULL_DEBS:
+            name = r'{}(?<!-di)(?<!-dbgsym)$'.format(name)
+        elif pull == PULL_DDEBS:
+            name += '-dbgsym$'
+        elif pull == PULL_UDEBS:
+            name += '-di$'
+        else:
+            raise InvalidPullValueError("Invalid pull value %s" % pull)
+        total = srcpkg.pull_binaries(name=name, arch=options.arch)
+        if total < 1:
+            Logger.error("No %s found for %s %s", pull,
+                         package, spph.getVersion())
