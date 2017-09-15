@@ -1,0 +1,134 @@
+.TH PULL\-PKG "1" "28 August 2017" "ubuntu-dev-tools"
+
+.SH NAME
+pull\-pkg \- download a package for Debian, Ubuntu, or UCA
+
+.SH SYNOPSIS
+.B pull\-pkg \fR[\fIoptions\fR]\fR <\fIpackage name\fR>
+[\fIrelease\fR|\fIversion\fR]
+
+.SH DESCRIPTION
+\fBpull\-pkg\fR downloads the specified \fIversion\fR of
+<\fIpackage name\fR>, or the latest version from the
+specified \fIrelease\fR.  To request a version from
+a particular pocket say \fIrelease\fB\-\fIpocket\fR (with a magic
+\fB\-release\fR for only the release pocket).
+If no \fIversion\fR or \fIrelease\fR is specified, the latest version in
+the development release will be downloaded.
+
+There are convenience scripts that set pull type and distribution
+appropriately: these are
+\fBpull\-lp\-source\fR, \fBpull\-lp\-debs\fR, \fBpull\-lp\-ddebs\fR,
+and \fBpull\-lp\-udebs\fR, which all pull Ubuntu packages;
+\fBpull\-debian\-source\fR, \fBpull\-debian\-debs\fR, \fBpull\-debian\-ddebs\fR,
+and \fBpull\-debian\-udebs\fR, which all pull Debian packages;
+and \fBpull\-uca\-source\fR, \fBpull\-uca\-debs\fR, \fBpull\-uca\-ddebs\fR,
+and \fBpull\-uca\-udebs\fR, which all pull Ubuntu Cloud Archive packages.
+Each script pulls the file type in its name, i.e.
+\fIsource\fR, \fIdebs\fR, \fIddebs\fR, or \fIudebs\fR.
+
+.SH OPTIONS
+Listed below are the command line options for pull\-pkg:
+.TP
+.I package name
+This is name of the package to downloaded.
+You can use either the source package name, or binary package name.
+.TP
+.I version
+This is the version of the package to downloaded.
+.TP
+.I release
+This is the release to downloaded from.
+For debian, you can use either the release name like \fBjessie\fR
+or \fBsid\fR, or you can use the special release names \fBunstable\fR,
+\fBstable\fR, or \fBtesting\fR.
+For ubuntu, you can use either the release name like \fBxenial\fR
+or the release-pocket like \fBxenial-proposed\fR.
+For ubuntu cloud archive (uca) you can use either the uca release
+name like \fBmitaka\fR or the ubuntu and uca release names like
+\fBtrusty-mitaka\fR.
+Defaults to the current development release.
+.TP
+.BR \-h ", " \-\-help
+Display a help message and exit.
+.TP
+.BR \-v ", " \-\-verbose
+Be verbose about what is being done.
+.TP
+.BR \-d ", " \-\-download\-only
+Do not extract the source package (applies only to source packages).
+.TP
+.B \-m \fIMIRROR\fR, \fB\-\-mirror\fR=\fIMIRROR\fR
+Use the specified mirror server.
+Should be in the form \fBhttp://archive.ubuntu.com/ubuntu\fR or
+\fBhttp://deb.debian.org/debian\fR.  If not specified or if the
+package is not found on the specified mirror, this will fall
+back to the default mirror(s) and/or mirror(s) from environment
+variables, and then will fall back to Launchpad or Debian Snapshot.
+This can be specified multiple times to try multiple mirrors.
+.TP
+.B \-\-no\-conf
+Do not use mirrors from the default configuration, or from
+any environment variables.
+.TP
+.B \-a \fIARCH\fR, \fB\-\-arch\fR=\fIARCH\fR
+Get binary packages from the \fIARCH\fR architecture.
+Defaults to the local architecture, if it can be deteected.
+.TP
+.B \-p \fIPULL\fR, \fB\-\-pull\fR=\fIPULL\fR
+What to pull: \fBsource\fR, \fBdebs\fR, \fBddebs\fR, \fBudebs\fR,
+or \fBlist\fR.  The \fBlist\fR action only lists all a package's
+source and binary files, but does not actually download any.
+Defaults to \fBsource\fR.
+.TP
+.B \-D \fIDISTRO\fR, \fB\-\-distro\fR=\fIDISTRO\fR
+Pull from: \fBdebian\fR, \fBuca\fR, or \fBubuntu\fR.
+\fBlp\fR can be used instead of \fBubuntu\fR.
+Any string containing \fBcloud\fR can be used instead of \fBuca\fR.
+Deafults to \fBubuntu\fR.
+
+.SH ENVIRONMENT
+All of the \fBCONFIGURATION VARIABLES\fR below are also supported as
+environment variables.
+Variables in the environment take precedence to those in configuration
+files.
+
+.SH CONFIGURATION VARIABLES
+The following variables can be set in the environment or in
+.BR ubuntu\-dev\-tools (5)
+configuration files.
+In each case, the script\-specific variable takes precedence over the
+package\-wide variable.
+.TP
+.BR UBUNTUTOOLS_UBUNTU_MIRROR
+The default mirror.
+.TP
+.BR PULL_PKG_UBUNTU_MIRROR
+The default mirror when using the \fBpull\-pkg\fR script.
+.TP
+.BR PULL_[LP|DEBIAN|UCA]_[SOURCE|DEBS|DDEBS|UDEBS]_MIRROR
+The default mirror when using the associated script.
+
+.SH SEE ALSO
+.BR dget (1),
+.BR pull\-lp\-source (1),
+.BR pull\-lp\-debs (1),
+.BR pull\-lp\-ddebs (1),
+.BR pull\-lp\-udebs (1),
+.BR pull\-debian\-source (1),
+.BR pull\-debian\-debs (1),
+.BR pull\-debian\-ddebs (1),
+.BR pull\-debian\-udebs (1),
+.BR pull\-uca\-source (1),
+.BR pull\-uca\-debs (1),
+.BR pull\-uca\-ddebs (1),
+.BR pull\-uca\-udebs (1),
+.BR pull\-debian\-debdiff (1),
+.BR ubuntu\-dev\-tools (5)
+
+.SH AUTHOR
+.PP
+\fBpull\-pkg\fR was written by Dan Streetman <dan.streetman@canonical.com>,
+based on the original \fBpull\-lp\-source\fR; it and this manual page
+were written by Iain Lane <iain@orangesquash.org.uk>.
+All are released under the GNU General Public License, version 3 or later.
