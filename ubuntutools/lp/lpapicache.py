@@ -26,6 +26,7 @@
 # httplib2.debuglevel = 1
 
 import collections
+import re
 import sys
 
 from debian.changelog import Changelog
@@ -364,6 +365,7 @@ class Archive(BaseWrapper):
 
         series defaults to the current development series if not specified.
         series must be either a series name string, or DistroArchSeries object.
+        series may be omitted if version is specified.
 
         pocket may be a string or a list. If a list, the highest version
         will be returned.  It defaults to all pockets except backports.
@@ -423,16 +425,18 @@ class Archive(BaseWrapper):
             pass
         elif series:
             series = dist.getSeries(series)
-        else:
+        elif not version:
             series = dist.getDevelopmentSeries()
 
         if binary:
-            if arch_series is None:
+            if arch_series is None and series:
                 arch_series = series.getArchSeries(archtag=archtag)
-            if archtag is None:
+            if archtag is None and arch_series:
                 archtag = arch_series.architecture_tag
+            if archtag is None:
+                archtag = host_architecture()
 
-        index = (name, series.name, archtag, pockets, status, version)
+        index = (name, getattr(series, 'name', None), archtag, pockets, status, version)
 
         if index not in cache:
             params = {
@@ -443,9 +447,9 @@ class Archive(BaseWrapper):
             if status:
                 params['status'] = status
 
-            if binary:
+            if arch_series:
                 params['distro_arch_series'] = arch_series()
-            else:
+            elif series:
                 params['distro_series'] = series()
 
             if len(pockets) == 1:
@@ -460,9 +464,11 @@ class Archive(BaseWrapper):
             for record in records:
                 if record.pocket not in pockets:
                     continue
-                if latest is None or (Version(latest.source_package_version)
-                                      < Version(record.source_package_version)):
-                    latest = record
+                r = wrapper(record)
+                if binary and archtag and archtag != r.arch:
+                    continue
+                if latest is None or latest.getVersion() < r.getVersion():
+                    latest = r
 
             if latest is None:
                 if name_key == 'binary_name':
@@ -471,19 +477,23 @@ class Archive(BaseWrapper):
                     package_type = "source package"
                 else:
                     package_type = "package"
-                msg = ("The %s '%s' does not exist in the %s %s archive" %
-                       (package_type, name, dist.display_name, self.name))
+                msg = "The %s '%s' " % (package_type, name)
+                if version:
+                    msg += "version %s " % version
+                msg += ("does not exist in the %s %s archive" %
+                        (dist.display_name, self.name))
                 if binary:
                     msg += " for architecture %s" % archtag
-                pockets = [series.name if pocket == 'Release'
-                           else '%s-%s' % (series.name, pocket.lower())
-                           for pocket in pockets]
-                if len(pockets) > 1:
-                    pockets[-2:] = [' or '.join(pockets[-2:])]
-                msg += " in " + ', '.join(pockets)
+                if series:
+                    pockets = [series.name if pocket == 'Release'
+                               else '%s-%s' % (series.name, pocket.lower())
+                               for pocket in pockets]
+                    if len(pockets) > 1:
+                        pockets[-2:] = [' or '.join(pockets[-2:])]
+                    msg += " in " + ', '.join(pockets)
                 raise PackageNotFoundException(msg)
 
-            cache[index] = wrapper(latest)
+            cache[index] = latest
         return cache[index]
 
     def copyPackage(self, source_name, version, from_archive, to_pocket,
@@ -557,7 +567,8 @@ class SourcePackagePublishingHistory(BaseWrapper):
     def __init__(self, *args):
         self._archive = None
         self._changelog = None
-        self._binaries = None
+        self._binaries = {}
+        self._have_all_binaries = False
         self._distro_series = None
         # Don't share _builds between different
         # SourcePackagePublishingHistory objects
@@ -653,19 +664,88 @@ class SourcePackagePublishingHistory(BaseWrapper):
             new_entries.append(str(block))
         return ''.join(new_entries)
 
-    def getBinaries(self, arch=None):
+    def getBinaries(self, arch, name=None):
         '''
         Returns the resulting BinaryPackagePublishingHistorys.
-        If arch is specified, only returns BPPH for that arch.
+        Must specify arch, or use 'all' to get all archs.
+        If name is specified, only returns BPPH matching that (regex) name.
         '''
-        if self._binaries is None:
-            self._binaries = [BinaryPackagePublishingHistory(bpph)
-                              for bpph in
-                              self._lpobject.getPublishedBinaries()]
         if not arch:
-            return list(self._binaries)
+            raise RuntimeError("Must specify arch")
 
-        return [b for b in self._binaries if b.arch == arch]
+        # debs with arch 'all' have to be categorized as a specific arch
+        # so use requested arch if not 'all', or system arch
+        fallback_arch = arch
+        if fallback_arch == 'all':
+            fallback_arch = host_architecture()
+
+        if self._have_all_binaries:
+            # Great!
+            pass
+        elif self.status in ["Pending", "Published"]:
+            # Published, great!  Directly query the list of binaries
+            binaries = map(BinaryPackagePublishingHistory,
+                           self._lpobject.getPublishedBinaries())
+            for b in binaries:
+                a = b.arch
+                if a == 'all':
+                    a = fallback_arch
+                if a not in self._binaries:
+                    self._binaries[a] = {}
+                self._binaries[a][b.binary_package_name] = b
+            self._have_all_binaries = True
+        else:
+            # Older version, so we have to go the long way :(
+            print("Please wait, this may take some time...")
+            archive = self.getArchive()
+            urls = self.binaryFileUrls()
+            for url in urls:
+                # strip out the URL leading text.
+                filename = url.rsplit('/', 1)[1]
+                # strip the file suffix
+                pkgname = filename.rsplit('.', 1)[0]
+                # split into name, version, arch
+                (n, v, a) = pkgname.rsplit('_', 2)
+                if a == 'all':
+                    a = fallback_arch
+                # Only check the arch requested - saves time
+                if arch != 'all' and arch != a:
+                    continue
+                # Only check the name requested - saves time
+                if name and not re.match(name, n):
+                    continue
+                # If we already have this BPPH, keep going
+                if a in self._binaries and n in self._binaries[a]:
+                    continue
+                # we ignore the version, as it may be missing epoch
+                # also we can't use series, as some package versions
+                # span multiple series! (e.g. for different archs)
+                params = {'name': n,
+                          'archtag': a,
+                          'version': self.getVersion()}
+                try:
+                    bpph = archive.getBinaryPackage(**params)
+                except PackageNotFoundException:
+                    print("Could not find pkg in archive: %s" % filename)
+                    continue
+                if a not in self._binaries:
+                    self._binaries[a] = {}
+                self._binaries[a][n] = bpph
+            if not name and arch == 'all':
+                # We must have got them all
+                self._have_all_binaries = True
+
+        bpphs = []
+        if arch == 'all':
+            for a in self._binaries.values():
+                bpphs += a.values()
+        elif arch in self._binaries:
+            bpphs = self._binaries[arch].copy().values()
+
+        if name:
+            bpphs = filter(lambda b: re.match(name, b.binary_package_name), bpphs)
+
+        return bpphs
 
     def _fetch_builds(self):
         '''Populate self._builds with the build records.'''

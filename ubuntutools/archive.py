@@ -317,9 +317,7 @@ class SourcePackage(object):
         yield default_url
 
     def _binary_files_info(self, arch, name):
-        for bpph in self.lp_spph.getBinaries(arch):
-            if name and not re.match(name, bpph.binary_package_name):
-                continue
+        for bpph in self.lp_spph.getBinaries(arch=arch, name=name):
             yield (bpph.getFileName(), bpph.getUrl(), 0)
 
     def pull_dsc(self):
@@ -585,13 +583,11 @@ class DebianSPPH(SourcePackagePublishingHistory):
     """
     resource_type = 'source_package_publishing_history'
 
-    def getBinaries(self, arch=None):
-        if not self._binaries:
-            Logger.normal('Using Snapshot to find binary packages')
-            srcpkg = Snapshot.getSourcePackage(self.getPackageName(),
-                                               version=self.getVersion())
-            self._binaries = [b.getBPPH() for b in srcpkg.getBinaryFiles()]
-        return super(DebianSPPH, self).getBinaries(arch)
+    def getBinaries(self, arch, name=None):
+        Logger.normal('Using Snapshot to find binary packages')
+        srcpkg = Snapshot.getSourcePackage(self.getPackageName(),
+                                           version=self.getVersion())
+        return srcpkg.getSPPH().getBinaries(arch=arch, name=name)
 
 
 class DebianSourcePackage(SourcePackage):
@@ -652,9 +648,7 @@ class DebianSourcePackage(SourcePackage):
         yield self.snapshot_files[name]
 
     def _binary_files_info(self, arch, name):
-        for f in self.snapshot_package.getBinaryFiles(arch):
-            if name and not re.match(name, f.package_name):
-                continue
+        for f in self.snapshot_package.getBinaryFiles(arch=arch, name=name):
             yield (f.name, f.getUrl(), f.size)
 
     def pull_dsc(self):
@@ -924,7 +918,7 @@ class SnapshotSourcePackage(SnapshotPackage):
     def getAllFiles(self):
         return self.getFiles() + self.getBinaryFiles()
 
-    def getBinaryFiles(self, arch=None):
+    def getBinaryFiles(self, arch=None, name=None):
         if not self._binary_files:
             url = "/mr/package/{}/{}/allfiles".format(self.name, self.version)
             response = Snapshot.load("{}?fileinfo=1".format(url))
@@ -934,9 +928,12 @@ class SnapshotSourcePackage(SnapshotPackage):
                                         r['architecture'], self.name)
                      for b in response['result']['binaries'] for r in b['files']]
             self._binary_files = files
-        if not arch:
-            return list(self._binary_files)
-        return filter(lambda f: f.isArch(arch), self._binary_files)
+        bins = self._binary_files.copy()
+        if arch:
+            bins = filter(lambda b: b.isArch(arch), bins)
+        if name:
+            bins = filter(lambda b: re.match(name, b.name), bins)
+        return bins
 
     def getFiles(self):
         if not self._files:
@@ -970,6 +967,8 @@ class SnapshotBinaryPackage(SnapshotPackage):
         f = self.getFiles(arch)
         if not f:
             return None
+        if not arch:
+            raise RuntimeError("Must specify arch")
         # Can only be 1 binary file for this pkg name/version/arch
         return f[0].getBPPH()
 
@@ -983,7 +982,7 @@ class SnapshotBinaryPackage(SnapshotPackage):
                                               r['architecture'], self.source)
                            for r in response['result']]
         if not arch:
-            return list(self._files)
+            return self._files.copy()
         return filter(lambda f: f.isArch(arch), self._files)
 
 
@@ -1145,8 +1144,9 @@ class SnapshotSPPH(object):
             new_entries.append(str(block))
         return ''.join(new_entries)
 
-    def getBinaries(self, arch=None):
-        return [b.getBPPH() for b in self._pkg.getBinaryFiles(arch)]
+    def getBinaries(self, arch, name=None):
+        return [b.getBPPH()
+                for b in self._pkg.getBinaryFiles(arch=arch, name=name)]
 
 
 class SnapshotBPPH(object):
