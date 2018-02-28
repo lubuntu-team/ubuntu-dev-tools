@@ -129,7 +129,7 @@ class SourcePackage(object):
 
     def __init__(self, package=None, version=None, component=None,
                  dscfile=None, lp=None, mirrors=(), workdir='.', quiet=False,
-                 series=None, pocket=None):
+                 series=None, pocket=None, verify_signature=False):
         """Can be initialised using either package or dscfile.
         If package is specified, either the version or series can also be
         specified; using version will get the specific package version,
@@ -149,6 +149,7 @@ class SourcePackage(object):
         self._use_series = True
         self._pocket = pocket
         self._dsc_source = dscfile
+        self._verify_signature = verify_signature
 
         # Cached values:
         self._distribution = None
@@ -321,7 +322,7 @@ class SourcePackage(object):
                 continue
             yield (bpph.getFileName(), bpph.getUrl(), 0)
 
-    def pull_dsc(self, verify_signature=False):
+    def pull_dsc(self):
         "Retrieve dscfile and parse"
         if self._dsc_source:
             parsed = urlparse(self._dsc_source)
@@ -333,16 +334,18 @@ class SourcePackage(object):
             url = self._lp_url(self.dsc_name)
         self._download_dsc(url)
 
-        self._check_dsc(verify_signature=verify_signature)
+        self._check_dsc()
 
     def _download_dsc(self, url):
         "Download specified dscfile and parse"
         parsed = urlparse(url)
         if parsed.scheme == 'file':
-            with open(parsed.path, 'r') as f:
+            Logger.debug("Using dsc file '%s'" % parsed.path)
+            with open(parsed.path, 'rb') as f:
                 body = f.read()
         else:
             try:
+                Logger.debug("Trying dsc url '%s'" % url)
                 response, body = httplib2.Http().request(url)
             except httplib2.HttpLib2Error as e:
                 raise DownloadError(e)
@@ -351,13 +354,14 @@ class SourcePackage(object):
                                                    response.reason))
         self._dsc = Dsc(body)
 
-    def _check_dsc(self, verify_signature=False):
+    def _check_dsc(self):
         "Check that the dsc matches what we are expecting"
         assert self._dsc is not None
         self.source = self.dsc['Source']
         self._version = Version(self.dsc['Version'])
 
         valid = False
+        no_pub_key = False
         message = None
         gpg_info = None
         try:
@@ -381,19 +385,24 @@ class SourcePackage(object):
                            % (gpg_info['GOODSIG'][1], gpg_info['GOODSIG'][0]))
             elif 'VALIDSIG' in gpg_info:
                 message = 'Valid signature by 0x%s' % gpg_info['VALIDSIG'][0]
-        if verify_signature:
+            elif 'NO_PUBKEY' in gpg_info:
+                no_pub_key = True
+                message = 'Public key not found, could not verify signature'
+        if self._verify_signature:
             if valid:
                 Logger.normal(message)
+            elif no_pub_key:
+                Logger.warn(message)
             else:
                 Logger.error(message)
                 raise DownloadError(message)
         else:
             Logger.info(message)
 
-    def _write_dsc(self, verify_signature=True):
+    def _write_dsc(self):
         "Write dsc file to workdir"
         if self._dsc is None:
-            self.pull_dsc(verify_signature=verify_signature)
+            self.pull_dsc()
         with open(self.dsc_pathname, 'wb') as f:
             f.write(self.dsc.raw_text)
 
@@ -477,9 +486,9 @@ class SourcePackage(object):
             return False
         return True
 
-    def pull(self, verify_signature=False):
+    def pull(self):
         "Pull into workdir"
-        self._write_dsc(verify_signature=verify_signature)
+        self._write_dsc()
         for entry in self.dsc['Files']:
             name = entry['name']
             for url in self._source_urls(name):
@@ -648,10 +657,10 @@ class DebianSourcePackage(SourcePackage):
                 continue
             yield (f.name, f.getUrl(), f.size)
 
-    def pull_dsc(self, verify_signature=True):
+    def pull_dsc(self):
         "Retrieve dscfile and parse"
         try:
-            super(DebianSourcePackage, self).pull_dsc(verify_signature)
+            super(DebianSourcePackage, self).pull_dsc()
             return
         except DownloadError:
             pass
@@ -666,7 +675,7 @@ class DebianSourcePackage(SourcePackage):
             break
         else:
             raise DownloadError('dsc could not be found anywhere')
-        self._check_dsc(verify_signature=verify_signature)
+        self._check_dsc()
 
     # Local methods:
     @property

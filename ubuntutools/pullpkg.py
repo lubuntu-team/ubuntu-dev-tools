@@ -83,6 +83,8 @@ def create_argparser(default_pull=None, default_distro=None, default_arch=None):
                         help='Preferred mirror(s)')
     parser.add_argument('--no-conf', action='store_true',
                         help="Don't read config files or environment variables")
+    parser.add_argument('--no-verify-signature', action='store_true',
+                        help="Don't fail if dsc signature can't be verified")
     parser.add_argument('-a', '--arch', default=default_arch,
                         help=help_default_arch)
     parser.add_argument('-p', '--pull', default=default_pull,
@@ -177,6 +179,7 @@ def pull(options):
     assert hasattr(options, 'verbose')
     assert hasattr(options, 'download_only')
     assert hasattr(options, 'no_conf')
+    assert hasattr(options, 'no_verify_signature')
     # these are type string
     assert hasattr(options, 'arch')
     assert hasattr(options, 'pull')
@@ -234,7 +237,8 @@ def pull(options):
         pkgcls = DISTRO_PKG_CLASS[distro]
         srcpkg = pkgcls(package=package, version=version,
                         series=release, pocket=pocket,
-                        mirrors=mirrors, dscfile=dscfile)
+                        mirrors=mirrors, dscfile=dscfile,
+                        verify_signature=(not options.no_verify_signature))
         spph = srcpkg.lp_spph
     except PackageNotFoundException as e:
         Logger.error(str(e))
