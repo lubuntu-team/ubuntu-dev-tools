@@ -719,6 +719,38 @@ class UbuntuSourcePackage(SourcePackage):
     distribution = 'ubuntu'
 
 
+class PersonalPackageArchiveSourcePackage(UbuntuSourcePackage):
+    "Download / unpack an Ubuntu Personal Package Archive source package"
+    def __init__(self, *args, **kwargs):
+        super(PersonalPackageArchiveSourcePackage, self).__init__(*args, **kwargs)
+        assert 'ppa' in kwargs
+        ppa = kwargs['ppa'].split('/')
+        if len(ppa) != 2:
+            raise ValueError('Invalid PPA value "%s",'
+                             'must be "<USER>/<PPA>"' % kwargs['ppa'])
+        self._ppateam = ppa[0]
+        self._ppaname = ppa[1]
+        self.masters = []
+        self._team = None
+        self._ppa = None
+
+    def getArchive(self):
+        if not self._ppa:
+            try:
+                self._team = PersonTeam.fetch(self._ppateam)
+            except KeyError:
+                raise ValueError('No user/team "%s" found on Launchpad' % self._ppateam)
+            self._ppa = self._team.getPPAByName(self._ppaname)
+            Logger.debug('Using PPA %s' % self._ppa.web_link)
+        return self._ppa
+
+    def _lp_url(self, filename):
+        "Build a source package URL on Launchpad"
+        return os.path.join('https://launchpad.net', '~' + self._ppateam,
+                            '+archive', self.distribution, self._ppaname,
+                            '+files', filename)
+
+
 class UbuntuCloudArchiveSourcePackage(UbuntuSourcePackage):
     "Download / unpack an Ubuntu Cloud Archive source package"
     _ppas = None
@@ -733,10 +765,12 @@ class UbuntuCloudArchiveSourcePackage(UbuntuSourcePackage):
 
     @classmethod
     def getArchives(cls):
-        if not cls._ppas:
-            ppas = filter(lambda p: p.name.endswith('-staging'),
-                          PersonTeam.fetch('ubuntu-cloud-archive').getPPAs())
-            cls._ppas = sorted(ppas, key=lambda p: p.name, reverse=True)
+        if cls._ppas is None:
+            cls._ppas = []
+            ppas = PersonTeam.fetch('ubuntu-cloud-archive').getPPAs()
+            for key in ppas.keys():
+                if key.endswith('-staging'):
+                    cls._ppas.append(ppas[key])
         return cls._ppas
 
     @classmethod
@@ -747,7 +781,7 @@ class UbuntuCloudArchiveSourcePackage(UbuntuSourcePackage):
 
     @classmethod
     def getDevelopmentRelease(cls):
-        return cls.getReleaseNames()[0]
+        return sorted(cls.getReleaseNames(), reverse=True)[0]
 
     @property
     def uca_release(self):

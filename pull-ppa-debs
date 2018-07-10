@@ -1,0 +1,12 @@
+#!/usr/bin/python3
+#
+# pull-ppa-debs -- pull deb package files for a Launchpad Personal Package Archive
+# Basic usage: pull-ppa-debs <package name> <ppa:USER/NAME> [version|release]
+#              pull-ppa-debs --ppa USER/NAME <package name> [version|release]
+#
+# See pull-pkg
+
+from ubuntutools.pullpkg import PullPkg
+
+if __name__ == '__main__':
+    PullPkg.main(distro='ppa', pull='debs')

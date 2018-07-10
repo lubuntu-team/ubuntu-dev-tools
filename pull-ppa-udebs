@@ -1,0 +1,12 @@
+#!/usr/bin/python3
+#
+# pull-ppa-udebs -- pull udeb package files for a Launchpad Personal Package Archive
+# Basic usage: pull-ppa-udebs <package name> <ppa:USER/NAME> [version|release]
+#              pull-ppa-udebs --ppa USER/NAME <package name> [version|release]
+#
+# See pull-pkg
+
+from ubuntutools.pullpkg import PullPkg
+
+if __name__ == '__main__':
+    PullPkg.main(distro='ppa', pull='udebs')

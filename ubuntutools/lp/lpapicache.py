@@ -1005,10 +1005,14 @@ class PersonTeam(BaseWrapper, metaclass=MetaPersonTeam):
         return canUpload
 
     def getPPAs(self):
-        if not self._ppas:
-            ppas = Launchpad.load(self._lpobject.ppas_collection_link).entries
-            self._ppas = [Archive(a['self_link']) for a in ppas]
+        if self._ppas is None:
+            ppas = [Archive(ppa['self_link']) for ppa in
+                    Launchpad.load(self._lpobject.ppas_collection_link).entries]
+            self._ppas = {ppa.name: ppa for ppa in ppas}
         return self._ppas
+
+    def getPPAByName(self, name):
+        return self._lpobject.getPPAByName(name=name)
 
 
 class Build(BaseWrapper):

@@ -23,6 +23,7 @@
 
 
 import re
+import sys
 import errno
 
 from argparse import ArgumentParser
@@ -30,7 +31,8 @@ from argparse import ArgumentParser
 from distro_info import DebianDistroInfo
 
 from ubuntutools.archive import (UbuntuSourcePackage, DebianSourcePackage,
-                                 UbuntuCloudArchiveSourcePackage)
+                                 UbuntuCloudArchiveSourcePackage,
+                                 PersonalPackageArchiveSourcePackage)
 from ubuntutools.config import UDTConfig
 from ubuntutools.lp.lpapicache import (Distribution, Launchpad)
 from ubuntutools.lp.udtexceptions import (SeriesNotFoundException,
@@ -51,11 +53,13 @@ VALID_PULLS = [PULL_SOURCE, PULL_DEBS, PULL_DDEBS, PULL_UDEBS, PULL_LIST]
 DISTRO_DEBIAN = 'debian'
 DISTRO_UBUNTU = 'ubuntu'
 DISTRO_UCA = 'uca'
+DISTRO_PPA = 'ppa'
 
 DISTRO_PKG_CLASS = {
     DISTRO_DEBIAN: DebianSourcePackage,
     DISTRO_UBUNTU: UbuntuSourcePackage,
     DISTRO_UCA: UbuntuCloudArchiveSourcePackage,
+    DISTRO_PPA: PersonalPackageArchiveSourcePackage,
 }
 VALID_DISTROS = DISTRO_PKG_CLASS.keys()
 
@@ -94,6 +98,7 @@ class PullPkg(object):
         self._default_distro = kwargs.get('distro')
         self._default_arch = kwargs.get('arch', host_architecture())
         self._parser = None
+        self._ppa_parser = None
 
     @property
     def argparser(self):
@@ -126,11 +131,40 @@ class PullPkg(object):
                             help=help_default_pull)
         parser.add_argument('-D', '--distro', default=self._default_distro,
                             help=help_default_distro)
+        parser.add_argument('--ppa', help='PPA to pull from')
         parser.add_argument('package', help="Package name to pull")
         parser.add_argument('release', nargs='?', help="Release to pull from")
         parser.add_argument('version', nargs='?', help="Package version to pull")
         self._parser = parser
         return self._parser
+
+    def parse_ppa_args(self, args):
+        """When pulling from PPA, convert from bare ppa:USER/NAME to --ppa option"""
+        if not args:
+            myargs = sys.argv[1:]
+
+        options = vars(self.argparser.parse_known_args(myargs)[0])
+        # we use these, which all should be always provided by the parser,
+        # even if their value is None
+        assert 'distro' in options
+        assert 'ppa' in options
+        assert 'release' in options
+        assert 'version' in options
+
+        # if we're not pulling from a PPA, or if we are but --ppa was given,
+        # then no change to the args is needed
+        if options['distro'] != DISTRO_PPA or options['ppa'] is not None:
+            return args
+
+        # check if release or version is a ppa:
+        # if it is, move it to a --ppa param
+        for param in ['release', 'version']:
+            if str(options[param]).startswith('ppa:'):
+                myargs.remove(options[param])
+                myargs.insert(0, options[param])
+                myargs.insert(0, '--ppa')
+
+        return myargs
 
     def parse_pull(self, pull):
         if not pull:
@@ -194,7 +228,11 @@ class PullPkg(object):
                 Logger.normal("Using release '%s' for '%s'", codename, release)
                 release = codename
 
-        d = Distribution(distro)
+        if distro == DISTRO_PPA:
+            # PPAs are part of Ubuntu distribution
+            d = Distribution(DISTRO_UBUNTU)
+        else:
+            d = Distribution(distro)
 
         # let SeriesNotFoundException flow up
         d.getSeries(release)
@@ -233,6 +271,7 @@ class PullPkg(object):
         assert 'arch' in options
         assert 'package' in options
         # type string, optional
+        assert 'ppa' in options
         assert 'release' in options
         assert 'version' in options
         # type list of strings, optional
@@ -255,6 +294,14 @@ class PullPkg(object):
             params['dscfile'] = params['package']
             params.pop('package')
 
+        if options['ppa']:
+            if options['ppa'].startswith('ppa:'):
+                params['ppa'] = options['ppa'][4:]
+            else:
+                params['ppa'] = options['ppa']
+        elif distro == DISTRO_PPA:
+            raise ValueError('Must specify PPA to pull from')
+
         mirrors = []
         if options['mirror']:
             mirrors.append(options['mirror'])
@@ -273,6 +320,9 @@ class PullPkg(object):
 
     def pull(self, args=None):
         """Pull (download) specified package file(s)"""
+        # pull-ppa-* may need conversion from ppa:USER/NAME to --ppa USER/NAME
+        args = self.parse_ppa_args(args)
+
         options = vars(self.argparser.parse_args(args))
 
         assert 'verbose' in options
