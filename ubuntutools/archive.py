@@ -751,59 +751,37 @@ class PersonalPackageArchiveSourcePackage(UbuntuSourcePackage):
                             '+files', filename)
 
 
-class UbuntuCloudArchiveSourcePackage(UbuntuSourcePackage):
+class UbuntuCloudArchiveSourcePackage(PersonalPackageArchiveSourcePackage):
     "Download / unpack an Ubuntu Cloud Archive source package"
-    _ppas = None
-    _ppa_names = None
+    _ppateam = 'ubuntu-cloud-archive'
 
     def __init__(self, *args, **kwargs):
+        series = kwargs.get('series') or UbuntuCloudArchiveSourcePackage.getDevelSeries()
+        kwargs.pop('series', None)
+        kwargs['ppa'] = ('%s/%s-staging' %
+                         (UbuntuCloudArchiveSourcePackage._ppateam, series))
         super(UbuntuCloudArchiveSourcePackage, self).__init__(*args, **kwargs)
-        self._use_series = False  # UCA doesn't really use distro series
-        self._uca_release = self._series
-        self._series = None
+        self._use_series = False  # each UCA series is for a single Ubuntu series
+        self.uca_release = series
         self.masters = ["http://ubuntu-cloud.archive.canonical.com/ubuntu/"]
 
     @classmethod
-    def getArchives(cls):
-        if cls._ppas is None:
-            cls._ppas = []
-            ppas = PersonTeam.fetch('ubuntu-cloud-archive').getPPAs()
-            for key in ppas.keys():
-                if key.endswith('-staging'):
-                    cls._ppas.append(ppas[key])
-        return cls._ppas
+    def getDevelSeries(cls):
+        ppas = PersonTeam.fetch(cls._ppateam).getPPAs()
+        for key in sorted(ppas.keys(), reverse=True):
+            if key.endswith('-staging'):
+                return key.rsplit('-', 1)[0]
+        raise SeriesNotFoundException('Internal Error: No UCA devel series found...?')
 
     @classmethod
-    def getReleaseNames(cls):
-        if not cls._ppa_names:
-            cls._ppa_names = [p.name.split('-', 1)[0] for p in cls.getArchives()]
-        return cls._ppa_names
-
-    @classmethod
-    def getDevelopmentRelease(cls):
-        return sorted(cls.getReleaseNames(), reverse=True)[0]
-
-    @property
-    def uca_release(self):
-        if not self._uca_release:
-            self._uca_release = self.getDevelopmentRelease()
-            Logger.normal('Using UCA release %s', self._uca_release)
-        return self._uca_release
+    def isValidRelease(cls, release):
+        return ('%s-staging' % release) in PersonTeam.fetch(cls._ppateam).getPPAs()
 
     def getArchive(self):
-        ppas = {p.name: p for p in self.getArchives()}
-        release = '{}-staging'.format(self.uca_release)
-        if release in ppas:
-            Logger.debug('UCA release {} at {}'.format(self.uca_release,
-                                                       ppas[release]()))
-            return ppas[release]
-        raise SeriesNotFoundException('UCA release {} not found.'.format(self.uca_release))
-
-    def _lp_url(self, filename):
-        "Build a source package URL on Launchpad"
-        return os.path.join('https://launchpad.net', "~ubuntu-cloud-archive",
-                            '+archive', ("%s-staging" % self.uca_release),
-                            '+files', filename)
+        try:
+            return super(UbuntuCloudArchiveSourcePackage, self).getArchive()
+        except ValueError:
+            raise SeriesNotFoundException('UCA release {} not found.'.format(self.uca_release))
 
 
 class _WebJSON(object):

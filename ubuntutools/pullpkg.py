@@ -211,7 +211,7 @@ class PullPkg(object):
             # archives always correspond to only one UBUNTURELEASE, and UCA archives
             # have only the Release pocket, so only UCARELEASE matters to us.
             for r in release.split('-'):
-                if r in UbuntuCloudArchiveSourcePackage.getReleaseNames():
+                if UbuntuCloudArchiveSourcePackage.isValidRelease(r):
                     Logger.debug("Using UCA release '%s'", r)
                     return (r, None)
             raise SeriesNotFoundException('UCA release {} not found.'.format(release))
