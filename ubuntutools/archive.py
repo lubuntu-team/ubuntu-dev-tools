@@ -128,8 +128,7 @@ class SourcePackage(object):
     spph_class = SourcePackagePublishingHistory
 
     def __init__(self, package=None, version=None, component=None,
-                 dscfile=None, lp=None, mirrors=(), workdir='.', quiet=False,
-                 series=None, pocket=None, verify_signature=False):
+                 *args, **kwargs):
         """Can be initialised using either package or dscfile.
         If package is specified, either the version or series can also be
         specified; using version will get the specific package version,
@@ -137,6 +136,15 @@ class SourcePackage(object):
         Specifying only the package with no version or series will get the
         latest version from the development series.
         """
+        dscfile = kwargs.get('dscfile')
+        lp = kwargs.get('lp')
+        mirrors = kwargs.get('mirrors', ())
+        workdir = kwargs.get('workdir', '.')
+        quiet = kwargs.get('quiet', False)
+        series = kwargs.get('series')
+        pocket = kwargs.get('pocket')
+        verify_signature = kwargs.get('verify_signature', False)
+
         assert (package is not None or dscfile is not None)
 
         self.source = package
