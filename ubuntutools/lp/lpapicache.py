@@ -37,7 +37,8 @@ from lazr.restfulclient.resource import Entry
 
 from ubuntutools.version import Version
 from ubuntutools.lp import (service, api_version)
-from ubuntutools.misc import host_architecture
+from ubuntutools.misc import (host_architecture,
+                              DEFAULT_POCKETS, POCKETS)
 from ubuntutools.lp.udtexceptions import (AlreadyLoggedInError,
                                           ArchiveNotFoundException,
                                           ArchSeriesNotFoundException,
@@ -58,8 +59,6 @@ __all__ = [
     'PersonTeam',
     'SourcePackagePublishingHistory',
     ]
-
-_POCKETS = ('Release', 'Security', 'Updates', 'Proposed', 'Backports')
 
 
 class _Launchpad(object):
@@ -191,14 +190,22 @@ class Distribution(BaseWrapper):
     resource_type = 'distribution'
 
     def __init__(self, *args):
-        # Don't share _series and _archives between different Distributions
-        if '_series' not in self.__dict__:
-            self._series = dict()
-        if '_archives' not in self.__dict__:
-            self._archives = dict()
+        self._archives = dict()
+        self._series_by_name = dict()
+        self._series = dict()
+        self._dev_series = None
+        self._have_all_series = False
 
     def cache(self):
         self._cache[self.name] = self
+
+    def _cache_series(self, series):
+        '''
+        Add the DistroSeries to the cache if needed.
+        '''
+        if series.version not in self._series:
+            self._series_by_name[series.name] = series
+            self._series[series.version] = series
 
     @classmethod
     def fetch(cls, dist):
@@ -246,28 +253,49 @@ class Distribution(BaseWrapper):
         (e.g. 'karmic') or version (e.g. '9.10').
         If the series is not found: raise SeriesNotFoundException
         '''
-        if name_or_version not in self._series:
-            try:
-                series = DistroSeries(self().getSeries(name_or_version=name_or_version))
-                # Cache with name and version
-                self._series[series.name] = series
-                self._series[series.version] = series
-            except HTTPError:
-                message = "Release '%s' is unknown in '%s'." % \
-                          (name_or_version, self.display_name)
-                raise SeriesNotFoundException(message)
-        return self._series[name_or_version]
+        if name_or_version in self._series:
+            return self._series[name_or_version]
+        if name_or_version in self._series_by_name:
+            return self._series_by_name[name_or_version]
+
+        try:
+            series = DistroSeries(self().getSeries(name_or_version=name_or_version))
+        except HTTPError:
+            message = "Release '%s' is unknown in '%s'." % \
+                      (name_or_version, self.display_name)
+            raise SeriesNotFoundException(message)
+
+        self._cache_series(series)
+        return series
 
     def getDevelopmentSeries(self):
         '''
         Returns a DistroSeries object of the current development series.
         '''
-        dev = DistroSeries(self.current_series_link)
-        # Cache it in _series if not already done
-        if dev.name not in self._series:
-            self._series[dev.name] = dev
-            self._series[dev.version] = dev
-        return dev
+        if not self._dev_series:
+            series = DistroSeries(self.current_series_link)
+            self._cache_series(series)
+            self._dev_series = series
+        return self._dev_series
+
+    def getAllSeries(self, active=True):
+        '''
+        Returns a list of all DistroSeries objects.
+        '''
+        if not self._have_all_series:
+            for s in Launchpad.load(self.series_collection_link).entries:
+                series = DistroSeries(s['self_link'])
+                self._cache_series(series)
+            self._have_all_series = True
+
+        allseries = filter(lambda s: s.active, self._series.values())
+        allseries = sorted(allseries,
+                           key=lambda s: float(s.version),
+                           reverse=True)
+        Logger.debug("Found series: %s" % ", ".join(map(lambda s: "%s (%s)" %
+                                                        (s.name, s.version),
+                                                        allseries)))
+        return collections.OrderedDict((s.name, s) for s in allseries)
 
 
 class DistroArchSeries(BaseWrapper):
@@ -329,7 +357,7 @@ class Archive(BaseWrapper):
         self._component_uploaders = {}
 
     def getSourcePackage(self, name, series=None, pocket=None, version=None,
-                         status=None):
+                         status=None, wrapper=None, search_all_series=False):
         '''
         Returns a SourcePackagePublishingHistory object for the most
         recent source package in the distribution 'dist', series and
@@ -338,11 +366,20 @@ class Archive(BaseWrapper):
         series defaults to the current development series if not specified.
         series must be either a series name string, or DistroSeries object.
 
-        pocket may be a string or a list. If a list, the highest version
-        will be returned.  It defaults to all pockets except backports.
-
         version may be specified to get only the exact version requested.
 
+        pocket may be a string or a list.  If no version is provided, it
+        defaults to all pockets except 'Backports'; if searching for a
+        specific version, it defaults to all pockets.  Pocket strings must
+        be capitalized.
+
+        wrapper is the class to return an instance of; defaults to
+        SourcePackagePublishingHistory.
+
+        search_all_series is used if series is None.  If False, this will
+        search only the latest devel series, and if True all series
+        will be searched, in reverse order, starting with the latest
+        devel series.  Defaults to False.
         status is optional, to restrict search to a given status only.
 
         If the requested source package doesn't exist a
@@ -351,13 +388,15 @@ class Archive(BaseWrapper):
         return self._getPublishedItem(name, series, pocket, cache=self._srcpkgs,
                                       function='getPublishedSources',
                                       name_key='source_name',
-                                      wrapper=SourcePackagePublishingHistory,
+                                      wrapper=wrapper or SourcePackagePublishingHistory,
                                       version=version,
                                       status=status,
+                                      search_all_series=search_all_series,
                                       binary=False)
 
     def getBinaryPackage(self, name, archtag=None, series=None, pocket=None,
-                         version=None, status=None):
+                         version=None, status=None, wrapper=None,
+                         search_all_series=False):
         '''
         Returns a BinaryPackagePublishingHistory object for the most
         recent source package in the distribution 'dist', architecture
@@ -367,11 +406,20 @@ class Archive(BaseWrapper):
         series must be either a series name string, or DistroArchSeries object.
         series may be omitted if version is specified.
 
-        pocket may be a string or a list. If a list, the highest version
-        will be returned.  It defaults to all pockets except backports.
-
         version may be specified to get only the exact version requested.
 
+        pocket may be a string or a list.  If no version is provided, it
+        defaults to all pockets except 'Backports'; if searching for a
+        specific version, it defaults to all pockets.  Pocket strings must
+        be capitalized.
+
+        wrapper is the class to return an instance of; defaults to
+        BinaryPackagePublishingHistory.
+
+        search_all_series is used if series is None.  If False, this will
+        search only the latest devel series, and if True all series
+        will be searched, in reverse order, starting with the latest
+        devel series.  Defaults to False.
         status is optional, to restrict search to a given status only.
 
         If the requested binary package doesn't exist a
@@ -381,35 +429,39 @@ class Archive(BaseWrapper):
                                       cache=self._binpkgs,
                                       function='getPublishedBinaries',
                                       name_key='binary_name',
-                                      wrapper=BinaryPackagePublishingHistory,
+                                      wrapper=wrapper or BinaryPackagePublishingHistory,
                                       version=version,
                                       status=status,
+                                      search_all_series=search_all_series,
                                       binary=True)
 
     def _getPublishedItem(self, name, series, pocket, cache,
                           function, name_key, wrapper, archtag=None,
-                          version=None, status=None,
+                          version=None, status=None, search_all_series=False,
                           binary=False):
         '''
         Common code between getSourcePackage and getBinaryPackage.
 
         Don't use this directly.
         '''
-        if pocket is None:
-            pockets = frozenset(('Proposed', 'Updates', 'Security', 'Release'))
+        if not pocket:
+            if version and not series:
+                # check ALL pockets if specific version in any series
+                pockets = POCKETS
+            else:
+                # otherwise, check all pockets EXCEPT 'Backports'
+                pockets = DEFAULT_POCKETS
         elif isinstance(pocket, str):
-            pockets = frozenset((pocket,))
+            pockets = (pocket,)
         else:
-            pockets = frozenset(pocket)
+            pockets = tuple(pocket)
 
-        for pocket in pockets:
-            if pocket not in _POCKETS:
-                raise PocketDoesNotExistError("Pocket '%s' does not exist." %
-                                              pocket)
+        for p in pockets:
+            if p not in POCKETS:
+                raise PocketDoesNotExistError("Pocket '%s' does not exist." % p)
+
 
         dist = Distribution(self.distribution_link)
-
-        arch_series = None
 
         # please don't pass DistroArchSeries as archtag!
         # but, the code was like that before so keep
@@ -418,34 +470,44 @@ class Archive(BaseWrapper):
             series = archtag
             archtag = None
 
-        if isinstance(series, DistroArchSeries):
-            arch_series = series
-            series = series.getSeries()
-        elif isinstance(series, DistroSeries):
-            pass
-        elif series:
-            series = dist.getSeries(series)
-        elif not version:
-            series = dist.getDevelopmentSeries()
+        series_to_check = [series]
+        if not version and not series:
+            # if neither version or series are specified, use either the
+            # devel series or search all series
+            if search_all_series:
+                series_to_check = dist.getAllSeries().values()
+            else:
+                series_to_check = [dist.getDevelopmentSeries()]
 
-        if binary:
-            if arch_series is None and series:
-                arch_series = series.getArchSeries(archtag=archtag)
-            if archtag is None and arch_series:
-                archtag = arch_series.architecture_tag
-            if archtag is None:
-                archtag = host_architecture()
+        # check each series - if only version was provided, series will be None
+        for series in series_to_check:
+            arch_series = None
 
-        index = (name, getattr(series, 'name', None), archtag, pockets, status, version)
+            if isinstance(series, DistroArchSeries):
+                arch_series = series
+                series = series.getSeries()
+            elif isinstance(series, DistroSeries):
+                pass
+            elif series:
+                series = dist.getSeries(series)
 
-        if index not in cache:
+            if binary:
+                if arch_series is None and series:
+                    arch_series = series.getArchSeries(archtag=archtag)
+                if archtag is None and arch_series:
+                    archtag = arch_series.architecture_tag
+                if archtag is None:
+                    archtag = host_architecture()
+
+            index = (name, getattr(series, 'name', None), archtag, pockets, status, version)
+
+            if index in cache:
+                return cache[index]
+
             params = {
                 name_key: name,
                 'exact_match': True,
             }
-
-            if status:
-                params['status'] = status
 
             if arch_series:
                 params['distro_arch_series'] = arch_series()
@@ -453,48 +515,81 @@ class Archive(BaseWrapper):
                 params['distro_series'] = series()
 
             if len(pockets) == 1:
-                params['pocket'] = list(pockets)[0]
+                params['pocket'] = pockets[0]
+
 
             if version:
                 params['version'] = version
 
+            Logger.debug('Calling %s(%s)' % (function,
+                                             ', '.join(['%s=%s' % (k, v)
+                                                        for (k, v) in params.items()])))
             records = getattr(self, function)(**params)
 
-            latest = None
+            err_msg = ("does not exist in the %s %s archive" %
+                       (dist.display_name, self.name))
+
             for record in records:
+                if binary:
+                    rversion = getattr(record, 'binary_package_version', None)
+                else:
+                    rversion = getattr(record, 'source_package_version', None)
+                skipmsg = ('Skipping version %s: ' % rversion)
+
                 if record.pocket not in pockets:
+                    err_msg = 'pocket %s not in (%s)' % (record.pocket, ','.join(pockets))
+                    Logger.debug(skipmsg + err_msg)
+                    continue
                     continue
                 r = wrapper(record)
                 if binary and archtag and archtag != r.arch:
+                    err_msg = 'arch %s does not match requested arch %s' % (r.arch, archtag)
+                    Logger.debug(skipmsg + err_msg)
                     continue
-                if latest is None or latest.getVersion() < r.getVersion():
-                    latest = r
+                # results are ordered so first is latest
+                cache[index] = r
+                return r
 
-            if latest is None:
-                if name_key == 'binary_name':
-                    package_type = "binary package"
-                elif name_key == 'source_name':
-                    package_type = "source package"
-                else:
-                    package_type = "package"
-                msg = "The %s '%s' " % (package_type, name)
-                if version:
-                    msg += "version %s " % version
-                msg += ("does not exist in the %s %s archive" %
-                        (dist.display_name, self.name))
-                if binary:
-                    msg += " for architecture %s" % archtag
-                if series:
-                    pockets = [series.name if pocket == 'Release'
-                               else '%s-%s' % (series.name, pocket.lower())
-                               for pocket in pockets]
-                    if len(pockets) > 1:
-                        pockets[-2:] = [' or '.join(pockets[-2:])]
-                    msg += " in " + ', '.join(pockets)
-                raise PackageNotFoundException(msg)
+        version_with_epoch = None
+        if version and version == Version(version).strip_epoch() and len(records) == 0:
+            # a specific version was asked for, but we found none;
+            # check if one exists with an epoch to give a hint in error msg
+            for epoch in range(1, 9):
+                v = Version(version)
+                v.epoch = epoch
+                params['version'] = v.full_version
+                if len(getattr(self, function)(**params)) > 0:
+                    version_with_epoch = v.full_version
+                    Logger.debug('Found version with epoch %s' % version_with_epoch)
+                    break
 
-            cache[index] = latest
-        return cache[index]
+        if name_key == 'binary_name':
+            package_type = "binary package"
+        elif name_key == 'source_name':
+            package_type = "source package"
+        else:
+            package_type = "package"
+        msg = "The %s '%s' " % (package_type, name)
+        if version:
+            msg += "version %s " % version
+        msg += err_msg
+        if binary and archtag:
+            msg += " for architecture %s" % archtag
+        if len(series_to_check) > 1:
+            msg += " in any release"
+            if len(pockets) == 1:
+                msg += " for pocket %s" % pockets[0]
+            elif len(pockets) != len(POCKETS):
+                msg += " for pockets " + ', '.join(pockets)
+        elif series:
+            msg += " in %s" % series.name
+            if len(pockets) == 1:
+                msg += "-%s" % pockets[0]
+            elif len(pockets) != len(POCKETS):
+                msg += " for pockets " + ', '.join(pockets)
+        if version_with_epoch:
+            msg += " (did you forget the epoch? try %s)" % version_with_epoch
+        raise PackageNotFoundException(msg)
 
     def copyPackage(self, source_name, version, from_archive, to_pocket,
                     to_series=None, sponsored=None, include_binaries=False):
@@ -695,7 +790,7 @@ class SourcePackagePublishingHistory(BaseWrapper):
                 self._binaries[a][b.binary_package_name] = b
             self._have_all_binaries = True
         else:
-            # Older version, so we have to go the long way :(
+            # we have to go the long way :(
             print("Please wait, this may take some time...")
             archive = self.getArchive()
             urls = self.binaryFileUrls()
@@ -976,7 +1071,7 @@ class PersonTeam(BaseWrapper, metaclass=MetaPersonTeam):
         if package is None and component is None:
             raise ValueError('Either a source package name or a component has '
                              'to be specified.')
-        if pocket not in _POCKETS:
+        if pocket not in POCKETS:
             raise PocketDoesNotExistError("Pocket '%s' does not exist." %
                                           pocket)
 
@@ -1012,7 +1107,7 @@ class PersonTeam(BaseWrapper, metaclass=MetaPersonTeam):
         return self._ppas
 
     def getPPAByName(self, name):
-        return self._lpobject.getPPAByName(name=name)
+        return Archive(self._lpobject.getPPAByName(name=name))
 
 
 class Build(BaseWrapper):

@@ -46,8 +46,7 @@ from contextlib import closing
 
 from ubuntutools.config import UDTConfig
 from ubuntutools.lp.lpapicache import (Launchpad, Distribution, PersonTeam,
-                                       SourcePackagePublishingHistory,
-                                       BinaryPackagePublishingHistory)
+                                       SourcePackagePublishingHistory)
 from ubuntutools.lp.udtexceptions import (PackageNotFoundException,
                                           SeriesNotFoundException,
                                           InvalidDistroValueError)
@@ -154,7 +153,6 @@ class SourcePackage(object):
         self.workdir = workdir
         self.quiet = quiet
         self._series = series
-        self._use_series = True
         self._pocket = pocket
         self._dsc_source = dscfile
         self._verify_signature = verify_signature
@@ -188,65 +186,61 @@ class SourcePackage(object):
             else:
                 Launchpad.login_anonymously()
 
-        distro = self.getDistribution()
         archive = self.getArchive()
-        series = None
-        params = {'exact_match': True, 'order_by_date': True}
+        params = {}
         if self._version:
             # if version was specified, use that
             params['version'] = self._version.full_version
-        elif self._use_series:
-            if self._series:
-                # if version not specified, get the latest from this series
-                series = distro.getSeries(self._series)
-            else:
-                # if no version or series, get the latest from devel series
-                series = distro.getDevelopmentSeries()
-            params['distro_series'] = series()
+        elif self._series:
+            # if version not specified, get the latest from this series
+            params['series'] = self._series
+            # note that if not specified, pocket defaults to all EXCEPT -backports
             if self._pocket:
                 params['pocket'] = self._pocket
-        spphs = archive.getPublishedSources(source_name=self.source, **params)
-        if spphs:
-            self._spph = self.spph_class(spphs[0])
+        else:
+            # We always want to search all series, if not specified
+            params['search_all_series'] = True
+
+        try:
+            self._spph = archive.getSourcePackage(self.source,
+                                                  wrapper=self.spph_class,
+                                                  **params)
             return self._spph
+        except PackageNotFoundException as pnfe:
+            if not self.try_binary or self.binary:
+                # either we don't need to bother trying binary name lookup,
+                # or we've already tried
+                raise pnfe
 
-        if self.try_binary and not self.binary:
-            if series:
-                arch_series = series.getArchSeries()
-                params['distro_arch_series'] = arch_series()
-                del params['distro_series']
-            bpphs = archive.getPublishedBinaries(binary_name=self.source, **params)
-            if bpphs:
-                bpph = BinaryPackagePublishingHistory(bpphs[0])
-                self.binary = self.source
-                self.source = bpph.getSourcePackageName()
-                Logger.normal("Using source package '{}' for binary package '{}'"
-                              .format(self.source, self.binary))
-                try:
-                    spph = bpph.getBuild().getSourcePackagePublishingHistory()
-                except Exception:
-                    spph = None
-                if spph:
-                    self._spph = spph
-                    return self._spph
-                else:
-                    # binary build didn't include source link, unfortunately
-                    # so try again with the updated self.source name
-                    if not self._version:
-                        # Get version first if user didn't specify it, as some
-                        # binaries have their version hardcoded in their name,
-                        # such as the kernel package
-                        self._version = Version(bpph.getVersion())
-                    return self.lp_spph
+            Logger.normal('Source package lookup failed, '
+                          'trying lookup of binary package %s' % self.source)
 
-        msg = "No {} package found".format(self.source)
-        if self._version:
-            msg += " for version {}".format(self._version.full_version)
-        elif series:
-            msg += " in series {}".format(series.name)
-            if self._pocket:
-                msg += " pocket {}".format(self._pocket)
-        raise PackageNotFoundException(msg)
+            try:
+                bpph = archive.getBinaryPackage(self.source, **params)
+            except PackageNotFoundException as bpnfe:
+                # log binary lookup failure, in case it provides hints
+                Logger.normal(str(bpnfe))
+                # raise the original exception for the source lookup
+                raise pnfe
+
+            self.binary = self.source
+            self.source = bpph.getSourcePackageName()
+            Logger.normal("Using source package '{}' for binary package '{}'"
+                          .format(self.source, self.binary))
+
+            spph = bpph.getBuild().getSourcePackagePublishingHistory()
+            if spph:
+                self._spph = self.spph_class(spph.self_link)
+                return self._spph
+
+            # binary build didn't include source link, unfortunately
+            # so try again with the updated self.source name
+            if not self._version:
+                # Get version first if user didn't specify it, as some
+                # binaries have their version hardcoded in their name,
+                # such as the kernel package
+                self._version = Version(bpph.getVersion())
+            return self.lp_spph
 
     @property
     def version(self):
@@ -761,7 +755,6 @@ class UbuntuCloudArchiveSourcePackage(PersonalPackageArchiveSourcePackage):
         kwargs['ppa'] = ('%s/%s-staging' %
                          (UbuntuCloudArchiveSourcePackage._ppateam, series))
         super(UbuntuCloudArchiveSourcePackage, self).__init__(*args, **kwargs)
-        self._use_series = False  # each UCA series is for a single Ubuntu series
         self.uca_release = series
         self.masters = ["http://ubuntu-cloud.archive.canonical.com/ubuntu/"]
 
@@ -948,7 +941,7 @@ class SnapshotSourcePackage(SnapshotPackage):
                                         r['architecture'], self.name)
                      for b in response['result']['binaries'] for r in b['files']]
             self._binary_files = files
-        bins = self._binary_files.copy()
+        bins = list(self._binary_files)
         if arch:
             bins = filter(lambda b: b.isArch(arch), bins)
         if name:
@@ -1002,7 +995,7 @@ class SnapshotBinaryPackage(SnapshotPackage):
                                               r['architecture'], self.source)
                            for r in response['result']]
         if not arch:
-            return self._files.copy()
+            return list(self._files)
         return filter(lambda f: f.isArch(arch), self._files)
 
 
