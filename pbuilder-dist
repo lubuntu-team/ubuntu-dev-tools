@@ -39,8 +39,10 @@ from distro_info import DebianDistroInfo, UbuntuDistroInfo, DistroDataOutdated
 import ubuntutools.misc
 import ubuntutools.version
 from ubuntutools.config import UDTConfig
-from ubuntutools.logger import Logger
 from ubuntutools.question import YesNoQuestion
+
+from ubuntutools import getLogger
+Logger = getLogger(__name__)
 
 
 class PbuilderDist(object):
@@ -103,9 +105,10 @@ class PbuilderDist(object):
                                                       '~/pbuilder/'))
 
         if 'SUDO_USER' in os.environ:
-            Logger.warn('Running under sudo. '
-                        'This is probably not what you want. '
-                        'pbuilder-dist will use sudo itself, when necessary.')
+            Logger.warning('Running under sudo. '
+                           'This is probably not what you want. '
+                           'pbuilder-dist will use sudo itself, '
+                           'when necessary.')
         if os.stat(os.environ['HOME']).st_uid != os.getuid():
             Logger.error("You don't own $HOME")
             sys.exit(1)
@@ -280,7 +283,7 @@ class PbuilderDist(object):
                 codename = debian_info.codename(self.target_distro,
                                                 default=self.target_distro)
             except DistroDataOutdated as error:
-                Logger.warn(error)
+                Logger.warning(error)
             if codename in (debian_info.devel(), 'experimental'):
                 self.enable_security = False
                 self.enable_updates = False
@@ -307,7 +310,7 @@ class PbuilderDist(object):
             try:
                 dev_release = self.target_distro == UbuntuDistroInfo().devel()
             except DistroDataOutdated as error:
-                Logger.warn(error)
+                Logger.warning(error)
                 dev_release = True
 
             if dev_release:
@@ -396,7 +399,7 @@ def show_help(exit_code=0):
 
     Print a help message for pbuilder-dist, and exit with the given code.
     """
-    print('See  man pbuilder-dist  for more information.')
+    Logger.info('See  man pbuilder-dist  for more information.')
 
     sys.exit(exit_code)
 
@@ -498,7 +501,7 @@ def main():
     if '--debug-echo' not in args:
         sys.exit(subprocess.call(app.get_command(args)))
     else:
-        print(app.get_command([arg for arg in args if arg != '--debug-echo']))
+        Logger.info(app.get_command([arg for arg in args if arg != '--debug-echo']))
 
 
 if __name__ == '__main__':

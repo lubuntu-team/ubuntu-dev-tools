@@ -25,10 +25,12 @@ from distro_info import UbuntuDistroInfo
 from ubuntutools.config import UDTConfig
 from ubuntutools.lp.lpapicache import Launchpad, Distribution
 from ubuntutools.lp.udtexceptions import PackageNotFoundException
-from ubuntutools.logger import Logger
 from ubuntutools.question import (YesNoQuestion, EditBugReport,
                                   confirmation_prompt)
 from ubuntutools.rdepends import query_rdepends, RDependsException
+
+from ubuntutools import getLogger
+Logger = getLogger(__name__)
 
 
 class DestinationException(Exception):
@@ -106,16 +108,11 @@ def check_existing(package, destinations):
     if not bugs:
         return
 
-    Logger.normal("There are existing bug reports that look similar to your "
-                  "request. Please check before continuing:")
+    Logger.info("There are existing bug reports that look similar to your "
+                "request. Please check before continuing:")
 
-    by_id = {}
-    for bug_task in bugs:
-        bug = bug_task.bug
-        by_id[bug.id] = bug
-
-    for id_, bug in sorted(by_id.items()):
-        Logger.normal(" * LP: #%-7i: %s  %s", bug.id, bug.title, bug.web_link)
+    for bug in sorted(set(bug_task.bug for bug_task in bugs)):
+        Logger.info(" * LP: #%-7i: %s  %s", bug.id, bug.title, bug.web_link)
 
     confirmation_prompt()
 
@@ -190,8 +187,8 @@ def locate_package(package, distribution):
         except KeyError:
             continue
         package = apt_pkg.candidate.source_name
-        Logger.normal("Binary package specified, considering its source "
-                      "package instead: %s", package)
+        Logger.info("Binary package specified, considering its source "
+                    "package instead: %s", package)
 
 
 def request_backport(package_spph, source, destinations):
@@ -204,8 +201,8 @@ def request_backport(package_spph, source, destinations):
         Logger.error("%s (%s) has no published binaries in %s. ",
                      package_spph.getPackageName(), package_spph.getVersion(),
                      source)
-        Logger.normal("Is it stuck in bin-NEW? It can't be backported until "
-                      "the binaries have been accepted.")
+        Logger.info("Is it stuck in bin-NEW? It can't be backported until "
+                    "the binaries have been accepted.")
         sys.exit(1)
 
     testing = []
@@ -256,8 +253,8 @@ def request_backport(package_spph, source, destinations):
     editor.edit()
     subject, body = editor.get_report()
 
-    Logger.normal('The final report is:\nSummary: %s\nDescription:\n%s\n',
-                  subject, body)
+    Logger.info('The final report is:\nSummary: %s\nDescription:\n%s\n',
+                subject, body)
     if YesNoQuestion().ask("Request this backport", "yes") == "no":
         sys.exit(1)
 
@@ -268,7 +265,7 @@ def request_backport(package_spph, source, destinations):
     for target in targets[1:]:
         bug.addTask(target=target)
 
-    Logger.normal("Backport request filed as %s", bug.web_link)
+    Logger.info("Backport request filed as %s", bug.web_link)
 
 
 def main():

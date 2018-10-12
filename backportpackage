@@ -36,10 +36,12 @@ from ubuntutools.builder import get_builder
 from ubuntutools.lp.lpapicache import (Launchpad, Distribution,
                                        SeriesNotFoundException,
                                        PackageNotFoundException)
-from ubuntutools.logger import Logger
 from ubuntutools.misc import (system_distribution, vendor_to_distroinfo,
                               codename_to_distribution)
 from ubuntutools.question import YesNoQuestion
+
+from ubuntutools import getLogger
+Logger = getLogger(__name__)
 
 
 def error(msg):
@@ -48,7 +50,7 @@ def error(msg):
 
 
 def check_call(cmd, *args, **kwargs):
-    Logger.command(cmd)
+    Logger.debug(' '.join(cmd))
     ret = subprocess.call(cmd, *args, **kwargs)
     if ret != 0:
         error('%s returned %d.' % (cmd[0], ret))
@@ -302,7 +304,7 @@ def orig_needed(upload, workdir, pkg):
                     not headers['content-location'].startswith('https://launchpadlibrarian.net')):
                 return True
         except HttpLib2Error as e:
-            Logger.info(e)
+            Logger.debug(e)
             return True
     return False
 

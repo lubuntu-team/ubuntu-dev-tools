@@ -39,8 +39,12 @@ from ubuntutools.lp.udtexceptions import (SeriesNotFoundException,
                                           PackageNotFoundException,
                                           PocketDoesNotExistError,
                                           InvalidDistroValueError)
-from ubuntutools.logger import Logger
 from ubuntutools.misc import (split_release_pocket, host_architecture, STATUSES)
+
+from ubuntutools import _loggingBasicConfig
+
+import logging
+Logger = logging.getLogger(__name__)
 
 PULL_SOURCE = 'source'
 PULL_DEBS = 'debs'
@@ -76,18 +80,22 @@ class PullPkg(object):
         """For use by stand-alone cmdline scripts.
 
         This will handle catching certain exceptions or kbd interrupts,
-        and printing out (via Logger) the error message, instead of
-        allowing the exception to flow up to the script.  This does
-        not catch unexpected exceptions, such as internal errors.
+        setting up the root logger level to INFO, and printing out
+        (via Logger) a caught error message, instead of allowing the
+        exception to flow up to the script.  This does not catch
+        unexpected exceptions, such as internal errors.
+
         On (expected) error, this will call sys.exit(error);
         unexpected errors will flow up to the caller.
         On success, this simply returns.
         """
+        _loggingBasicConfig()
+
         try:
             cls(*args, **kwargs).pull()
             return
         except KeyboardInterrupt:
-            Logger.normal('User abort.')
+            Logger.info('User abort.')
         except (PackageNotFoundException, SeriesNotFoundException,
                 PocketDoesNotExistError, InvalidDistroValueError) as e:
             Logger.error(str(e))
@@ -120,7 +128,7 @@ class PullPkg(object):
 
         parser = ArgumentParser(epilog=epilog)
         parser.add_argument('-v', '--verbose', action='store_true',
-                            help="Print verbose/debug messages")
+                            help="Print debug messages")
         parser.add_argument('-d', '--download-only', action='store_true',
                             help="Do not extract the source package")
         parser.add_argument('-m', '--mirror', action='append',
@@ -231,7 +239,7 @@ class PullPkg(object):
             debian_info = DebianDistroInfo()
             codename = debian_info.codename(release)
             if codename:
-                Logger.normal("Using release '%s' for '%s'", codename, release)
+                Logger.info("Using release '%s' for '%s'", codename, release)
                 release = codename
 
         if distro == DISTRO_PPA:
@@ -335,8 +343,8 @@ class PullPkg(object):
         options = vars(self.argparser.parse_args(args))
 
         assert 'verbose' in options
-        if options['verbose'] is not None:
-            Logger.set_verbosity(options['verbose'])
+        if options['verbose']:
+            Logger.setLevel(logging.DEBUG)
 
         Logger.debug("pullpkg options: %s", options)
 
@@ -349,15 +357,15 @@ class PullPkg(object):
         srcpkg = DISTRO_PKG_CLASS[distro](**params)
         spph = srcpkg.lp_spph
 
-        Logger.normal('Found %s', spph.display_name)
+        Logger.info('Found %s', spph.display_name)
 
         if pull == PULL_LIST:
-            Logger.normal("Source files:")
+            Logger.info("Source files:")
             for f in srcpkg.dsc['Files']:
-                Logger.normal("  %s", f['name'])
-            Logger.normal("Binary files:")
+                Logger.info("  %s", f['name'])
+            Logger.info("Binary files:")
             for f in spph.getBinaries(options['arch']):
-                Logger.normal("  %s", f.getFileName())
+                Logger.info("  %s", f.getFileName())
         elif pull == PULL_SOURCE:
             # allow DownloadError to flow up to caller
             srcpkg.pull()
@@ -368,9 +376,9 @@ class PullPkg(object):
         else:
             name = '.*'
             if params['package'] != spph.getPackageName():
-                Logger.normal("Pulling only binary package '%s'", params['package'])
-                Logger.normal("Use package name '%s' to pull all binary packages",
-                              spph.getPackageName())
+                Logger.info("Pulling only binary package '%s'", params['package'])
+                Logger.info("Use package name '%s' to pull all binary packages",
+                            spph.getPackageName())
                 name = params['package']
             if pull == PULL_DEBS:
                 name = r'{}(?<!-di)(?<!-dbgsym)$'.format(name)

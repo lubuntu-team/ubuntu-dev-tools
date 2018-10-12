@@ -19,10 +19,12 @@ import sys
 
 from distro_info import DistroDataOutdated
 
-from ubuntutools.logger import Logger
 from ubuntutools.misc import (system_distribution, vendor_to_distroinfo,
                               codename_to_distribution)
 from ubuntutools.rdepends import query_rdepends, RDependsException
+
+from ubuntutools import getLogger
+Logger = getLogger(__name__)
 
 DEFAULT_MAX_DEPTH = 10  # We want avoid any infinite loop...
 
@@ -32,7 +34,7 @@ def main():
     try:
         default_release = system_distro_info.devel()
     except DistroDataOutdated as e:
-        Logger.warn(e)
+        Logger.warning(e)
         default_release = 'unstable'
 
     description = ("List reverse-dependencies of package. "
@@ -85,7 +87,7 @@ def main():
         options.release = distro_info.codename(options.release,
                                                default=options.release)
     except DistroDataOutdated:
-        # We already printed a warning
+        # We already logged a warning
         pass
 
     if options.build_depends:
@@ -143,14 +145,14 @@ def main():
 
 def display_verbose(package, values):
     if not values:
-        print("No reverse dependencies found")
+        Logger.info("No reverse dependencies found")
         return
 
-    def print_field(field):
-        print(field)
-        print('=' * len(field))
+    def log_field(field):
+        Logger.info(field)
+        Logger.info('=' * len(field))
 
-    def print_package(values, package, arch, dependency, offset=0):
+    def log_package(values, package, arch, dependency, offset=0):
         line = '  ' * offset + '* %s' % package
         if all_archs and set(arch) != all_archs:
             line += ' [%s]' % ' '.join(sorted(arch))
@@ -158,17 +160,17 @@ def display_verbose(package, values):
             if len(line) < 30:
                 line += ' ' * (30 - len(line))
                 line += '  (for %s)' % dependency
-        print(line)
+        Logger.info(line)
         data = values.get(package)
         if data:
             offset = offset + 1
             for rdeps in data.values():
                 for rdep in rdeps:
-                    print_package(values,
-                                  rdep['Package'],
-                                  rdep.get('Architectures', all_archs),
-                                  rdep.get('Dependency'),
-                                  offset)
+                    log_package(values,
+                                rdep['Package'],
+                                rdep.get('Architectures', all_archs),
+                                rdep.get('Dependency'),
+                                offset)
 
     all_archs = set()
     # This isn't accurate, but we make up for it by displaying what we found
@@ -179,19 +181,19 @@ def display_verbose(package, values):
                     all_archs.update(rdep['Architectures'])
 
     for field, rdeps in values[package].items():
-        print_field(field)
+        Logger.info(field)
         rdeps.sort(key=lambda x: x['Package'])
         for rdep in rdeps:
-            print_package(values,
-                          rdep['Package'],
-                          rdep.get('Architectures', all_archs),
-                          rdep.get('Dependency'))
-        print()
+            log_package(values,
+                        rdep['Package'],
+                        rdep.get('Architectures', all_archs),
+                        rdep.get('Dependency'))
+        Logger.info("")
 
     if all_archs:
-        print("Packages without architectures listed are "
-              "reverse-dependencies in: %s"
-              % ', '.join(sorted(list(all_archs))))
+        Logger.info("Packages without architectures listed are "
+                    "reverse-dependencies in: %s"
+                    % ', '.join(sorted(list(all_archs))))
 
 
 def display_consise(values):
@@ -201,7 +203,7 @@ def display_consise(values):
             for rdep in rdeps:
                 result.add(rdep['Package'])
 
-    print('\n'.join(sorted(list(result))))
+    Logger.info('\n'.join(sorted(list(result))))
 
 
 if __name__ == '__main__':

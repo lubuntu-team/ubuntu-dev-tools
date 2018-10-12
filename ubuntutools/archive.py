@@ -35,6 +35,7 @@ import hashlib
 import json
 import os.path
 import re
+import shutil
 import subprocess
 import sys
 
@@ -50,8 +51,10 @@ from ubuntutools.lp.lpapicache import (Launchpad, Distribution, PersonTeam,
 from ubuntutools.lp.udtexceptions import (PackageNotFoundException,
                                           SeriesNotFoundException,
                                           InvalidDistroValueError)
-from ubuntutools.logger import Logger
 from ubuntutools.version import Version
+
+import logging
+Logger = logging.getLogger(__name__)
 
 
 class DownloadError(Exception):
@@ -139,7 +142,6 @@ class SourcePackage(object):
         lp = kwargs.get('lp')
         mirrors = kwargs.get('mirrors', ())
         workdir = kwargs.get('workdir', '.')
-        quiet = kwargs.get('quiet', False)
         series = kwargs.get('series')
         pocket = kwargs.get('pocket')
         status = kwargs.get('status')
@@ -152,7 +154,6 @@ class SourcePackage(object):
         self.binary = None
         self.try_binary = True
         self.workdir = workdir
-        self.quiet = quiet
         self._series = series
         self._pocket = pocket
         self._status = status
@@ -216,21 +217,21 @@ class SourcePackage(object):
                 # or we've already tried
                 raise pnfe
 
-            Logger.normal('Source package lookup failed, '
-                          'trying lookup of binary package %s' % self.source)
+            Logger.info('Source package lookup failed, '
+                        'trying lookup of binary package %s' % self.source)
 
             try:
                 bpph = archive.getBinaryPackage(self.source, **params)
             except PackageNotFoundException as bpnfe:
                 # log binary lookup failure, in case it provides hints
-                Logger.normal(str(bpnfe))
+                Logger.info(str(bpnfe))
                 # raise the original exception for the source lookup
                 raise pnfe
 
             self.binary = self.source
             self.source = bpph.getSourcePackageName()
-            Logger.normal("Using source package '{}' for binary package '{}'"
-                          .format(self.source, self.binary))
+            Logger.info("Using source package '{}' for binary package '{}'"
+                        .format(self.source, self.binary))
 
             spph = bpph.getBuild().getSourcePackagePublishingHistory()
             if spph:
@@ -394,14 +395,14 @@ class SourcePackage(object):
                 message = 'Public key not found, could not verify signature'
         if self._verify_signature:
             if valid:
-                Logger.normal(message)
+                Logger.info(message)
             elif no_pub_key:
-                Logger.warn(message)
+                Logger.warning(message)
             else:
                 Logger.error(message)
                 raise DownloadError(message)
         else:
-            Logger.info(message)
+            Logger.debug(message)
 
     def _write_dsc(self):
         "Write dsc file to workdir"
@@ -500,9 +501,9 @@ class SourcePackage(object):
                     if self._download_file(url, name):
                         break
                 except HTTPError as e:
-                    Logger.normal('HTTP Error %i: %s', e.code, str(e))
+                    Logger.info('HTTP Error %i: %s', e.code, str(e))
                 except URLError as e:
-                    Logger.normal('URL Error: %s', e.reason)
+                    Logger.info('URL Error: %s', e.reason)
             else:
                 raise DownloadError('File %s could not be found' % name)
 
@@ -525,13 +526,13 @@ class SourcePackage(object):
                         found = True
                         break
                 except HTTPError as e:
-                    Logger.normal('HTTP Error %i: %s', e.code, str(e))
+                    Logger.info('HTTP Error %i: %s', e.code, str(e))
                 except URLError as e:
-                    Logger.normal('URL Error: %s', e.reason)
+                    Logger.info('URL Error: %s', e.reason)
             if found:
                 total += 1
             else:
-                Logger.normal("Could not download from any location: %s", fname)
+                Logger.info("Could not download from any location: %s", fname)
         return total
 
     def verify(self):
@@ -557,7 +558,7 @@ class SourcePackage(object):
         cmd = ['dpkg-source', '-x', self.dsc_name]
         if destdir:
             cmd.append(destdir)
-        Logger.command(cmd)
+        Logger.debug(' '.join(cmd))
         if subprocess.call(cmd, cwd=self.workdir):
             Logger.error('Source unpack failed.')
             sys.exit(1)
@@ -569,14 +570,14 @@ class SourcePackage(object):
         """
         cmd = ['debdiff', self.dsc_name, newpkg.dsc_name]
         difffn = newpkg.dsc_name[:-3] + 'debdiff'
-        Logger.command(cmd + ['> %s' % difffn])
+        Logger.debug(' '.join(cmd) + ('> %s' % difffn))
         with open(difffn, 'w') as f:
             if subprocess.call(cmd, stdout=f, cwd=self.workdir) > 2:
                 Logger.error('Debdiff failed.')
                 sys.exit(1)
         if diffstat:
             cmd = ('diffstat', '-p1', difffn)
-            Logger.command(cmd)
+            Logger.debug(' '.join(cmd))
             if subprocess.call(cmd):
                 Logger.error('diffstat failed.')
                 sys.exit(1)
@@ -590,7 +591,7 @@ class DebianSPPH(SourcePackagePublishingHistory):
     resource_type = 'source_package_publishing_history'
 
     def getBinaries(self, arch, name=None):
-        Logger.normal('Using Snapshot to find binary packages')
+        Logger.info('Using Snapshot to find binary packages')
         srcpkg = Snapshot.getSourcePackage(self.getPackageName(),
                                            version=self.getVersion())
         return srcpkg.getSPPH().getBinaries(arch=arch, name=name)
@@ -631,7 +632,7 @@ class DebianSourcePackage(SourcePackage):
             except SeriesNotFoundException:
                 pass
 
-            Logger.normal('Package not found in Launchpad, using Snapshot')
+            Logger.info('Package not found in Launchpad, using Snapshot')
             self._spph = self.snapshot_package.getSPPH()
         return self._spph
 
@@ -692,7 +693,7 @@ class DebianSourcePackage(SourcePackage):
                 self._snapshot_package = srcpkg
             else:
                 # we have neither version nor spph, so look up our version using madison
-                Logger.normal('Using madison to find latest version number')
+                Logger.info('Using madison to find latest version number')
                 series = self._series
                 params = {'series': series} if series else {}
                 srcpkg = Madison(self.distribution).getSourcePackage(self.source, **params)
@@ -899,10 +900,10 @@ class _Snapshot(_WebJSON):
             if s.startswith('pool'):
                 found_pool = True
         if not component:
-            Logger.warn("could not determine component from path %s" % path)
+            Logger.warning("could not determine component from path %s" % path)
             return self.DEBIAN_COMPONENTS[0]
         if component not in self.DEBIAN_COMPONENTS:
-            Logger.warn("unexpected component %s" % component)
+            Logger.warning("unexpected component %s" % component)
         return component
 
     def _get_package(self, name, url, pkginit, version, sort_key):

@@ -23,7 +23,8 @@ import socket
 import sys
 import locale
 
-from ubuntutools.logger import Logger
+import logging
+Logger = logging.getLogger(__name__)
 
 
 class UDTConfig(object):
@@ -71,8 +72,8 @@ class UDTConfig(object):
             for line in f:
                 parsed = shlex.split(line, comments=True)
                 if len(parsed) > 1:
-                    Logger.warn('Cannot parse variable assignment in %s: %s',
-                                getattr(f, 'name', '<config>'), line)
+                    Logger.warning('Cannot parse variable assignment in %s: %s',
+                                   getattr(f, 'name', '<config>'), line)
                 if len(parsed) >= 1 and '=' in parsed[0]:
                     key, value = parsed[0].split('=', 1)
                     config[key] = value
@@ -111,10 +112,8 @@ class UDTConfig(object):
                         replacements = self.prefix + '_' + key
                         if key in self.defaults:
                             replacements += 'or UBUNTUTOOLS_' + key
-                        Logger.warn(
-                                'Using deprecated configuration variable %s. '
-                                'You should use %s.',
-                                k, replacements)
+                        Logger.warning('Using deprecated configuration variable %s. '
+                                       'You should use %s.', k, replacements)
                     return value
         return default
 

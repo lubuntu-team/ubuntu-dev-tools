@@ -23,12 +23,14 @@ import sys
 import debian.changelog
 import debian.deb822
 
-from ubuntutools.logger import Logger
 from ubuntutools.question import Question, YesNoQuestion
 
 from ubuntutools.sponsor_patch.question import (ask_for_ignoring_or_fixing,
                                                 ask_for_manual_fixing,
                                                 user_abort)
+
+import logging
+Logger = logging.getLogger(__name__)
 
 
 def _get_series(launchpad):
@@ -84,7 +86,7 @@ class SourcePackage(object):
             if task.importance == "Undecided":
                 task.importance = "Wishlist"
             task.lp_save()
-            Logger.info("Set bug #%i status to Confirmed.", bug.id)
+            Logger.debug("Set bug #%i status to Confirmed.", bug.id)
 
             msg = "Sync request ACK'd."
             if self._build_log:
@@ -92,26 +94,26 @@ class SourcePackage(object):
                       (self._package, self._version,
                        self._builder.get_architecture())
             bug.newMessage(content=msg, subject="sponsor-patch")
-            Logger.info("Acknowledged sync request bug #%i.", bug.id)
+            Logger.debug("Acknowledged sync request bug #%i.", bug.id)
 
             bug.subscribe(person=launchpad.people['ubuntu-archive'])
-            Logger.info("Subscribed ubuntu-archive to bug #%i.", bug.id)
+            Logger.debug("Subscribed ubuntu-archive to bug #%i.", bug.id)
 
             bug.subscribe(person=launchpad.me)
-            Logger.info("Subscribed me to bug #%i.", bug.id)
+            Logger.debug("Subscribed me to bug #%i.", bug.id)
 
             sponsorsteam = launchpad.people['ubuntu-sponsors']
             for sub in bug.subscriptions:
                 if sub.person == sponsorsteam and sub.canBeUnsubscribedByUser():
                     bug.unsubscribe(person=launchpad.people['ubuntu-sponsors'])
-                    Logger.info("Unsubscribed ubuntu-sponsors from bug #%i.",
-                                bug.id)
+                    Logger.debug("Unsubscribed ubuntu-sponsors from bug #%i.",
+                                 bug.id)
                 elif sub.person == sponsorsteam:
-                    Logger.info("Couldn't unsubscribe ubuntu-sponsors from "
-                                "bug #%i.", bug.id)
+                    Logger.debug("Couldn't unsubscribe ubuntu-sponsors from "
+                                 "bug #%i.", bug.id)
 
-            Logger.normal("Successfully acknowledged sync request bug #%i.",
-                          bug.id)
+            Logger.info("Successfully acknowledged sync request bug #%i.",
+                        bug.id)
         else:
             Logger.error("Sync requests can only be acknowledged when the "
                          "upload target is Ubuntu.")
@@ -139,7 +141,7 @@ class SourcePackage(object):
             elif answer == "no":
                 user_abort()
             cmd = ["dput", "--force", upload, self._changes_file]
-            Logger.command(cmd)
+            Logger.debug(' '.join(cmd))
             if subprocess.call(cmd) != 0:
                 Logger.error("Upload of %s to %s failed." %
                              (os.path.basename(self._changes_file), upload))
@@ -148,17 +150,17 @@ class SourcePackage(object):
             # Push the branch if the package is uploaded to the Ubuntu archive.
             if upload == "ubuntu" and self._branch:
                 cmd = ['debcommit']
-                Logger.command(cmd)
+                Logger.debug(' '.join(cmd))
                 if subprocess.call(cmd) != 0:
                     Logger.error('Bzr commit failed.')
                     sys.exit(1)
                 cmd = ['bzr', 'mark-uploaded']
-                Logger.command(cmd)
+                Logger.debug(' '.join(cmd))
                 if subprocess.call(cmd) != 0:
                     Logger.error('Bzr tagging failed.')
                     sys.exit(1)
                 cmd = ['bzr', 'push', ':parent']
-                Logger.command(cmd)
+                Logger.debug(' '.join(cmd))
                 if subprocess.call(cmd) != 0:
                     Logger.error('Bzr push failed.')
                     sys.exit(1)
@@ -239,7 +241,7 @@ class SourcePackage(object):
         env = os.environ
         if upload == 'ubuntu':
             env['DEB_VENDOR'] = 'Ubuntu'
-        Logger.command(cmd)
+        Logger.debug(' '.join(cmd))
         if subprocess.call(cmd, env=env) != 0:
             Logger.error("Failed to build source tarball.")
             # TODO: Add a "retry" option
@@ -322,9 +324,9 @@ class SourcePackage(object):
         assert os.path.isfile(self._dsc_file), "%s does not exist." % \
                                                (self._dsc_file)
         cmd = ["debdiff", dsc_file, self._dsc_file]
-        if not Logger.verbose:
+        if not Logger.isEnabledFor(logging.DEBUG):
             cmd.insert(1, "-q")
-        Logger.command(cmd + [">", self._debdiff_filename])
+        Logger.debug(' '.join(cmd) + " > " + self._debdiff_filename)
         debdiff = subprocess.check_output(cmd, encoding='utf-8')
 
         # write debdiff file
@@ -417,7 +419,7 @@ class SourcePackage(object):
         lintian_filename = os.path.join(self._workdir,
                                         self._package + "_" +
                                         strip_epoch(self._version) + ".lintian")
-        Logger.command(cmd + [">", lintian_filename])
+        Logger.debug(' '.join(cmd) + " > " + lintian_filename)
         report = subprocess.check_output(cmd, encoding='utf-8')
 
         # write lintian report file
@@ -434,7 +436,7 @@ class SourcePackage(object):
             cmd = ["syncpackage", self._package, "-b", str(bug_number), "-f",
                    "-s", requester, "-V", str(self._version),
                    "-d", series]
-            Logger.command(cmd)
+            Logger.debug(' '.join(cmd))
             if subprocess.call(cmd) != 0:
                 Logger.error("Syncing of %s %s failed.", self._package,
                              str(self._version))

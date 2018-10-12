@@ -21,7 +21,8 @@
 import os
 import subprocess
 
-from ubuntutools.logger import Logger
+import logging
+Logger = logging.getLogger(__name__)
 
 
 def _build_preparation(result_directory):
@@ -71,7 +72,7 @@ class Pbuilder(Builder):
                self.name, "--build",
                "--architecture", self.architecture, "--distribution", dist,
                "--buildresult", result_directory, dsc_file]
-        Logger.command(cmd)
+        Logger.debug(' '.join(cmd))
         returncode = subprocess.call(cmd)
         return self._build_failure(returncode, dsc_file)
 
@@ -79,7 +80,7 @@ class Pbuilder(Builder):
         cmd = ["sudo", "-E", "ARCH=" + self.architecture, "DIST=" + dist,
                self.name, "--update",
                "--architecture", self.architecture, "--distribution", dist]
-        Logger.command(cmd)
+        Logger.debug(' '.join(cmd))
         returncode = subprocess.call(cmd)
         return self._update_failure(returncode, dist)
 
@@ -92,13 +93,13 @@ class Pbuilderdist(Builder):
         _build_preparation(result_directory)
         cmd = [self.name, dist, self.architecture,
                "build", dsc_file, "--buildresult", result_directory]
-        Logger.command(cmd)
+        Logger.debug(' '.join(cmd))
         returncode = subprocess.call(cmd)
         return self._build_failure(returncode, dsc_file)
 
     def update(self, dist):
         cmd = [self.name, dist, self.architecture, "update"]
-        Logger.command(cmd)
+        Logger.debug(' '.join(cmd))
         returncode = subprocess.call(cmd)
         return self._update_failure(returncode, dist)
 
@@ -110,19 +111,19 @@ class Sbuild(Builder):
     def build(self, dsc_file, dist, result_directory):
         _build_preparation(result_directory)
         workdir = os.getcwd()
-        Logger.command(["cd", result_directory])
+        Logger.debug("cd " + result_directory)
         os.chdir(result_directory)
         cmd = ["sbuild", "--arch-all", "--dist=" + dist,
                "--arch=" + self.architecture, dsc_file]
-        Logger.command(cmd)
+        Logger.debug(' '.join(cmd))
         returncode = subprocess.call(cmd)
-        Logger.command(["cd", workdir])
+        Logger.debug("cd " + workdir)
         os.chdir(workdir)
         return self._build_failure(returncode, dsc_file)
 
     def update(self, dist):
         cmd = ["schroot", "--list"]
-        Logger.command(cmd)
+        Logger.debug(' '.join(cmd))
         process = subprocess.run(cmd, stdout=subprocess.PIPE, encoding='utf-8')
         chroots, _ = process.stdout.strip().split()
         if process.returncode != 0:
@@ -144,7 +145,7 @@ class Sbuild(Builder):
                     ["sbuild-clean", "-a", "-c"]]
         for cmd in commands:
             # pylint: disable=W0631
-            Logger.command(cmd + [chroot])
+            Logger.debug(' '.join(cmd) + " " + chroot)
             ret = subprocess.call(cmd + [chroot])
             # pylint: enable=W0631
             if ret != 0:

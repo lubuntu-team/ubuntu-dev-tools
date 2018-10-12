@@ -33,8 +33,10 @@ from distro_info import DebianDistroInfo, DistroDataOutdated
 
 from ubuntutools.archive import DebianSourcePackage, UbuntuSourcePackage
 from ubuntutools.lp.udtexceptions import PackageNotFoundException
-from ubuntutools.logger import Logger
 from ubuntutools.question import confirmation_prompt, YesNoQuestion
+
+import logging
+Logger = logging.getLogger(__name__)
 
 
 __all__ = [
@@ -54,7 +56,7 @@ def get_debian_srcpkg(name, release):
         codename = debian_info.codename(release, default=release)
         return DebianSourcePackage(package=name, series=codename).lp_spph
     except DistroDataOutdated as e:
-        Logger.warn(e)
+        Logger.warning(e)
     except PackageNotFoundException:
         pass
     return DebianSourcePackage(package=name, series=release).lp_spph
@@ -173,14 +175,14 @@ Content-Type: text/plain; charset=UTF-8
     with backup:
         backup.write(mail)
 
-    Logger.normal('The e-mail has been saved in %s and will be deleted '
-                  'after succesful transmission', backup.name)
+    Logger.info('The e-mail has been saved in %s and will be deleted '
+                'after succesful transmission', backup.name)
 
     # connect to the server
     while True:
         try:
-            Logger.normal('Connecting to %s:%s ...', mailserver_host,
-                          mailserver_port)
+            Logger.info('Connecting to %s:%s ...', mailserver_host,
+                        mailserver_port)
             s = smtplib.SMTP(mailserver_host, mailserver_port)
             break
         except smtplib.SMTPConnectError as s:
@@ -226,7 +228,7 @@ Content-Type: text/plain; charset=UTF-8
             s.sendmail(myemailaddr, to, mail.encode('utf-8'))
             s.quit()
             os.remove(backup.name)
-            Logger.normal('Sync request mailed.')
+            Logger.info('Sync request mailed.')
             break
         except smtplib.SMTPRecipientsRefused as smtperror:
             smtp_code, smtp_message = smtperror.recipients[to]

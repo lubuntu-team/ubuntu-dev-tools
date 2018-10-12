@@ -21,6 +21,7 @@
 # ##################################################################
 
 import fnmatch
+import logging
 import optparse
 import os
 import shutil
@@ -37,13 +38,15 @@ from ubuntutools.config import UDTConfig, ubu_email
 from ubuntutools.lp import udtexceptions
 from ubuntutools.lp.lpapicache import (Distribution, Launchpad, PersonTeam,
                                        SourcePackagePublishingHistory)
-from ubuntutools.logger import Logger
 from ubuntutools.misc import split_release_pocket
 from ubuntutools.question import YesNoQuestion
 from ubuntutools.requestsync.mail import (
         get_debian_srcpkg as requestsync_mail_get_debian_srcpkg)
 from ubuntutools.requestsync.lp import get_debian_srcpkg, get_ubuntu_srcpkg
 from ubuntutools.version import Version
+
+from ubuntutools import getLogger
+Logger = getLogger(__name__)
 
 
 def remove_signature(dscname):
@@ -116,7 +119,7 @@ def sync_dsc(src_pkg, debian_dist, release, name, email, bugs, ubuntu_mirror,
         ubuntu_ver = Version('~')
         ubu_pkg = None
         need_orig = True
-        Logger.normal('%s does not exist in Ubuntu.', name)
+        Logger.info('%s does not exist in Ubuntu.', name)
 
     Logger.debug('Source %s: current version %s, new version %s',
                  src_pkg.source, ubuntu_ver, new_ver)
@@ -128,9 +131,9 @@ def sync_dsc(src_pkg, debian_dist, release, name, email, bugs, ubuntu_mirror,
             Logger.error('--force is required to discard Ubuntu changes.')
             sys.exit(1)
 
-        Logger.warn('Overwriting modified Ubuntu version %s, '
-                    'setting current version to %s',
-                    ubuntu_ver.full_version, cur_ver.full_version)
+        Logger.warning('Overwriting modified Ubuntu version %s, '
+                       'setting current version to %s',
+                       ubuntu_ver.full_version, cur_ver.full_version)
     if simulate:
         return
 
@@ -144,7 +147,7 @@ def sync_dsc(src_pkg, debian_dist, release, name, email, bugs, ubuntu_mirror,
     needs_fakesync = not (need_orig or ubu_pkg.verify_orig())
 
     if needs_fakesync and fakesync:
-        Logger.warn('Performing a fakesync')
+        Logger.warning('Performing a fakesync')
     elif not needs_fakesync and fakesync:
         Logger.error('Fakesync not required, aborting.')
         sys.exit(1)
@@ -163,7 +166,7 @@ def sync_dsc(src_pkg, debian_dist, release, name, email, bugs, ubuntu_mirror,
 
     # change into package directory
     directory = src_pkg.source + '-' + new_ver.upstream_version
-    Logger.command(('cd', directory))
+    Logger.debug('cd' + directory)
     os.chdir(directory)
 
     # read Debian distribution from debian/changelog if not specified
@@ -183,9 +186,9 @@ def sync_dsc(src_pkg, debian_dist, release, name, email, bugs, ubuntu_mirror,
             cmd.append("-sa")
         else:
             cmd.append("-sd")
-        if not Logger.verbose:
+        if not Logger.isEnabledFor(logging.DEBUG):
             cmd += ["-q"]
-        Logger.command(cmd + ['>', '../' + changes_filename])
+        Logger.debug(' '.join(cmd) + '> ../' + changes_filename)
         changes = subprocess.check_output(cmd, encoding='utf-8')
 
         # Add additional bug numbers
@@ -193,7 +196,7 @@ def sync_dsc(src_pkg, debian_dist, release, name, email, bugs, ubuntu_mirror,
             changes = add_fixed_bugs(changes, bugs)
 
         # remove extracted (temporary) files
-        Logger.command(('cd', '..'))
+        Logger.debug('cd ..')
         os.chdir('..')
         shutil.rmtree(directory, True)
 
@@ -208,7 +211,7 @@ def sync_dsc(src_pkg, debian_dist, release, name, email, bugs, ubuntu_mirror,
             cmd = ["debsign", changes_filename]
             if keyid is not None:
                 cmd.insert(1, "-k" + keyid)
-            Logger.command(cmd)
+            Logger.debug(' '.join(cmd))
             subprocess.check_call(cmd)
     else:
         # Create fakesync changelog entry
@@ -223,14 +226,14 @@ def sync_dsc(src_pkg, debian_dist, release, name, email, bugs, ubuntu_mirror,
         cmd = ['dch', '-v', new_ver.full_version, '--force-distribution',
                '-D', release, message]
         env = {'DEBFULLNAME': name, 'DEBEMAIL': email}
-        Logger.command(cmd)
+        Logger.debug(' '.join(cmd))
         subprocess.check_call(cmd, env=env)
 
         # update the Maintainer field
         cmd = ["update-maintainer"]
-        if not Logger.verbose:
+        if not Logger.isEnabledFor(logging.DEBUG):
             cmd.append("-q")
-        Logger.command(cmd)
+        Logger.debug(' '.join(cmd))
         subprocess.check_call(cmd)
 
         # Build source package
@@ -240,7 +243,7 @@ def sync_dsc(src_pkg, debian_dist, release, name, email, bugs, ubuntu_mirror,
             cmd += ['-sa']
         if keyid:
             cmd += ["-k" + keyid]
-        Logger.command(cmd)
+        Logger.debug(' '.join(cmd))
         returncode = subprocess.call(cmd)
         if returncode != 0:
             Logger.error('Source-only build with debuild failed. '
@@ -339,9 +342,9 @@ def copy(src_pkg, release, bugs, sponsoree=None, simulate=False, force=False):
                                          ubuntu_spph.getComponent(),
                                          mirrors=[])
 
-        Logger.normal('Source %s -> %s/%s: current version %s, new version %s',
-                      src_pkg.source, ubuntu_series, ubuntu_pocket,
-                      ubuntu_pkg.version, src_pkg.version)
+        Logger.info('Source %s -> %s/%s: current version %s, new version %s',
+                    src_pkg.source, ubuntu_series, ubuntu_pocket,
+                    ubuntu_pkg.version, src_pkg.version)
 
         ubuntu_version = Version(ubuntu_pkg.version.full_version)
         base_version = ubuntu_version.get_related_debian_version()
@@ -358,21 +361,21 @@ def copy(src_pkg, release, bugs, sponsoree=None, simulate=False, force=False):
             sys.exit(1)
     except udtexceptions.PackageNotFoundException:
         base_version = Version('~')
-        Logger.normal('Source %s -> %s/%s: not in Ubuntu, new version %s',
-                      src_pkg.source, ubuntu_series, ubuntu_pocket,
-                      src_pkg.version)
+        Logger.info('Source %s -> %s/%s: not in Ubuntu, new version %s',
+                    src_pkg.source, ubuntu_series, ubuntu_pocket,
+                    src_pkg.version)
 
     changes = debian_spph.getChangelog(since_version=base_version)
     if changes:
         changes = changes.strip()
-        Logger.normal("New changes:\n%s", changes)
+        Logger.info("New changes:\n%s", changes)
 
     if simulate:
         return
 
     if sponsoree:
-        Logger.normal("Sponsoring this sync for %s (%s)",
-                      sponsoree.display_name, sponsoree.name)
+        Logger.info("Sponsoring this sync for %s (%s)",
+                    sponsoree.display_name, sponsoree.name)
     answer = YesNoQuestion().ask("Sync this package", "no")
     if answer != "yes":
         return
@@ -392,14 +395,14 @@ def copy(src_pkg, release, bugs, sponsoree=None, simulate=False, force=False):
         Logger.error(error.content)
         sys.exit(1)
 
-    Logger.normal('Request succeeded; you should get an e-mail once it is '
-                  'processed.')
+    Logger.info('Request succeeded; you should get an e-mail once it is '
+                'processed.')
     bugs = sorted(set(bugs))
     if bugs:
-        Logger.normal("Launchpad bugs to be closed: %s",
-                      ', '.join(str(bug) for bug in bugs))
-        Logger.normal('Please wait for the sync to be successful before '
-                      'closing bugs.')
+        Logger.info("Launchpad bugs to be closed: %s",
+                    ', '.join(str(bug) for bug in bugs))
+        Logger.info('Please wait for the sync to be successful before '
+                    'closing bugs.')
         answer = YesNoQuestion().ask("Close bugs", "yes")
         if answer == "yes":
             close_bugs(bugs, src_pkg.source, src_pkg.version.full_version,
@@ -468,7 +471,7 @@ def close_bugs(bugs, package, version, changes, sponsoree):
             if target == ubuntu or (target.name == package and
                getattr(target, 'distribution', None) == ubuntu):
                 if task.status != 'Fix Released':
-                    Logger.normal("Closed bug %s", task.web_link)
+                    Logger.info("Closed bug %s", task.web_link)
                     task.status = 'Fix Released'
                     task.lp_save()
                     bug.newMessage(content=message)
@@ -597,7 +600,8 @@ def main():
     '''Handle parameters and get the ball rolling'''
     (options, package) = parse()
 
-    Logger.verbose = options.verbose
+    if options.verbose:
+        Logger.setLevel('DEBUG')
     config = UDTConfig(options.no_conf)
     if options.debian_mirror is None:
         options.debian_mirror = config.get_value('DEBIAN_MIRROR')
@@ -626,10 +630,10 @@ def main():
         options.release = "%s-proposed" % ubuntu.current_series.name
 
     if not options.fakesync and not options.lp:
-        Logger.warn("The use of --no-lp is not recommended for uploads "
-                    "targeted at Ubuntu. "
-                    "The archive-admins discourage its use, except for "
-                    "fakesyncs.")
+        Logger.warning("The use of --no-lp is not recommended for uploads "
+                       "targeted at Ubuntu. "
+                       "The archive-admins discourage its use, except for "
+                       "fakesyncs.")
 
     sponsoree = None
     if options.sponsoree:
@@ -687,17 +691,17 @@ def main():
         if blacklist_fail:
             Logger.error("Source package %s is blacklisted.", src_pkg.source)
         elif blacklisted == 'ALWAYS':
-            Logger.normal("Source package %s is blacklisted.", src_pkg.source)
+            Logger.info(u"Source package %s is blacklisted.", src_pkg.source)
         if messages:
             for message in messages:
                 for line in textwrap.wrap(message):
-                    Logger.normal(line)
+                    Logger.info(line)
 
     if comments:
-        Logger.normal("Blacklist Comments:")
+        Logger.info("Blacklist Comments:")
         for comment in comments:
             for line in textwrap.wrap(comment):
-                Logger.normal("  " + line)
+                Logger.info("  " + line)
 
     if blacklist_fail:
         sys.exit(1)
@@ -717,4 +721,4 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        Logger.normal('User abort.')
+        Logger.info('User abort.')

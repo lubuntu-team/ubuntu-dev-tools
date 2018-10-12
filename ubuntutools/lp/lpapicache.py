@@ -27,7 +27,6 @@
 
 import collections
 import re
-import sys
 
 from debian.changelog import Changelog
 from httplib2 import Http, HttpLib2Error
@@ -46,6 +45,9 @@ from ubuntutools.lp.udtexceptions import (AlreadyLoggedInError,
                                           PackageNotFoundException,
                                           PocketDoesNotExistError,
                                           SeriesNotFoundException)
+
+import logging
+Logger = logging.getLogger(__name__)
 
 
 __all__ = [
@@ -72,7 +74,7 @@ class _Launchpad(object):
                 self.__lp = LP.login_with('ubuntu-dev-tools', service,
                                           version=api_version)
             except IOError as error:
-                print('E: %s' % error, file=sys.stderr)
+                Logger.error(str(error))
                 raise
         else:
             raise AlreadyLoggedInError('Already logged in to Launchpad.')
@@ -153,6 +155,7 @@ class BaseWrapper(object, metaclass=MetaWrapper):
                     cached._lpobject = data
                     # and add it to our cache
                     cls._cache[data.self_link] = cached
+                    Logger.debug("%s: %s" % (cls.__name__, data.self_link))
                     # add additional class specific caching (if available)
                     cache = getattr(cls, 'cache', None)
                     if isinstance(cache, collections.Callable):
@@ -765,17 +768,17 @@ class SourcePackagePublishingHistory(BaseWrapper):
         if self._changelog is None:
             url = self._lpobject.changelogUrl()
             if url is None:
-                print('E: No changelog available for %s %s' %
-                      (self.getPackageName(), self.getVersion()), file=sys.stderr)
+                Logger.error('No changelog available for %s %s' %
+                             (self.getPackageName(), self.getVersion()))
                 return None
 
             try:
                 response, changelog = Http().request(url)
             except HttpLib2Error as e:
-                print(str(e), file=sys.stderr)
+                Logger.error(str(e))
                 return None
             if response.status != 200:
-                print('%s: %s %s' % (url, response.status, response.reason), file=sys.stderr)
+                Logger.error('%s: %s %s' % (url, response.status, response.reason))
                 return None
             self._changelog = changelog
 
@@ -824,7 +827,7 @@ class SourcePackagePublishingHistory(BaseWrapper):
             self._have_all_binaries = True
         else:
             # we have to go the long way :(
-            print("Please wait, this may take some time...")
+            Logger.info("Please wait, this may take some time...")
             archive = self.getArchive()
             urls = self.binaryFileUrls()
             for url in urls:
@@ -854,7 +857,7 @@ class SourcePackagePublishingHistory(BaseWrapper):
                 try:
                     bpph = archive.getBinaryPackage(**params)
                 except PackageNotFoundException:
-                    print("Could not find pkg in archive: %s" % filename)
+                    Logger.debug("Could not find pkg in archive: %s" % filename)
                     continue
                 if a not in self._binaries:
                     self._binaries[a] = {}

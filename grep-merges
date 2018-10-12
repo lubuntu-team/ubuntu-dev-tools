@@ -27,6 +27,9 @@ from httplib2 import Http, HttpLib2Error
 
 import ubuntutools.misc
 
+from ubuntutools import getLogger
+Logger = getLogger(__name__)
+
 
 def main():
     parser = optparse.OptionParser(
@@ -52,11 +55,11 @@ def main():
         try:
             headers, page = Http().request(url)
         except HttpLib2Error as e:
-            print(str(e), file=sys.stderr)
+            Logger.exception(e)
             sys.exit(1)
         if headers.status != 200:
-            print("%s: %s %s" % (url, headers.status, headers.reason),
-                  file=sys.stderr)
+            Logger.error("%s: %s %s" % (url, headers.status,
+                                        headers.reason))
             sys.exit(1)
 
         for merge in json.loads(page):
@@ -71,7 +74,7 @@ def main():
             pretty_uploader = '{} {}'.format(author, uploader)
             if (match is None or match in package or match in author
                or match in uploader or match in teams):
-                print('%s\t%s' % (package, pretty_uploader))
+                Logger.info('%s\t%s' % (package, pretty_uploader))
 
 
 if __name__ == '__main__':

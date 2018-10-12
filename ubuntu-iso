@@ -24,6 +24,9 @@ import optparse
 import subprocess
 import sys
 
+from ubuntutools import getLogger
+Logger = getLogger(__name__)
+
 
 def extract(iso, path):
     command = ['isoinfo', '-R', '-i', iso, '-x', path]
@@ -54,12 +57,11 @@ def main():
         version = extract(iso, '/.disk/info')
 
         if len(version) == 0:
-            print('%s does not appear to be an Ubuntu ISO' % iso,
-                  file=sys.stderr)
+            Logger.error('%s does not appear to be an Ubuntu ISO' % iso)
             err = True
             continue
 
-        print(prefix + version)
+        Logger.info(prefix + version)
 
     if err:
         sys.exit(1)

@@ -29,8 +29,10 @@ from httplib2 import Http, HttpLib2Error
 from ubuntutools.lp import udtexceptions
 from ubuntutools.lp.lpapicache import (Launchpad, Distribution, PersonTeam,
                                        DistributionSourcePackage)
-from ubuntutools.logger import Logger
 from ubuntutools.question import confirmation_prompt
+
+import logging
+Logger = logging.getLogger(__name__)
 
 
 def get_debian_srcpkg(name, release):
@@ -40,7 +42,7 @@ def get_debian_srcpkg(name, release):
     try:
         release = DebianDistroInfo().codename(release, None, release)
     except DistroDataOutdated as e:
-        Logger.warn(e)
+        Logger.warning(e)
 
     return debian_archive.getSourcePackage(name, release)
 

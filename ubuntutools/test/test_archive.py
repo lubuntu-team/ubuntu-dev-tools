@@ -92,10 +92,6 @@ class LocalSourcePackageTestCase(unittest.TestCase):
         self.url_opener = mock.MagicMock(spec=OpenerDirector)
         self.url_opener.open.side_effect = self.urlopen_proxy
 
-        # Silence the tests a little:
-        self._stubout('ubuntutools.logger.Logger.stdout')
-        self._stubout('ubuntutools.logger.Logger.stderr')
-
     def _stubout(self, stub):
         patcher = mock.patch(stub)
         self.addCleanup(patcher.stop)
@@ -151,7 +147,6 @@ class LocalSourcePackageTestCase(unittest.TestCase):
                                  dscfile='test-data/example_1.0-1.dsc',
                                  workdir=self.workdir,
                                  verify_signature=False)
-        pkg.quiet = True
         pkg.pull()
         pkg.unpack()
 
@@ -164,7 +159,6 @@ class LocalSourcePackageTestCase(unittest.TestCase):
                                                       'example_1.0-1.dsc'),
                                  workdir=self.workdir,
                                  verify_signature=False)
-        pkg.quiet = True
         pkg.pull()
         pkg.unpack()
 
@@ -179,7 +173,6 @@ class LocalSourcePackageTestCase(unittest.TestCase):
                                                       'example_1.0-1.dsc'),
                                  workdir=self.workdir,
                                  verify_signature=False)
-        pkg.quiet = True
         pkg.pull()
         pkg.unpack()
 
@@ -197,7 +190,6 @@ class LocalSourcePackageTestCase(unittest.TestCase):
                                  dscfile='test-data/example_1.0-1.dsc',
                                  workdir=self.workdir,
                                  verify_signature=False)
-        pkg.quiet = True
         pkg.pull()
 
     def test_pull(self):
@@ -208,7 +200,6 @@ class LocalSourcePackageTestCase(unittest.TestCase):
                                  verify_signature=False)
 
         pkg.url_opener = self.url_opener
-        pkg.quiet = True
         pkg.pull()
 
     def test_mirrors(self):
@@ -228,7 +219,6 @@ class LocalSourcePackageTestCase(unittest.TestCase):
                                  mirrors=[mirror],
                                  verify_signature=False)
         pkg.url_opener = url_opener
-        pkg.quiet = True
         pkg.pull()
 
     def test_dsc_missing(self):
@@ -237,7 +227,6 @@ class LocalSourcePackageTestCase(unittest.TestCase):
                                  version='1.0-1',
                                  component='main',
                                  workdir=self.workdir)
-        pkg.quiet = True
         self.assertRaises(ubuntutools.archive.DownloadError, pkg.pull)
 
 
@@ -267,7 +256,6 @@ class DebianLocalSourcePackageTestCase(LocalSourcePackageTestCase):
                                  workdir=self.workdir,
                                  mirrors=[debian_mirror, debsec_mirror],
                                  verify_signature=False)
-        pkg.quiet = True
         pkg.url_opener = url_opener
         pkg.pull()
         pkg.unpack()

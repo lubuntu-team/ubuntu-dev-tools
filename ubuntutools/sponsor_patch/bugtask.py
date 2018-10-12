@@ -23,8 +23,10 @@ from urllib.request import urlretrieve
 import distro_info
 import httplib2
 
-from ubuntutools.logger import Logger
 from ubuntutools.version import Version
+
+import logging
+Logger = logging.getLogger(__name__)
 
 
 def is_sync(bug):
@@ -66,7 +68,7 @@ class BugTask(object):
         dsc_file = ""
         for url in source_files:
             filename = unquote(os.path.basename(url))
-            Logger.info("Downloading %s..." % (filename))
+            Logger.debug("Downloading %s..." % (filename))
             # HttpLib2 isn't suitable for large files (it reads into memory),
             # but we want its https certificate validation on the .dsc
             if url.endswith(".dsc"):

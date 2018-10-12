@@ -20,7 +20,9 @@ import os
 import re
 
 import debian.changelog
-from ubuntutools.logger import Logger
+
+import logging
+Logger = logging.getLogger(__name__)
 
 # Prior May 2009 these Maintainers were used:
 _PREVIOUS_UBUNTU_MAINTAINER = (
@@ -176,8 +178,8 @@ def update_maintainer(debian_directory, verbose=False):
             return
 
         if control.get_original_maintainer() is not None:
-            Logger.warn("Overwriting original maintainer: %s",
-                        control.get_original_maintainer())
+            Logger.warning("Overwriting original maintainer: %s",
+                           control.get_original_maintainer())
 
         if verbose:
             print("The original maintainer is: %s" % original_maintainer)
