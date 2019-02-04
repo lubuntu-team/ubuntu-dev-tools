@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 # Copyright © 2009 James Westby <james.westby@ubuntu.com>,
 #             2010, 2011 Stefano Rivera <stefanor@ubuntu.com>
@@ -22,7 +22,9 @@
 #
 # ##################################################################
 
-from optparse import OptionParser, SUPPRESS_HELP
+import argparse
+import debianbts
+import logging
 import re
 import sys
 import webbrowser
@@ -32,41 +34,39 @@ from launchpadlib.launchpad import Launchpad
 from ubuntutools.config import UDTConfig
 from ubuntutools.logger import Logger
 
-try:
-    import debianbts
-except ImportError:
-    Logger.error("Please install 'python3-debianbts' in order to use this utility.")
-    sys.exit(1)
-
 
 def main():
     bug_re = re.compile(r"bug=(\d+)")
 
-    parser = OptionParser(usage="%prog [option] bug ...")
-    parser.add_option("-b", "--browserless",
-                      help="Don't open the bug in the browser at the end",
-                      dest="browserless", action="store_true")
-    parser.add_option("-l", "--lpinstance", metavar="INSTANCE",
-                      help="Launchpad instance to connect to "
-                           "(default: production)",
-                      dest="lpinstance", default=None)
-    parser.add_option("-n", "--dry-run",
-                      help=SUPPRESS_HELP,
-                      dest="lpinstance", action="store_const", const="staging")
-    parser.add_option("-p", "--package", metavar="PACKAGE",
-                      help="Launchpad package to file bug against "
-                           "(default: Same as Debian)",
-                      dest="package", default=None)
-    parser.add_option("--no-conf", dest="no_conf", default=False,
-                      help="Don't read config files or environment variables.",
-                      action="store_true")
-    (options, args) = parser.parse_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-b", "--browserless", action="store_true",
+                        help="Don't open the bug in the browser at the end")
+    parser.add_argument("-l", "--lpinstance", metavar="INSTANCE",
+                        help="LP instance to connect to (default: production)")
+    parser.add_argument("-v", "--verbose", action="store_true",
+                        help="Print info about the bug being imported")
+    parser.add_argument("-n", "--dry-run", action="store_true",
+                        help="Don't actually open a bug (also sets verbose)")
+    parser.add_argument("-p", "--package",
+                        help="Launchpad package to file bug against "
+                        "(default: Same as Debian)")
+    parser.add_argument("--no-conf", action="store_true",
+                        help="Don't read config files or environment variables.")
+    parser.add_argument("bugs", nargs="+", help="Bug number(s) or URL(s)")
+    options = parser.parse_args()
 
     config = UDTConfig(options.no_conf)
     if options.lpinstance is None:
         options.lpinstance = config.get_value("LPINSTANCE")
 
-    launchpad = Launchpad.login_with("ubuntu-dev-tools", options.lpinstance)
+    if options.dry_run:
+        launchpad = Launchpad.login_anonymously("ubuntu-dev-tools")
+        options.verbose = True
+    else:
+        launchpad = Launchpad.login_with("ubuntu-dev-tools", options.lpinstance)
+
+    if options.verbose:
+        Logger.setLevel(logging.DEBUG)
 
     debian = launchpad.distributions['debian']
     ubuntu = launchpad.distributions['ubuntu']
@@ -74,7 +74,7 @@ def main():
 
     bug_nums = []
 
-    for bug_num in args:
+    for bug_num in options.bugs:
         if bug_num.startswith("http"):
             # bug URL
             match = bug_re.search(bug_num)
@@ -88,33 +88,41 @@ def main():
 
     bugs = debianbts.get_status(*bug_nums)
 
-    if len(bug_nums) > 1:
-        bugs = bugs[0]
-
     if not bugs:
         Logger.error("Cannot find any of the listed bugs")
         sys.exit(1)
 
+    err = False
     for bug in bugs:
         ubupackage = package = bug.source
         if options.package:
             ubupackage = options.package
         bug_num = bug.bug_num
         subject = bug.subject
-        summary = bug.summary
         log = debianbts.get_bug_log(bug_num)
-        summary = log[0]['body']
+        summary = log[0]['message'].get_payload()
         target = ubuntu.getSourcePackage(name=ubupackage)
         if target is None:
             Logger.error("Source package '%s' is not in Ubuntu. Please specify "
                          "the destination source package with --package",
                          ubupackage)
-            sys.exit(1)
+            err = True
+            continue
 
-        u_bug = launchpad.bugs.createBug(
-            target=target, title=subject,
-            description='Imported from Debian bug http://bugs.debian.org/%d:\n\n%s' %
-                        (bug_num, summary))
+        description = ('Imported from Debian bug http://bugs.debian.org/%d:\n\n%s' %
+                       (bug_num, summary))
+
+        Logger.debug('Target: %s' % target)
+        Logger.debug('Subject: %s' % subject)
+        Logger.debug('Description: ')
+        Logger.debug(description)
+
+        if options.dry_run:
+            Logger.info('Dry-Run: not creating Ubuntu bug.')
+            continue
+
+        u_bug = launchpad.bugs.createBug(target=target, title=subject,
+                                         description=description)
         d_sp = debian.getSourcePackage(name=package)
         if d_sp is None and options.package:
             d_sp = debian.getSourcePackage(name=options.package)
@@ -125,6 +133,9 @@ def main():
         Logger.normal("Opened %s", u_bug.web_link)
         if not options.browserless:
             webbrowser.open(u_bug.web_link)
+
+    if err:
+        sys.exit(1)
 
 
 if __name__ == '__main__':
