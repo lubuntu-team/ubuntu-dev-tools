@@ -27,15 +27,15 @@ import sys
 
 def extract(iso, path):
     command = ['isoinfo', '-R', '-i', iso, '-x', path]
-    pipe = subprocess.Popen(command, stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE, encoding='utf-8')
-    stdout, stderr = pipe.communicate()
+    pipe = subprocess.run(command, encoding='utf-8',
+                          stdout=subprocess.PIPE,
+                          stderr=subprocess.PIPE)
 
     if pipe.returncode != 0:
-        sys.stderr.write(stderr)
+        sys.stderr.write(pipe.stderr)
         sys.exit(pipe.returncode)
 
-    return stdout
+    return pipe.stdout
 
 
 def main():

@@ -27,7 +27,9 @@ import os
 import re
 import shutil
 import sys
-from subprocess import call, check_call, Popen, PIPE
+
+from subprocess import call, check_call, run, Popen, PIPE, DEVNULL
+
 from tempfile import mkdtemp
 
 from debian.changelog import Changelog
@@ -85,9 +87,8 @@ def gen_debdiff(tmpdir, changelog):
 
     debdiff = os.path.join(tmpdir, '%s_%s.debdiff' % (pkg, newver))
 
-    devnull = open('/dev/null', 'w')
     diff_cmd = ['bzr', 'diff', '-r', 'tag:' + str(oldver)]
-    if call(diff_cmd, stdout=devnull, stderr=devnull) == 1:
+    if call(diff_cmd, stdout=DEVNULL, stderr=DEVNULL) == 1:
         print("Extracting bzr diff between %s and %s" % (oldver, newver))
     else:
         if oldver.epoch is not None:
@@ -104,14 +105,10 @@ def gen_debdiff(tmpdir, changelog):
         print("Generating debdiff between %s and %s" % (oldver, newver))
         diff_cmd = ['debdiff', olddsc, newdsc]
 
-    diff = Popen(diff_cmd, stdout=PIPE)
-    debdiff_f = open(debdiff, 'w')
-    filterdiff = Popen(['filterdiff', '-x', '*changelog*'],
-                       stdin=diff.stdout, stdout=debdiff_f)
-    diff.stdout.close()
-    filterdiff.wait()
-    debdiff_f.close()
-    devnull.close()
+    with Popen(diff_cmd, stdout=PIPE, encoding='utf-8') as diff:
+        with open(debdiff, 'w', encoding='utf-8') as debdiff_f:
+            run(['filterdiff', '-x', '*changelog*'],
+                stdin=diff.stdout, stdout=debdiff_f, encoding='utf-8')
 
     return debdiff
 

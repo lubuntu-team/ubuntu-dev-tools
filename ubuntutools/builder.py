@@ -34,8 +34,7 @@ class Builder(object):
     def __init__(self, name):
         self.name = name
         cmd = ["dpkg-architecture", "-qDEB_BUILD_ARCH_CPU"]
-        self.architecture = subprocess.check_output(
-            cmd, encoding='utf-8').strip()
+        self.architecture = subprocess.check_output(cmd, encoding='utf-8').strip()
 
     def _build_failure(self, returncode, dsc_file):
         if returncode != 0:
@@ -124,9 +123,8 @@ class Sbuild(Builder):
     def update(self, dist):
         cmd = ["schroot", "--list"]
         Logger.command(cmd)
-        process = subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, encoding='utf-8')
-        chroots, _ = process.communicate()[0].strip().split()
+        process = subprocess.run(cmd, stdout=subprocess.PIPE, encoding='utf-8')
+        chroots, _ = process.stdout.strip().split()
         if process.returncode != 0:
             return process.returncode
 
