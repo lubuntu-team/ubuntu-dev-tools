@@ -132,6 +132,7 @@ Depends:
  python3-distro-info,
  python3-httplib2,
  python3-launchpadlib,
+ python3-lazr.restfulclient,
  sensible-utils,
  ${misc:Depends},
  ${python3:Depends},
