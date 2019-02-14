@@ -146,13 +146,14 @@ class SourcePackage(object):
         pocket = kwargs.get('pocket')
         status = kwargs.get('status')
         verify_signature = kwargs.get('verify_signature', False)
+        try_binary = kwargs.get('try_binary', True)
 
         assert (package is not None or dscfile is not None)
 
         self.source = package
         self._lp = lp
         self.binary = None
-        self.try_binary = True
+        self.try_binary = try_binary
         self.workdir = workdir
         self._series = series
         self._pocket = pocket

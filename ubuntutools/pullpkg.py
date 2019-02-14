@@ -105,13 +105,9 @@ class PullPkg(object):
         self._default_pull = kwargs.get('pull')
         self._default_distro = kwargs.get('distro')
         self._default_arch = kwargs.get('arch', host_architecture())
-        self._parser = None
-        self._ppa_parser = None
 
-    @property
-    def argparser(self):
-        if self._parser:
-            return self._parser
+    def parse_args(self, args):
+        args = args[:]
 
         help_default_pull = "What to pull: " + ", ".join(VALID_PULLS)
         if self._default_pull:
@@ -122,11 +118,9 @@ class PullPkg(object):
         help_default_arch = ("Get binary packages for arch")
         help_default_arch += ("(default: %s)" % self._default_arch)
 
-        epilog = ("Note on --status: if a version is provided, all status types "
-                  "will be searched; if no version is provided, by default only "
-                  "'Pending' and 'Published' status will be searched.")
-
-        parser = ArgumentParser(epilog=epilog)
+        # use add_help=False because we do parse_known_args() below, and if
+        # that sees --help then it exits immediately
+        parser = ArgumentParser(add_help=False)
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help="Increase verbosity/debug")
         parser.add_argument('-d', '--download-only', action='store_true',
@@ -145,40 +139,42 @@ class PullPkg(object):
                             help=help_default_pull)
         parser.add_argument('-D', '--distro', default=self._default_distro,
                             help=help_default_distro)
-        parser.add_argument('--ppa', help='PPA to pull from')
+
+        # add distro-specific params
+        try:
+            distro = self.parse_distro(parser.parse_known_args(args)[0].distro)
+        except InvalidDistroValueError:
+            # don't fail at this point, finish setting up parser help/usage
+            distro = None
+
+        if distro == DISTRO_UBUNTU:
+            parser.add_argument('--security', action='store_true',
+                                help='Check the Ubuntu Security Team PPA')
+        if distro == DISTRO_PPA:
+            parser.add_argument('--ppa', help='PPA to pull from')
+            if parser.parse_known_args(args)[0].ppa is None:
+                # check for any param starting with "ppa:"
+                # if found, move it to a --ppa param
+                for param in args:
+                    if param.startswith('ppa:'):
+                        args.remove(param)
+                        args.insert(0, param)
+                        args.insert(0, '--ppa')
+                        break
+
+        # add the positional params
         parser.add_argument('package', help="Package name to pull")
         parser.add_argument('release', nargs='?', help="Release to pull from")
         parser.add_argument('version', nargs='?', help="Package version to pull")
-        self._parser = parser
-        return self._parser
 
-    def parse_ppa_args(self, args):
-        """When pulling from PPA, convert from bare ppa:USER/NAME to --ppa option"""
-        if not args:
-            myargs = sys.argv[1:]
+        epilog = ("Note on --status: if a version is provided, all status types "
+                  "will be searched; if no version is provided, by default only "
+                  "'Pending' and 'Published' status will be searched.")
 
-        options = vars(self.argparser.parse_known_args(myargs)[0])
-        # we use these, which all should be always provided by the parser,
-        # even if their value is None
-        assert 'distro' in options
-        assert 'ppa' in options
-        assert 'release' in options
-        assert 'version' in options
+        # since parser has no --help handler, create a new parser that does
+        newparser = ArgumentParser(parents=[parser], epilog=epilog)
 
-        # if we're not pulling from a PPA, or if we are but --ppa was given,
-        # then no change to the args is needed
-        if options['distro'] != DISTRO_PPA or options['ppa'] is not None:
-            return args
-
-        # check if release or version is a ppa:
-        # if it is, move it to a --ppa param
-        for param in ['release', 'version']:
-            if str(options[param]).startswith('ppa:'):
-                myargs.remove(options[param])
-                myargs.insert(0, options[param])
-                myargs.insert(0, '--ppa')
-
-        return myargs
+        return self.parse_options(vars(newparser.parse_args(args)))
 
     def parse_pull(self, pull):
         if not pull:
@@ -276,6 +272,7 @@ class PullPkg(object):
         # they should all be provided, though the optional ones may be None
 
         # type bool
+        assert 'verbose' in options
         assert 'download_only' in options
         assert 'no_conf' in options
         assert 'no_verify_signature' in options
@@ -286,14 +283,23 @@ class PullPkg(object):
         assert 'arch' in options
         assert 'package' in options
         # type string, optional
-        assert 'ppa' in options
         assert 'release' in options
         assert 'version' in options
         # type list of strings, optional
         assert 'mirror' in options
 
-        pull = self.parse_pull(options['pull'])
-        distro = self.parse_distro(options['distro'])
+        options['pull'] = self.parse_pull(options['pull'])
+        options['distro'] = self.parse_distro(options['distro'])
+
+        # ensure these are always included so we can just check for None/False later
+        options['ppa'] = options.get('ppa', None)
+        options['security'] = options.get('security', False)
+
+        return options
+
+    def _get_params(self, options):
+        distro = options['distro']
+        pull = options['pull']
 
         params = {}
         params['package'] = options['package']
@@ -308,6 +314,13 @@ class PullPkg(object):
         if (params['package'].endswith('.dsc') and not params['series'] and not params['version']):
             params['dscfile'] = params['package']
             params.pop('package')
+
+        if options['security']:
+            if options['ppa']:
+                Logger.warning('Both --security and --ppa specified, ignoring --ppa')
+            Logger.debug('Checking Ubuntu Security PPA')
+            # --security is just a shortcut for --ppa ppa:ubuntu-security-proposed/ppa
+            options['ppa'] = 'ubuntu-security-proposed/ppa'
 
         if options['ppa']:
             if options['ppa'].startswith('ppa:'):
@@ -333,16 +346,12 @@ class PullPkg(object):
 
         params['status'] = STATUSES if 'all' in options['status'] else options['status']
 
-        return (pull, distro, params)
+        return params
 
-    def pull(self, args=None):
+    def pull(self, args=sys.argv[1:]):
         """Pull (download) specified package file(s)"""
-        # pull-ppa-* may need conversion from ppa:USER/NAME to --ppa USER/NAME
-        args = self.parse_ppa_args(args)
+        options = self.parse_args(args)
 
-        options = vars(self.argparser.parse_args(args))
-
-        assert 'verbose' in options
         if options['verbose']:
             Logger.setLevel(logging.DEBUG)
             if options['verbose'] > 1:
@@ -353,7 +362,11 @@ class PullPkg(object):
         # Login anonymously to LP
         Launchpad.login_anonymously()
 
-        (pull, distro, params) = self.parse_options(options)
+        pull = options['pull']
+        distro = options['distro']
+
+        params = self._get_params(options)
+        package = params['package']
 
         # call implementation, and allow exceptions to flow up to caller
         srcpkg = DISTRO_PKG_CLASS[distro](**params)
@@ -377,11 +390,11 @@ class PullPkg(object):
                 srcpkg.unpack()
         else:
             name = '.*'
-            if params['package'] != spph.getPackageName():
-                Logger.info("Pulling only binary package '%s'", params['package'])
+            if package != spph.getPackageName():
+                Logger.info("Pulling only binary package '%s'", package)
                 Logger.info("Use package name '%s' to pull all binary packages",
                             spph.getPackageName())
-                name = params['package']
+                name = package
             if pull == PULL_DEBS:
                 name = r'{}(?<!-di)(?<!-dbgsym)$'.format(name)
             elif pull == PULL_DDEBS:
@@ -395,4 +408,4 @@ class PullPkg(object):
             total = srcpkg.pull_binaries(name=name, arch=options['arch'])
             if total < 1:
                 Logger.error("No %s found for %s %s", pull,
-                             params['package'], spph.getVersion())
+                             package, spph.getVersion())
