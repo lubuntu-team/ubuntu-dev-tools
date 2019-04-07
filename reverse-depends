@@ -14,7 +14,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-import optparse
+import argparse
 import sys
 
 from distro_info import DistroDataOutdated
@@ -35,52 +35,42 @@ def main():
         Logger.warn(e)
         default_release = 'unstable'
 
-    parser = optparse.OptionParser(
-        '%prog [options] package',
-        description="List reverse-dependencies of package. "
-                    "If the package name is prefixed with src: then the "
-                    "reverse-dependencies of all the binary packages that "
-                    "the specified source package builds will be listed.")
-    parser.add_option('-r', '--release', metavar='RELEASE',
-                      default=default_release,
-                      help='Query dependencies in RELEASE. '
-                      'Default: %s' % default_release)
-    parser.add_option('-R', '--without-recommends',
-                      action='store_false', dest='recommends', default=True,
-                      help='Only consider Depends relationships, '
-                           'not Recommends')
-    parser.add_option('-s', '--with-suggests',
-                      action='store_true', dest='suggests', default=False,
-                      help='Also consider Suggests relationships')
-    parser.add_option('-b', '--build-depends',
-                      action='store_const', dest='arch', const='source',
-                      help='Query build dependencies (synonym for --arch=source)')
-    parser.add_option('-a', '--arch', metavar='ARCH', default='any',
-                      help='Query dependencies in ARCH. '
-                           'Default: any')
-    parser.add_option('-c', '--component', metavar='COMPONENT',
-                      action='append',
-                      help='Only consider reverse-dependencies in COMPONENT. '
-                           'Can be specified multiple times. Default: all')
-    parser.add_option('-l', '--list',
-                      action='store_true', default=False,
-                      help='Display a simple, machine-readable list')
-    parser.add_option('-u', '--service-url', metavar='URL',
-                      dest='server', default=None,
-                      help='Reverse Dependencies webservice URL. '
-                           'Default: UbuntuWire')
-    parser.add_option('-x', '--recursive',
-                      action='store_true', dest='recursive', default=False,
-                      help='Consider to find reverse dependencies recursively.')
-    parser.add_option('-d', '--recursive-deph', type="int",
-                      metavar='RECURSIVE_DEPTH', dest='recursive_depth', default=DEFAULT_MAX_DEPTH,
-                      help='If recusive, you can specify the depth.')
+    description = ("List reverse-dependencies of package. "
+                   "If the package name is prefixed with src: then the "
+                   "reverse-dependencies of all the binary packages that "
+                   "the specified source package builds will be listed.")
 
-    options, args = parser.parse_args()
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument('-r', '--release', default=default_release,
+                        help='Query dependencies in RELEASE. '
+                        'Default: %s' % default_release)
+    parser.add_argument('-R', '--without-recommends', action='store_false',
+                        dest='recommends',
+                        help='Only consider Depends relationships, '
+                        'not Recommends')
+    parser.add_argument('-s', '--with-suggests', action='store_true',
+                        help='Also consider Suggests relationships')
+    parser.add_argument('-b', '--build-depends', action='store_true',
+                        help='Query build dependencies (synonym for --arch=source)')
+    parser.add_argument('-a', '--arch', default='any',
+                        help='Query dependencies in ARCH. Default: any')
+    parser.add_argument('-c', '--component', action='append',
+                        help='Only consider reverse-dependencies in COMPONENT. '
+                        'Can be specified multiple times. Default: all')
+    parser.add_argument('-l', '--list', action='store_true',
+                        help='Display a simple, machine-readable list')
+    parser.add_argument('-u', '--service-url', metavar='URL',
+                        dest='server', default=None,
+                        help='Reverse Dependencies webservice URL. '
+                        'Default: UbuntuWire')
+    parser.add_argument('-x', '--recursive', action='store_true',
+                        help='Consider to find reverse dependencies recursively.')
+    parser.add_argument('-d', '--recursive-depth', type=int,
+                        default=DEFAULT_MAX_DEPTH,
+                        help='If recusive, you can specify the depth.')
+    parser.add_argument('package')
 
-    if len(args) != 1:
-        parser.error("One (and only one) package must be specified")
-    package = args[0]
+    options = parser.parse_args()
 
     opts = {}
     if options.server is not None:
@@ -98,26 +88,8 @@ def main():
         # We already printed a warning
         pass
 
-    def query(package):
-        try:
-            return query_rdepends(package, options.release, options.arch, **opts)
-        except RDependsException as e:
-            Logger.error(str(e))
-            sys.exit(1)
-
-    def filter_out_fiels(data, fields):
-        for field in list(data.keys()):
-            if field not in fields:
-                del data[field]
-
-    def filter_out_component(data, component):
-        for field, rdeps in list(data.items()):
-            filtered = [rdep for rdep in rdeps
-                        if rdep['Component'] in component]
-            if not filtered:
-                del data[field]
-            else:
-                data[field] = filtered
+    if options.build_depends:
+        options.arch = 'source'
 
     if options.arch == 'source':
         fields = ['Reverse-Build-Depends', 'Reverse-Build-Depends-Indep']
@@ -125,20 +97,27 @@ def main():
         fields = ['Reverse-Depends']
         if options.recommends:
             fields.append('Reverse-Recommends')
-        if options.suggests:
+        if options.with_suggests:
             fields.append('Reverse-Suggests')
 
     def build_results(package, result, fields, component, recursive):
-        data = query(package)
+        try:
+            data = query_rdepends(package, options.release, options.arch, **opts)
+        except RDependsException as e:
+            Logger.error(str(e))
+            sys.exit(1)
         if not data:
             return
 
-        result[package] = data
-
         if fields:
-            filter_out_fiels(result[package], fields)
+            data = {k: v for k, v in data.items() if k in fields}
         if component:
-            filter_out_component(result[package], component)
+            data = {k: [rdep for rdep in v
+                        if rdep['Component'] in component]
+                    for k, v in data.items()}
+            data = {k: v for k, v in data.items() if v}
+
+        result[package] = data
 
         if recursive > 0:
             for rdeps in result[package].values():
@@ -148,13 +127,13 @@ def main():
 
     result = {}
     build_results(
-        package, result, fields, options.component,
+        options.package, result, fields, options.component,
         options.recursive and options.recursive_depth or 0)
 
     if options.list:
         display_consise(result)
     else:
-        display_verbose(package, result)
+        display_verbose(options.package, result)
 
 
 def display_verbose(package, values):
