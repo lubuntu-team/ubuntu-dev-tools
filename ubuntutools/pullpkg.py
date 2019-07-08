@@ -127,8 +127,8 @@ class PullPkg(object):
                   "'Pending' and 'Published' status will be searched.")
 
         parser = ArgumentParser(epilog=epilog)
-        parser.add_argument('-v', '--verbose', action='store_true',
-                            help="Print debug messages")
+        parser.add_argument('-v', '--verbose', action='count', default=0,
+                            help="Increase verbosity/debug")
         parser.add_argument('-d', '--download-only', action='store_true',
                             help="Do not extract the source package")
         parser.add_argument('-m', '--mirror', action='append',
@@ -345,6 +345,8 @@ class PullPkg(object):
         assert 'verbose' in options
         if options['verbose']:
             Logger.setLevel(logging.DEBUG)
+            if options['verbose'] > 1:
+                logging.getLogger(__package__).setLevel(logging.DEBUG)
 
         Logger.debug("pullpkg options: %s", options)
 
