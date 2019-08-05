@@ -1,4 +1,4 @@
-ubuntu-dev-tools (0.170) UNRELEASED; urgency=medium
+ubuntu-dev-tools (0.170) unstable; urgency=medium
 
   [ Robie Basak ]
   * pull-debian-source:
@@ -9,8 +9,12 @@ ubuntu-dev-tools (0.170) UNRELEASED; urgency=medium
   [ Mattia Rizzolo ]
   * d/control:
     + Bump debhelper compat level to 12.
+  * reverse-depends:
+    + prevent crash when specifying a specific architecture.  Closes: #933018
+  * ubuntutools/archive:
+    + Default to checking signatures while pulling a .dsc.
 
- -- Mattia Rizzolo <mattia@debian.org>  Sat, 20 Jul 2019 15:09:05 +0200
+ -- Mattia Rizzolo <mattia@debian.org>  Mon, 05 Aug 2019 13:28:23 +0200
 
 ubuntu-dev-tools (0.169) unstable; urgency=medium
 
