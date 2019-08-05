@@ -182,7 +182,7 @@ def display_verbose(package, values):
                 for rdep in rdeps:
                     print_package(values,
                                   rdep['Package'],
-                                  rdep['Architectures'],
+                                  rdep.get('Architectures', all_archs),
                                   rdep.get('Dependency'),
                                   offset)
 
@@ -200,7 +200,7 @@ def display_verbose(package, values):
         for rdep in rdeps:
             print_package(values,
                           rdep['Package'],
-                          rdep['Architectures'],
+                          rdep.get('Architectures', all_archs),
                           rdep.get('Dependency'))
         print
 
