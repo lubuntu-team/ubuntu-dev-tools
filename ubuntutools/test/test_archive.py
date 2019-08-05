@@ -162,7 +162,7 @@ class LocalSourcePackageTestCase(unittest.TestCase):
                                  dscfile='test-data/example_1.0-1.dsc',
                                  workdir=self.workdir)
         pkg.quiet = True
-        pkg.pull()
+        pkg.pull(verify_signature=False)
         pkg.unpack()
 
     def test_workdir_srcpkg_noinfo(self):
@@ -174,7 +174,7 @@ class LocalSourcePackageTestCase(unittest.TestCase):
                                                       'example_1.0-1.dsc'),
                                  workdir=self.workdir)
         pkg.quiet = True
-        pkg.pull()
+        pkg.pull(verify_signature=False)
         pkg.unpack()
 
     def test_workdir_srcpkg_info(self):
@@ -187,7 +187,7 @@ class LocalSourcePackageTestCase(unittest.TestCase):
                                                       'example_1.0-1.dsc'),
                                  workdir=self.workdir)
         pkg.quiet = True
-        pkg.pull()
+        pkg.pull(verify_signature=False)
         pkg.unpack()
 
     def test_verification(self):
@@ -202,7 +202,7 @@ class LocalSourcePackageTestCase(unittest.TestCase):
                                  dscfile='test-data/example_1.0-1.dsc',
                                  workdir=self.workdir)
         pkg.quiet = True
-        pkg.pull()
+        pkg.pull(verify_signature=False)
 
     def test_pull(self):
         pkg = self.SourcePackage('example', '1.0-1', 'main',
@@ -210,7 +210,7 @@ class LocalSourcePackageTestCase(unittest.TestCase):
 
         pkg.url_opener = self.url_opener
         pkg.quiet = True
-        pkg.pull()
+        pkg.pull(verify_signature=False)
 
     def test_mirrors(self):
         mirror = 'http://mirror'
@@ -226,7 +226,7 @@ class LocalSourcePackageTestCase(unittest.TestCase):
                                  workdir=self.workdir, mirrors=[mirror])
         pkg.url_opener = url_opener
         pkg.quiet = True
-        pkg.pull()
+        pkg.pull(verify_signature=False)
 
     def test_dsc_missing(self):
         self.mock_http.side_effect = self.request_404
@@ -263,7 +263,7 @@ class DebianLocalSourcePackageTestCase(LocalSourcePackageTestCase):
                                                                 debsec_mirror])
         pkg.quiet = True
         pkg.url_opener = url_opener
-        pkg.pull()
+        pkg.pull(verify_signature=False)
         pkg.unpack()
 
     def test_dsc_missing(self):
@@ -280,7 +280,7 @@ class DebianLocalSourcePackageTestCase(LocalSourcePackageTestCase):
         pkg = self.SourcePackage('example', '1.0-1', 'main',
                                  workdir=self.workdir, mirrors=[mirror])
         pkg.url_opener = self.url_opener
-        pkg.pull()
+        pkg.pull(verify_signature=False)
 
     def test_dsc_badsig(self):
         mirror = 'http://mirror'

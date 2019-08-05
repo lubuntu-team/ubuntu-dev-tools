@@ -236,7 +236,7 @@ class SourcePackage(object):
                 yield self._mirror_url(mirror, name)
         yield self._lp_url(name)
 
-    def pull_dsc(self):
+    def pull_dsc(self, verify_signature=True):
         "Retrieve dscfile and parse"
         if self._dsc_source:
             parsed = urlparse(self._dsc_source)
@@ -248,7 +248,7 @@ class SourcePackage(object):
             url = self._lp_url(self.dsc_name)
         self._download_dsc(url)
 
-        self._check_dsc()
+        self._check_dsc(verify_signature=verify_signature)
 
     def _download_dsc(self, url):
         "Download specified dscfile and parse"
@@ -474,7 +474,7 @@ class DebianSourcePackage(SourcePackage):
     def pull_dsc(self, verify_signature=True):
         "Retrieve dscfile and parse"
         try:
-            super(DebianSourcePackage, self).pull_dsc()
+            super(DebianSourcePackage, self).pull_dsc(verify_signature)
             return
         except DownloadError:
             pass
