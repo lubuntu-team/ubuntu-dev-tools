@@ -236,7 +236,7 @@ class SourcePackage(object):
                 yield self._mirror_url(mirror, name)
         yield self._lp_url(name)
 
-    def pull_dsc(self, verify_signature=True):
+    def pull_dsc(self, verify_signature=False):
         "Retrieve dscfile and parse"
         if self._dsc_source:
             parsed = urlparse(self._dsc_source)
@@ -359,7 +359,7 @@ class SourcePackage(object):
             return False
         return True
 
-    def pull(self, verify_signature=True):
+    def pull(self, verify_signature=False):
         "Pull into workdir"
         self._write_dsc(verify_signature=verify_signature)
         for entry in self.dsc['Files']:
