@@ -1,2 +1,2 @@
-*.egg-info/*
+*.egg-info/
 test-data/example_*
