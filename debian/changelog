@@ -1,3 +1,14 @@
+ubuntu-dev-tools (0.171) unstable; urgency=medium
+
+  * Add an autopkgtest running the package tests.
+    Currently it runs the tests directly over the sources, instead of the
+    installed package.
+  * ubuntutools/archive: Disable dsc signature verification for non-Debian.
+    Ubuntu doesn't have a unified keyring of developers like Debian has, so
+    it is not feasible to check for the dsc signatures.
+
+ -- Mattia Rizzolo <mattia@debian.org>  Mon, 12 Aug 2019 13:42:31 +0200
+
 ubuntu-dev-tools (0.170) unstable; urgency=medium
 
   [ Robie Basak ]
