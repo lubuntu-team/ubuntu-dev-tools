@@ -1,0 +1,2 @@
+Test-Command: set -ex ; for i in $(py3versions -s) ; do "$i" setup.py test; done
+Depends: @builddeps@
