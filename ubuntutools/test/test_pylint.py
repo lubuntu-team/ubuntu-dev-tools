@@ -36,7 +36,7 @@ class PylintTestCase(unittest.TestCase):
     def test_pylint(self):
         """Test: Run pylint on Python source code"""
 
-        cmd = [sys.executable, "-m", "pylint", "--rcfile=" + CONFIG,
+        cmd = ["pylint", "--rcfile=" + CONFIG,
                "-E", "--"] + get_source_files()
         if unittest_verbosity() >= 2:
             sys.stderr.write("Running following command:\n{}\n".format(" ".join(cmd)))
