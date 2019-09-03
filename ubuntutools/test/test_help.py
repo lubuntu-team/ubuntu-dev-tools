@@ -24,7 +24,7 @@ import setup
 from ubuntutools import subprocess
 from ubuntutools.test import unittest
 
-TIMEOUT = 5
+TIMEOUT = 10
 
 
 def load_tests(loader, tests, pattern):
