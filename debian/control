@@ -140,6 +140,10 @@ Package: python-ubuntutools
 Architecture: all
 Section: python
 Depends:
+ python-debian,
+ python-distro-info,
+ python-httplib2,
+ python-launchpadlib,
  sensible-utils,
  ${misc:Depends},
  ${python:Depends},
@@ -157,6 +161,10 @@ Package: python3-ubuntutools
 Architecture: all
 Section: python
 Depends:
+ python3-debian,
+ python3-distro-info,
+ python3-httplib2,
+ python3-launchpadlib,
  sensible-utils,
  ${misc:Depends},
  ${python3:Depends},
