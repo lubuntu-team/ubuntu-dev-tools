@@ -1,6 +1,10 @@
 ubuntu-dev-tools (0.172) UNRELEASED; urgency=medium
 
+  [ Mattia Rizzolo ]
   * autopkgtest: Add a allow-stderr restriction, as things log to stderr.
+
+  [ Stefano Rivera ]
+  * Build-Depend on pylint (>= 2, the Python 3 version), it replaced pylint3.
 
  -- Mattia Rizzolo <mattia@debian.org>  Fri, 23 Aug 2019 10:07:40 +0200
 
