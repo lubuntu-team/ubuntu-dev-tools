@@ -19,6 +19,7 @@ if sys.version_info[0] >= 3:
     scripts = [
         'backportpackage',
         'bitesize',
+        'check-mir',
         'check-symbols',
         'dch-repeat',
         'grab-merge',
@@ -36,7 +37,6 @@ if sys.version_info[0] >= 3:
     ]
 else:
     scripts = [
-        'check-mir',
         'grep-merges',
         'hugdaylist',
         'import-bug-from-debian',
