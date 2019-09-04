@@ -104,7 +104,6 @@ def main():
     except DownloadError, e:
         Logger.error('Failed to download: %s', str(e))
         sys.exit(1)
-    oldpkg.unpack()
     print 'file://' + oldpkg.debdiff(newpkg, diffstat=True)
 
 

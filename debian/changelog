@@ -1,3 +1,10 @@
+ubuntu-dev-tools (0.173) UNRELEASED; urgency=medium
+
+  * pull-debian-debdiff: Don't unpack the older source package, it will often
+    use the same directory as the newer one, and break.
+
+ -- Stefano Rivera <stefanor@debian.org>  Wed, 04 Sep 2019 16:31:28 -0300
+
 ubuntu-dev-tools (0.172) unstable; urgency=medium
 
   [ Mattia Rizzolo ]
