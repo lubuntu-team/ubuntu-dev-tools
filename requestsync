@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 #
 # (C) 2007 Canonical Ltd., Steve Kowalik
@@ -97,7 +97,7 @@ def main():
     config = UDTConfig(options.no_conf)
 
     if options.deprecated_lp_flag:
-        print "The --lp flag is now default, ignored."
+        print("The --lp flag is now default, ignored.")
     if options.email:
         options.lpapi = False
     else:
@@ -115,8 +115,8 @@ def main():
         elif options.lpinstance == 'staging':
             bug_mail_domain = 'bugs.staging.launchpad.net'
         else:
-            print >> sys.stderr, ('Error: Unknown launchpad instance: %s'
-                                  % options.lpinstance)
+            print(('Error: Unknown launchpad instance: %s'
+                                  % options.lpinstance), file=sys.stderr)
             sys.exit(1)
 
     mailserver_host = config.get_value('SMTP_SERVER',
@@ -130,8 +130,8 @@ def main():
             firstmx = mxlist[0]
             mailserver_host = firstmx[1]
         except ImportError:
-            print >> sys.stderr, ('Please install python-dns to support '
-                                  'Launchpad mail server lookup.')
+            print(('Please install python-dns to support '
+                                  'Launchpad mail server lookup.'), file=sys.stderr)
             sys.exit(1)
 
     mailserver_port = config.get_value('SMTP_PORT', default=25,
@@ -167,9 +167,9 @@ def main():
                                                   get_ubuntu_delta_changelog,
                                                   mail_bug, need_sponsorship)
         if not any(x in os.environ for x in ('UBUMAIL', 'DEBEMAIL', 'EMAIL')):
-            print >> sys.stderr, (
+            print((
                 'E: The environment variable UBUMAIL, DEBEMAIL or EMAIL needs '
-                'to be set to let this script mail the sync request.')
+                'to be set to let this script mail the sync request.'), file=sys.stderr)
             sys.exit(1)
 
     newsource = options.newpkg
@@ -187,14 +187,14 @@ def main():
         else:
             ubu_info = UbuntuDistroInfo()
             release = ubu_info.devel()
-        print >> sys.stderr, 'W: Target release missing - assuming %s' % release
+        print('W: Target release missing - assuming %s' % release, file=sys.stderr)
     elif len(args) == 2:
         release = args[1]
     elif len(args) == 3:
         release = args[1]
         force_base_version = Version(args[2])
     else:
-        print >> sys.stderr, 'E: Too many arguments.'
+        print('E: Too many arguments.', file=sys.stderr)
         parser.print_help()
         sys.exit(1)
 
@@ -209,12 +209,12 @@ def main():
         ubuntu_version = Version('~')
         ubuntu_component = None  # Set after getting the Debian info
         if not newsource:
-            print("'%s' doesn't exist in 'Ubuntu %s'.\nDo you want to sync a new package?" %
-                  (srcpkg, release))
+            print(("'%s' doesn't exist in 'Ubuntu %s'.\nDo you want to sync a new package?" %
+                  (srcpkg, release)))
             confirmation_prompt()
             newsource = True
-    except udtexceptions.SeriesNotFoundException, error:
-        print >> sys.stderr, "E: %s" % error
+    except udtexceptions.SeriesNotFoundException as error:
+        print("E: %s" % error, file=sys.stderr)
         sys.exit(1)
 
     # Get the requested Debian source package
@@ -222,11 +222,11 @@ def main():
         debian_srcpkg = get_debian_srcpkg(srcpkg, distro)
         debian_version = Version(debian_srcpkg.getVersion())
         debian_component = debian_srcpkg.getComponent()
-    except udtexceptions.PackageNotFoundException, error:
-        print >> sys.stderr, "E: %s" % error
+    except udtexceptions.PackageNotFoundException as error:
+        print("E: %s" % error, file=sys.stderr)
         sys.exit(1)
-    except udtexceptions.SeriesNotFoundException, error:
-        print >> sys.stderr, "E: %s" % error
+    except udtexceptions.SeriesNotFoundException as error:
+        print("E: %s" % error, file=sys.stderr)
         sys.exit(1)
 
     if ubuntu_component is None:
@@ -243,18 +243,18 @@ def main():
             debian_srcpkg = ubuntutools.requestsync.mail.get_debian_srcpkg(srcpkg, distro)
             debian_version = Version(debian_srcpkg.getVersion())
             debian_component = debian_srcpkg.getComponent()
-        except udtexceptions.PackageNotFoundException, error:
-            print >> sys.stderr, "E: %s" % error
+        except udtexceptions.PackageNotFoundException as error:
+            print("E: %s" % error, file=sys.stderr)
             sys.exit(1)
 
     if ubuntu_version == debian_version:
-        print >> sys.stderr, ('E: The versions in Debian and Ubuntu are the '
-                              'same already (%s). Aborting.' % ubuntu_version)
+        print(('E: The versions in Debian and Ubuntu are the '
+                              'same already (%s). Aborting.' % ubuntu_version), file=sys.stderr)
         sys.exit(1)
     if ubuntu_version > debian_version:
-        print >> sys.stderr, ('E: The version in Ubuntu (%s) is newer than '
+        print(('E: The version in Ubuntu (%s) is newer than '
                               'the version in Debian (%s). Aborting.'
-                              % (ubuntu_version, debian_version))
+                              % (ubuntu_version, debian_version)), file=sys.stderr)
         sys.exit(1)
 
     # -s flag not specified - check if we do need sponsorship
@@ -262,8 +262,8 @@ def main():
         sponsorship = need_sponsorship(srcpkg, ubuntu_component, release)
 
     if not sponsorship and not ffe:
-        print >> sys.stderr, ('Consider using syncpackage(1) for syncs that '
-                              'do not require feature freeze exceptions.')
+        print(('Consider using syncpackage(1) for syncs that '
+                              'do not require feature freeze exceptions.'), file=sys.stderr)
 
     # Check for existing package reports
     if not newsource:
@@ -284,8 +284,8 @@ def main():
         print('Changes have been made to the package in Ubuntu.\n'
               'Please edit the report and give an explanation.\n'
               'Not saving the report file will abort the request.')
-        report += (u'Explanation of the Ubuntu delta and why it can be '
-                   u'dropped:\n%s\n>>> ENTER_EXPLANATION_HERE <<<\n\n'
+        report += ('Explanation of the Ubuntu delta and why it can be '
+                   'dropped:\n%s\n>>> ENTER_EXPLANATION_HERE <<<\n\n'
                    % get_ubuntu_delta_changelog(ubuntu_srcpkg))
 
     if ffe:
@@ -310,10 +310,10 @@ def main():
     changelog = debian_srcpkg.getChangelog(since_version=base_version)
     if not changelog:
         if not options.missing_changelog_ok:
-            print >> sys.stderr, ("E: Did not retrieve any changelog entries. "
+            print(("E: Did not retrieve any changelog entries. "
                                   "Do you need to specify '-C'? "
                                   "Was the package recently uploaded? (check "
-                                  "http://packages.debian.org/changelogs/)")
+                                  "http://packages.debian.org/changelogs/)"), file=sys.stderr)
             sys.exit(1)
         else:
             need_interaction = True
@@ -325,8 +325,8 @@ def main():
     title, report = editor.get_report()
 
     if 'XXX FIXME' in report:
-        print >> sys.stderr, ("E: changelog boilerplate found in report, "
-                              "please manually add changelog when using '-C'")
+        print(("E: changelog boilerplate found in report, "
+                              "please manually add changelog when using '-C'"), file=sys.stderr)
         sys.exit(1)
 
     # bug status and bug subscriber
@@ -357,5 +357,5 @@ if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
-        print "\nUser abort."
+        print("\nUser abort.")
         sys.exit(2)
