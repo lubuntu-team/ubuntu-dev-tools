@@ -327,8 +327,7 @@ class SourcePackage(object):
         if not Logger.verbose:
             cmd.insert(1, "-q")
         Logger.command(cmd + [">", self._debdiff_filename])
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, encoding='utf-8')
-        debdiff = process.communicate()[0]
+        debdiff = subprocess.check_output(cmd, encoding='utf-8')
 
         # write debdiff file
         debdiff_file = open(self._debdiff_filename, "w")
@@ -421,8 +420,7 @@ class SourcePackage(object):
                                         self._package + "_" +
                                         strip_epoch(self._version) + ".lintian")
         Logger.command(cmd + [">", lintian_filename])
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, encoding='utf-8')
-        report = process.communicate()[0]
+        report = subprocess.check_output(cmd, encoding='utf-8')
 
         # write lintian report file
         lintian_file = open(lintian_filename, "w")
