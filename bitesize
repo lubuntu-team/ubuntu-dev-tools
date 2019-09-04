@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 """Add 'bitesize' tag to bugs and add a comment."""
 
 # Copyright (c) 2011 Canonical Ltd.
@@ -39,7 +39,7 @@ def error_out(msg):
 def save_entry(entry):
     try:
         entry.lp_save()
-    except HTTPError, error:
+    except HTTPError as error:
         error_out(error.content)
 
 
@@ -73,7 +73,7 @@ def main():
     # check that the new main bug isn't a duplicate
     try:
         bug = launchpad.bugs[args[0]]
-    except HTTPError, error:
+    except HTTPError as error:
         if error.response.status == 401:
             error_out("Don't have enough permissions to access bug %s. %s" %
                       (args[0], error.content))
