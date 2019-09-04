@@ -39,9 +39,7 @@ License: GPL-2
  On Debian systems, the complete text of the GNU General Public License
  version 2 can be found in the /usr/share/common-licenses/GPL-2 file.
 
-Files: 404main
-       doc/404main.1
-       doc/import-bug-from-debian.1
+Files: doc/import-bug-from-debian.1
        doc/pbuilder-dist-simple.1
        doc/pbuilder-dist.1
        doc/submittodebian.1

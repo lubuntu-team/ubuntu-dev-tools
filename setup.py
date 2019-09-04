@@ -22,7 +22,6 @@ if sys.version_info[0] >= 3:
     data_files = []
 else:
     scripts = [
-        '404main',
         'backportpackage',
         'bitesize',
         'check-mir',

@@ -96,8 +96,6 @@ Description: useful tools for Ubuntu developers
  .
  Such tools include:
  .
-  - 404main - used to check what components a package's deps are in, for
-    doing a main inclusion report for example.
   - backportpackage - helper to test package backports
   - bitesize - add the 'bitesize' tag to a bug and comment that you are
     willing to help fix it.
