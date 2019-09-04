@@ -23,6 +23,7 @@ if sys.version_info[0] >= 3:
         'check-symbols',
         'dch-repeat',
         'grab-merge',
+        'grep-merges',
         'mk-sbuild',
         'pbuilder-dist-simple',
         'pull-debian-source',
@@ -38,7 +39,6 @@ if sys.version_info[0] >= 3:
     ]
 else:
     scripts = [
-        'grep-merges',
         'hugdaylist',
         'import-bug-from-debian',
         'merge-changelog',
