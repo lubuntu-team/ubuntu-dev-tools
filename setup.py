@@ -24,6 +24,7 @@ if sys.version_info[0] >= 3:
         'dch-repeat',
         'grab-merge',
         'grep-merges',
+        'hugdaylist',
         'mk-sbuild',
         'pbuilder-dist-simple',
         'pull-debian-source',
@@ -39,7 +40,6 @@ if sys.version_info[0] >= 3:
     ]
 else:
     scripts = [
-        'hugdaylist',
         'import-bug-from-debian',
         'merge-changelog',
         'pbuilder-dist',
