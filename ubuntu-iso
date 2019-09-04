@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 # ubuntuiso - tool to examine Ubuntu CD (ISO) installation media
 # Copyright (C) 2008 Canonical Ltd.
@@ -29,7 +29,7 @@ from ubuntutools import subprocess
 def extract(iso, path):
     command = ['isoinfo', '-R', '-i', iso, '-x', path]
     pipe = subprocess.Popen(command, stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE)
+                            stderr=subprocess.PIPE, encoding='utf-8')
     stdout, stderr = pipe.communicate()
 
     if pipe.returncode != 0:
@@ -55,11 +55,12 @@ def main():
         version = extract(iso, '/.disk/info')
 
         if len(version) == 0:
-            print >> sys.stderr, '%s does not appear to be an Ubuntu ISO' % iso
+            print('%s does not appear to be an Ubuntu ISO' % iso,
+                  file=sys.stderr)
             err = True
             continue
 
-        print prefix + version
+        print(prefix + version)
 
     if err:
         sys.exit(1)
