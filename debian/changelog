@@ -7,6 +7,8 @@ ubuntu-dev-tools (0.172) UNRELEASED; urgency=medium
   * Build-Depend on pylint (>= 2, the Python 3 version), it replaced pylint3.
   * Explicitly declare python dependencies in the python library modules (the
     setup.py doesn't provide these) and ubuntu-dev-tools itself.
+  * dh_python2 doesn't generate a python dependency in ubuntu-dev-tools, now
+    that it's scripts-only, so manually declare one.
 
  -- Mattia Rizzolo <mattia@debian.org>  Fri, 23 Aug 2019 10:07:40 +0200
 
