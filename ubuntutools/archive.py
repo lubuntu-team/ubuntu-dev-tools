@@ -27,18 +27,13 @@ Approach:
 3. Verify checksums.
 """
 
-from __future__ import with_statement, print_function
-
+from urllib.error import URLError, HTTPError
+from urllib.parse import urlparse
+from urllib.request import ProxyHandler, build_opener, urlopen
 import codecs
 import hashlib
+import json
 import os.path
-try:
-    from urllib.request import ProxyHandler, build_opener, urlopen
-    from urllib.parse import urlparse
-    from urllib.error import URLError, HTTPError
-except ImportError:
-    from urllib2 import ProxyHandler, build_opener, urlopen, URLError, HTTPError
-    from urlparse import urlparse
 import re
 import sys
 
@@ -496,15 +491,6 @@ class DebianSourcePackage(SourcePackage):
     def snapshot_list(self):
         "Return a filename -> hash dictionary from snapshot.debian.org"
         if self._snapshot_list is None:
-            try:
-                import json
-            except ImportError:
-                import simplejson as json
-            except ImportError:
-                Logger.error("Please install python-simplejson.")
-                raise DownloadError("Unable to dowload from "
-                                    "snapshot.debian.org without "
-                                    "python-simplejson")
 
             try:
                 data = self.url_opener.open(

@@ -49,8 +49,7 @@ def get_source_files():
         if is_script:
             with open(code_file, "rb") as script_file:
                 shebang = script_file.readline().decode("utf-8")
-            if ((sys.version_info[0] == 3 and "python3" in shebang)
-                    or ("python" in shebang and "python3" not in shebang)):
+            if "python3" in shebang:
                 files.append(code_file)
         else:
             files.append(code_file)
