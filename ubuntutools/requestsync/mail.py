@@ -161,9 +161,10 @@ def mail_bug(srcpkg, subscribe, status, bugtitle, bugtext, bug_mail_domain,
         gpg_command.extend(('-u', keyid))
 
     # sign the mail body
-    gpg = subprocess.Popen(gpg_command, stdin=subprocess.PIPE,
-                           stdout=subprocess.PIPE)
-    signed_report = gpg.communicate(mailbody.encode('utf-8'))[0].decode('utf-8')
+    gpg = subprocess.Popen(
+        gpg_command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+        encoding='utf-8')
+    signed_report = gpg.communicate(mailbody)[0]
     if gpg.returncode != 0:
         Logger.error("%s failed.", gpg_command[0])
         sys.exit(1)

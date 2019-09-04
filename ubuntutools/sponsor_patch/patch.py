@@ -71,7 +71,7 @@ class Patch(object):
         patch_f.close()
 
         cmd = ["diffstat", "-l", "-p0", self._full_path]
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, encoding='utf-8')
         changed_files = process.communicate()[0]
         self._changed_files = [f for f in changed_files.split("\n") if f != ""]
 

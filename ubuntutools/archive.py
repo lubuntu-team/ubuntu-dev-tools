@@ -620,8 +620,8 @@ def rmadison(url, package, suite=None, arch=None):
     if arch:
         cmd += ['-a', arch]
     cmd.append(package)
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE, close_fds=True)
+    process = subprocess.Popen(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
     output, error_output = process.communicate()
     if process.wait() != 0:
         if error_output:
@@ -636,7 +636,7 @@ def rmadison(url, package, suite=None, arch=None):
 
     # pylint bug: http://www.logilab.org/ticket/46273
     # pylint: disable=E1103
-    for line in output.decode().strip().splitlines():
+    for line in output.strip().splitlines():
         # pylint: enable=E1103
         pkg, ver, dist, archs = [x.strip() for x in line.split('|')]
         comp = 'main'

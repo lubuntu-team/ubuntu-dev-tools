@@ -46,7 +46,7 @@ class HelpTestCase(unittest.TestCase):
         def tester(self):
             null = open('/dev/null', 'r')
             process = subprocess.Popen(['./' + script, '--help'],
-                                       close_fds=True, stdin=null,
+                                       encoding='utf-8', stdin=null,
                                        universal_newlines=True,
                                        stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE)
