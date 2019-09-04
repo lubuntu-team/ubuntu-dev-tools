@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Copyright (C) 2011, Stefano Rivera <stefanor@ubuntu.com>
 #
@@ -106,12 +106,12 @@ def main():
             sys.exit(1)
 
     def filter_out_fiels(data, fields):
-        for field in data.keys():
+        for field in list(data.keys()):
             if field not in fields:
                 del data[field]
 
     def filter_out_component(data, component):
-        for field, rdeps in data.items():
+        for field, rdeps in list(data.items()):
             filtered = [rdep for rdep in rdeps
                         if rdep['Component'] in component]
             if not filtered:
@@ -141,7 +141,7 @@ def main():
             filter_out_component(result[package], component)
 
         if recursive > 0:
-            for rdeps in result[package].itervalues():
+            for rdeps in result[package].values():
                 for rdep in rdeps:
                     build_results(
                         rdep['Package'], result, fields, component, recursive - 1)
@@ -178,7 +178,7 @@ def display_verbose(package, values):
         data = values.get(package)
         if data:
             offset = offset + 1
-            for rdeps in data.itervalues():
+            for rdeps in data.values():
                 for rdep in rdeps:
                     print_package(values,
                                   rdep['Package'],
@@ -188,13 +188,13 @@ def display_verbose(package, values):
 
     all_archs = set()
     # This isn't accurate, but we make up for it by displaying what we found
-    for data in values.itervalues():
-        for rdeps in data.itervalues():
+    for data in values.values():
+        for rdeps in data.values():
             for rdep in rdeps:
                 if 'Architectures' in rdep:
                     all_archs.update(rdep['Architectures'])
 
-    for field, rdeps in values[package].iteritems():
+    for field, rdeps in values[package].items():
         print_field(field)
         rdeps.sort(key=lambda x: x['Package'])
         for rdep in rdeps:
@@ -202,7 +202,7 @@ def display_verbose(package, values):
                           rdep['Package'],
                           rdep.get('Architectures', all_archs),
                           rdep.get('Dependency'))
-        print
+        print()
 
     if all_archs:
         print("Packages without architectures listed are "
@@ -212,12 +212,12 @@ def display_verbose(package, values):
 
 def display_consise(values):
     result = set()
-    for data in values.itervalues():
-        for rdeps in data.itervalues():
+    for data in values.values():
+        for rdeps in data.values():
             for rdep in rdeps:
                 result.add(rdep['Package'])
 
-    print(u'\n'.join(sorted(list(result))))
+    print('\n'.join(sorted(list(result))))
 
 
 if __name__ == '__main__':

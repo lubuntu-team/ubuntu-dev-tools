@@ -36,6 +36,7 @@ if sys.version_info[0] >= 3:
         'requestbackport',
         'requestsync',
         'reverse-build-depends',
+        'reverse-depends',
         'setup-packaging-environment',
     ]
     data_files = [
@@ -48,7 +49,6 @@ else:
     scripts = [
         'import-bug-from-debian',
         'merge-changelog',
-        'reverse-depends',
         'seeded-in-ubuntu',
         'sponsor-patch',
         'submittodebian',
