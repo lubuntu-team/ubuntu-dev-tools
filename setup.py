@@ -17,6 +17,7 @@ if os.path.exists(changelog):
 
 if sys.version_info[0] >= 3:
     scripts = [
+        'backportpackage',
         'check-symbols',
         'dch-repeat',
         'grab-merge',
@@ -34,7 +35,6 @@ if sys.version_info[0] >= 3:
     ]
 else:
     scripts = [
-        'backportpackage',
         'bitesize',
         'check-mir',
         'grep-merges',
