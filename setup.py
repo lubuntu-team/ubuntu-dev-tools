@@ -40,6 +40,7 @@ if sys.version_info[0] >= 3:
         'seeded-in-ubuntu',
         'setup-packaging-environment',
         'sponsor-patch',
+        'submittodebian',
     ]
     data_files = [
         ('share/bash-completion/completions', glob.glob("bash_completion/*")),
@@ -51,7 +52,6 @@ else:
     scripts = [
         'import-bug-from-debian',
         'merge-changelog',
-        'submittodebian',
         'syncpackage',
         'ubuntu-build',
         'ubuntu-iso',

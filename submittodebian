@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 #
 # submittodebian - tool to submit patches to Debian's BTS
@@ -39,8 +39,8 @@ from ubuntutools.update_maintainer import update_maintainer, restore_maintainer
 try:
     from debian.changelog import Changelog
 except ImportError:
-    print(u"This utility requires modules from the «python-debian» package, "
-          u"which isn't currently installed.")
+    print("This utility requires modules from the «python3-debian» package, "
+          "which isn't currently installed.")
     sys.exit(1)
 
 
@@ -94,7 +94,7 @@ def gen_debdiff(tmpdir, changelog):
     devnull = open('/dev/null', 'w')
     diff_cmd = ['bzr', 'diff', '-r', 'tag:' + str(oldver)]
     if call(diff_cmd, stdout=devnull, stderr=devnull) == 1:
-        print "Extracting bzr diff between %s and %s" % (oldver, newver)
+        print("Extracting bzr diff between %s and %s" % (oldver, newver))
     else:
         if oldver.epoch is not None:
             oldver = str(oldver)[str(oldver).index(":") + 1:]
@@ -107,7 +107,7 @@ def gen_debdiff(tmpdir, changelog):
         check_file(olddsc)
         check_file(newdsc)
 
-        print "Generating debdiff between %s and %s" % (oldver, newver)
+        print("Generating debdiff between %s and %s" % (oldver, newver))
         diff_cmd = ['debdiff', olddsc, newdsc]
 
     diff = Popen(diff_cmd, stdout=PIPE)
@@ -128,15 +128,15 @@ def check_file(fname, critical=True):
     else:
         if not critical:
             return False
-        print u"Couldn't find «%s».\n" % fname
+        print("Couldn't find «%s».\n" % fname)
         sys.exit(1)
 
 
 def submit_bugreport(body, debdiff, deb_version, changelog):
     try:
         devel = UbuntuDistroInfo().devel()
-    except DistroDataOutdated, e:
-        print str(e)
+    except DistroDataOutdated as e:
+        print(str(e))
         devel = ''
 
     if os.path.dirname(sys.argv[0]).startswith('/usr/bin'):
@@ -203,10 +203,10 @@ no-cc
 #smtptls
 """ % email
 
-    with file(fn, 'w') as f:
+    with open(fn, 'w') as f:
         f.write(reportbugrc)
 
-    print """\
+    print("""\
 You have not configured reportbug. Assuming this is the first time you have
 used it. Writing a ~/.reportbugrc that will use Debian's mail server, and CC
 the bug to you at <%s>
@@ -217,7 +217,7 @@ the bug to you at <%s>
 
 If this is not correct, please exit now and edit ~/.reportbugrc or run
 reportbug --configure for its configuration wizard.
-""" % (email, reportbugrc.strip())
+""" % (email, reportbugrc.strip()))
 
     if YesNoQuestion().ask("Continue submitting this bug", "yes") == "no":
         sys.exit(1)
@@ -230,14 +230,15 @@ def main():
     parser.parse_args()
 
     if not os.path.exists('/usr/bin/reportbug'):
-        print(u"This utility requires the «reportbug» package, which isn't "
-              u"currently installed.")
+        print("This utility requires the «reportbug» package, which isn't "
+              "currently installed.")
         sys.exit(1)
 
     check_reportbug_config()
     changelog_file = (check_file('debian/changelog', critical=False) or
                       check_file('../debian/changelog'))
-    changelog = Changelog(file(changelog_file).read())
+    with open(changelog_file) as f:
+        changelog = Changelog(f.read())
 
     deb_version = get_most_recent_debian_version(changelog)
     bug_body = get_bug_body(changelog)
