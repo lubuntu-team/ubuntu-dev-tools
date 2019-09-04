@@ -18,10 +18,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import re
 import sys
 
-from debian.debian_support import Version
+from debian.changelog import Changelog
 
 
 def usage(exit_code=1):
@@ -39,65 +38,30 @@ Debian release of the package.
 ########################################################################
 
 
-# Regular expression for top of debian/changelog
-CL_RE = re.compile(r'^(\w[-+0-9a-z.]*) \(([^\(\) \t]+)\)((\s+[-0-9a-z]+)+)\;',
-                   re.IGNORECASE)
-
-
 def merge_changelog(left_changelog, right_changelog):
     """Merge a changelog file."""
 
-    left_cl = read_changelog(left_changelog)
-    right_cl = read_changelog(right_changelog)
+    with open(left_changelog) as f:
+        left_cl = Changelog(f)
+    with open(right_changelog) as f:
+        right_cl = Changelog(f)
 
-    for right_ver, right_text in right_cl:
-        while len(left_cl) and left_cl[0][0] > right_ver:
-            (left_ver, left_text) = left_cl.pop(0)
-            print(left_text)
+    left_versions = set(left_cl.versions)
+    right_versions = set(right_cl.versions)
+    left_blocks = iter(left_cl)
+    right_blocks = iter(right_cl)
 
-        while len(left_cl) and left_cl[0][0] == right_ver:
-            (left_ver, left_text) = left_cl.pop(0)
+    for version in sorted(left_versions | right_versions, reverse=True):
+        if version in left_versions:
+            block = next(left_blocks)
+            if version in right_versions:
+                next(right_blocks)
+        else:
+            block = next(right_blocks)
 
-        print(right_text)
+        assert block.version == version
 
-    for _, left_text in left_cl:
-        print(left_text)
-
-    return False
-
-
-def read_changelog(filename):
-    """Return a parsed changelog file."""
-    entries = []
-
-    changelog_file = open(filename)
-    try:
-        (ver, text) = (None, "")
-        for line in changelog_file:
-            match = CL_RE.search(line)
-            if match:
-                try:
-                    ver = Version(match.group(2))
-                except ValueError:
-                    ver = None
-
-                text += line
-            elif line.startswith(" -- "):
-                if ver is None:
-                    ver = Version("0")
-
-                text += line
-                entries.append((ver, text))
-                (ver, text) = (None, "")
-            elif len(line.strip()) or ver is not None:
-                text += line
-    finally:
-        changelog_file.close()
-
-    if len(text):
-        entries.append((ver, text))
-
-    return entries
+        print(str(block).strip(), end='\n\n')
 
 
 def main():
