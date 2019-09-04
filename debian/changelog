@@ -4,6 +4,7 @@ ubuntu-dev-tools (0.173) UNRELEASED; urgency=medium
   * pull-debian-debdiff: Don't unpack the older source package, it will often
     use the same directory as the newer one, and break.
   * Drop 404main, it's been totally broken for years.
+  * Use python3-debian's Version class in merge-changelog, to support Python 3.
 
   [ Scott Kitterman ]
   * Update requestsync to python3 (Closes: #927147)

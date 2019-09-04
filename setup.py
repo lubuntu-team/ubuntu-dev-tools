@@ -26,6 +26,7 @@ if sys.version_info[0] >= 3:
         'grep-merges',
         'hugdaylist',
         'import-bug-from-debian',
+        'merge-changelog',
         'mk-sbuild',
         'pbuilder-dist',
         'pbuilder-dist-simple',
@@ -55,9 +56,7 @@ if sys.version_info[0] >= 3:
         ('share/ubuntu-dev-tools', ['enforced-editing-wrapper']),
     ]
 else:
-    scripts = [
-        'merge-changelog',
-    ]
+    scripts = []
     data_files = []
 
 if __name__ == '__main__':
