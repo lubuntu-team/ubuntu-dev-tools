@@ -34,6 +34,7 @@ if sys.version_info[0] >= 3:
         ('share/bash-completion/completions', glob.glob("bash_completion/*")),
         ('share/man/man1', glob.glob("doc/*.1")),
         ('share/man/man5', glob.glob("doc/*.5")),
+        ('share/ubuntu-dev-tools', ['enforced-editing-wrapper']),
     ]
 else:
     scripts = [
@@ -57,9 +58,7 @@ else:
         'ubuntu-upload-permission',
         'update-maintainer',
     ]
-    data_files = [
-        ('share/ubuntu-dev-tools', ['enforced-editing-wrapper']),
-    ]
+    data_files = []
 
 if __name__ == '__main__':
     setup(
