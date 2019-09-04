@@ -18,6 +18,7 @@
 
 from __future__ import print_function
 
+import codecs
 import tempfile
 import os
 import re
@@ -27,6 +28,7 @@ import ubuntutools.subprocess
 
 if sys.version_info[0] < 3:
     input = raw_input  # noqa, pylint: disable=undefined-variable
+    open = codecs.open
 
 
 class Question(object):
@@ -133,7 +135,7 @@ class EditFile(object):
     def edit(self, optional=False):
         if optional:
             print("\n\nCurrently the %s looks like:" % self.description)
-            with open(self.filename, 'r') as f:
+            with open(self.filename, 'r', encoding='utf-8') as f:
                 print(f.read())
             if YesNoQuestion().ask("Edit", "no") == "no":
                 return
@@ -146,7 +148,7 @@ class EditFile(object):
             modified = old_mtime != os.stat(self.filename).st_mtime
             placeholders_present = False
             if self.placeholders:
-                with open(self.filename, 'r') as f:
+                with open(self.filename, 'r', encoding='utf-8') as f:
                     for line in f:
                         for placeholder in self.placeholders:
                             if placeholder.search(line.strip()):
@@ -188,8 +190,8 @@ class EditBugReport(EditFile):
                                             placeholders)
 
     def check_edit(self):
-        with open(self.filename, 'r') as f:
-            report = f.read().decode('utf-8')
+        with open(self.filename, 'r', encoding='utf-8') as f:
+            report = f.read()
 
         if self.split_re.match(report) is None:
             print("The %s doesn't start with 'Summary:' and 'Description:' "
@@ -199,8 +201,8 @@ class EditBugReport(EditFile):
         return True
 
     def get_report(self):
-        with open(self.filename, 'r') as f:
-            report = f.read().decode('utf-8')
+        with open(self.filename, 'r', encoding='utf-8') as f:
+            report = f.read()
 
         match = self.split_re.match(report)
         title = match.group(1).replace(u'\n', u' ')
