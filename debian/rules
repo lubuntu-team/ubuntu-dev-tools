@@ -1,12 +1,4 @@
 #!/usr/bin/make -f
 
-export PYBUILD_NAME=ubuntutools
-
 %:
 	dh $@ --with python2,python3 --buildsystem=pybuild
-
-override_dh_install:
-	dh_install
-	mkdir -p debian/ubuntu-dev-tools/usr
-	mv debian/python-ubuntutools/usr/bin debian/ubuntu-dev-tools/usr/
-	mv debian/python-ubuntutools/usr/share debian/ubuntu-dev-tools/usr/
