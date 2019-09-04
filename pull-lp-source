@@ -105,7 +105,7 @@ def main():
     pocket = None
     try:
         (release, pocket) = split_release_pocket(version, default=None)
-    except PocketDoesNotExistError as e:
+    except PocketDoesNotExistError:
         pass
     if release in ubuntu_info.all:
         archive = Distribution('ubuntu').getArchive()

@@ -118,12 +118,12 @@ def main():
     pocket = None
     try:
         (release, pocket) = split_release_pocket(release, default=None)
-    except PocketDoesNotExistError as e:
+    except PocketDoesNotExistError:
         pass
 
     try:
         archive = uca.getPPAByName(name="%s-staging" % release)
-    except NotFound as e:
+    except NotFound:
         Logger.error('Archive does not exist for Openstack release: %s',
                      release)
         showOpenstackReleases(uca)
