@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # pull-debian-debdiff - find and download a specific version of a Debian
 #                       package and its immediate parent to generate a debdiff.
 #
@@ -84,7 +84,7 @@ def main():
     newpkg = DebianSourcePackage(package, version, mirrors=mirrors)
     try:
         newpkg.pull()
-    except DownloadError, e:
+    except DownloadError as e:
         Logger.error('Failed to download: %s', str(e))
         sys.exit(1)
     newpkg.unpack()
@@ -101,10 +101,10 @@ def main():
     oldpkg = DebianSourcePackage(package, oldversion, mirrors=mirrors)
     try:
         oldpkg.pull()
-    except DownloadError, e:
+    except DownloadError as e:
         Logger.error('Failed to download: %s', str(e))
         sys.exit(1)
-    print 'file://' + oldpkg.debdiff(newpkg, diffstat=True)
+    print('file://' + oldpkg.debdiff(newpkg, diffstat=True))
 
 
 if __name__ == '__main__':
