@@ -44,6 +44,7 @@ if sys.version_info[0] >= 3:
         'syncpackage',
         'ubuntu-build',
         'ubuntu-iso',
+        'ubuntu-upload-permission',
     ]
     data_files = [
         ('share/bash-completion/completions', glob.glob("bash_completion/*")),
@@ -55,7 +56,6 @@ else:
     scripts = [
         'import-bug-from-debian',
         'merge-changelog',
-        'ubuntu-upload-permission',
         'update-maintainer',
     ]
     data_files = []
