@@ -34,6 +34,7 @@ if sys.version_info[0] >= 3:
         'pull-revu-source',
         'pull-uca-source',
         'requestbackport',
+        'requestsync',
         'reverse-build-depends',
         'setup-packaging-environment',
     ]
@@ -47,7 +48,6 @@ else:
     scripts = [
         'import-bug-from-debian',
         'merge-changelog',
-        'requestsync',
         'reverse-depends',
         'seeded-in-ubuntu',
         'sponsor-patch',
