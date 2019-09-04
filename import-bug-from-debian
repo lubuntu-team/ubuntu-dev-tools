@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: UTF-8 -*-
 
 # Copyright © 2009 James Westby <james.westby@ubuntu.com>,
@@ -33,22 +33,14 @@ from ubuntutools.config import UDTConfig
 from ubuntutools.logger import Logger
 
 try:
-    import SOAPpy
+    import debianbts
 except ImportError:
-    Logger.error("Please install 'python-soappy' in order to use this utility.")
+    Logger.error("Please install 'python3-debianbts' in order to use this utility.")
     sys.exit(1)
 
 
 def main():
     bug_re = re.compile(r"bug=(\d+)")
-
-    url = 'http://bugs.debian.org/cgi-bin/soap.cgi'
-    namespace = 'Debbugs/SOAP'
-    debbugs = SOAPpy.SOAPProxy(url, namespace)
-
-    # debug
-    # debbugs.config.dumpSOAPOut = 1
-    # debbugs.config.dumpSOAPIn = 1
 
     parser = OptionParser(usage="%prog [option] bug ...")
     parser.add_option("-b", "--browserless",
@@ -94,7 +86,7 @@ def main():
         bug_num = int(bug_num)
         bug_nums.append(bug_num)
 
-    bugs = debbugs.get_status(*bug_nums)
+    bugs = debianbts.get_status(*bug_nums)
 
     if len(bug_nums) > 1:
         bugs = bugs[0]
@@ -104,14 +96,14 @@ def main():
         sys.exit(1)
 
     for bug in bugs:
-        bug = bug.value
         ubupackage = package = bug.source
         if options.package:
             ubupackage = options.package
         bug_num = bug.bug_num
         subject = bug.subject
-        log = debbugs.get_bug_log(bug_num)
-        summary = log[0][0]
+        summary = bug.summary
+        log = debianbts.get_bug_log(bug_num)
+        summary = log[0]['body']
         target = ubuntu.getSourcePackage(name=ubupackage)
         if target is None:
             Logger.error("Source package '%s' is not in Ubuntu. Please specify "

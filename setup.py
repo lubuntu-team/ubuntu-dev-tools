@@ -25,6 +25,7 @@ if sys.version_info[0] >= 3:
         'grab-merge',
         'grep-merges',
         'hugdaylist',
+        'import-bug-from-debian',
         'mk-sbuild',
         'pbuilder-dist',
         'pbuilder-dist-simple',
@@ -55,7 +56,6 @@ if sys.version_info[0] >= 3:
     ]
 else:
     scripts = [
-        'import-bug-from-debian',
         'merge-changelog',
     ]
     data_files = []
