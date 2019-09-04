@@ -68,6 +68,7 @@ Depends:
  python3-distro-info,
  python3-httplib2,
  python3-launchpadlib,
+ python3-lazr.restfulclient,
  python3-ubuntutools,
  sensible-utils,
  sudo,

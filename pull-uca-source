@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # pull-uca-source -- pull a source package from Ubuntu Cloud Archive
 # Basic usage: pull-uca-source <source package> <openstack release> [version]
@@ -118,12 +118,12 @@ def main():
     pocket = None
     try:
         (release, pocket) = split_release_pocket(release, default=None)
-    except PocketDoesNotExistError, e:
+    except PocketDoesNotExistError as e:
         pass
 
     try:
         archive = uca.getPPAByName(name="%s-staging" % release)
-    except NotFound, e:
+    except NotFound as e:
         Logger.error('Archive does not exist for Openstack release: %s',
                      release)
         showOpenstackReleases(uca)
@@ -143,7 +143,7 @@ def main():
 
     try:
         srcpkg.pull()
-    except DownloadError, e:
+    except DownloadError as e:
         Logger.error('Failed to download: %s', str(e))
         sys.exit(1)
     if not options.download_only:

@@ -32,6 +32,7 @@ if sys.version_info[0] >= 3:
         'pull-debian-source',
         'pull-lp-source',
         'pull-revu-source',
+        'pull-uca-source',
         'reverse-build-depends',
         'setup-packaging-environment',
     ]
@@ -45,7 +46,6 @@ else:
     scripts = [
         'import-bug-from-debian',
         'merge-changelog',
-        'pull-uca-source',
         'requestbackport',
         'requestsync',
         'reverse-depends',
