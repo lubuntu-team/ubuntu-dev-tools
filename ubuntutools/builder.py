@@ -19,9 +19,9 @@
 #
 
 import os
+import subprocess
 
 from ubuntutools.logger import Logger
-from ubuntutools import subprocess
 
 
 def _build_preparation(result_directory):

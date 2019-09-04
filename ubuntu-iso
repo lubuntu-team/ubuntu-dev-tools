@@ -21,9 +21,8 @@
 # ##################################################################
 
 import optparse
+import subprocess
 import sys
-
-from ubuntutools import subprocess
 
 
 def extract(iso, path):

@@ -22,9 +22,8 @@
 #
 # ##################################################################
 
-from __future__ import print_function
-
 # Modules.
+from subprocess import Popen, PIPE
 import locale
 import os
 import sys
@@ -32,7 +31,6 @@ import sys
 import distro_info
 
 from ubuntutools.lp.udtexceptions import PocketDoesNotExistError
-from ubuntutools.subprocess import Popen, PIPE
 
 _system_distribution_chain = []
 

@@ -18,10 +18,10 @@ import fcntl
 import os
 import select
 import signal
+import subprocess
 import time
 
 import setup
-from ubuntutools import subprocess
 from ubuntutools.test import unittest
 
 TIMEOUT = 10

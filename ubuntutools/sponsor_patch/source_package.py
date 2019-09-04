@@ -15,16 +15,14 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-from __future__ import print_function
-
 import os
 import re
+import subprocess
 import sys
 
 import debian.changelog
 import debian.deb822
 
-from ubuntutools import subprocess
 from ubuntutools.logger import Logger
 from ubuntutools.question import Question, YesNoQuestion
 

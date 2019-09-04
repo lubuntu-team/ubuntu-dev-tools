@@ -17,10 +17,10 @@
 
 import os
 import re
+import subprocess
 import sys
 
 from ubuntutools.test import get_source_files, unittest, unittest_verbosity
-from ubuntutools import subprocess
 
 CONFIG = os.path.join(os.path.dirname(__file__), "pylint.conf")
 

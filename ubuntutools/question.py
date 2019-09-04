@@ -16,19 +16,11 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-from __future__ import print_function
-
-import codecs
 import tempfile
 import os
 import re
+import subprocess
 import sys
-
-import ubuntutools.subprocess
-
-if sys.version_info[0] < 3:
-    input = raw_input  # noqa, pylint: disable=undefined-variable
-    open = codecs.open
 
 
 class Question(object):
@@ -143,8 +135,7 @@ class EditFile(object):
         done = False
         while not done:
             old_mtime = os.stat(self.filename).st_mtime
-            ubuntutools.subprocess.check_call(['sensible-editor',
-                                               self.filename])
+            subprocess.check_call(['sensible-editor', self.filename])
             modified = old_mtime != os.stat(self.filename).st_mtime
             placeholders_present = False
             if self.placeholders:

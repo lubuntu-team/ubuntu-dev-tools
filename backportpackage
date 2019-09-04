@@ -22,6 +22,7 @@ import glob
 import optparse
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 
@@ -39,7 +40,6 @@ from ubuntutools.logger import Logger
 from ubuntutools.misc import (system_distribution, vendor_to_distroinfo,
                               codename_to_distribution)
 from ubuntutools.question import YesNoQuestion
-from ubuntutools import subprocess
 
 
 def error(msg):

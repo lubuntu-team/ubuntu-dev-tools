@@ -35,6 +35,7 @@ import hashlib
 import json
 import os.path
 import re
+import subprocess
 import sys
 
 from debian.changelog import Changelog, Version
@@ -46,11 +47,6 @@ from ubuntutools.config import UDTConfig
 from ubuntutools.lp.lpapicache import (Launchpad, Distribution,
                                        SourcePackagePublishingHistory)
 from ubuntutools.logger import Logger
-from ubuntutools import subprocess
-
-if sys.version_info[0] >= 3:
-    basestring = str
-    unicode = str
 
 
 class DownloadError(Exception):
@@ -587,14 +583,14 @@ class FakeSPPH(object):
         if since_version is None:
             return self._changelog
 
-        if isinstance(since_version, basestring):
+        if isinstance(since_version, str):
             since_version = Version(since_version)
 
         new_entries = []
         for block in Changelog(self._changelog):
             if block.version <= since_version:
                 break
-            new_entries.append(unicode(block))
+            new_entries.append(str(block))
         return u''.join(new_entries)
 
 

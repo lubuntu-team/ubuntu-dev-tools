@@ -4,12 +4,11 @@ from setuptools import setup
 import glob
 import os
 import re
-import codecs
 
 # look/set what version we have
 changelog = "debian/changelog"
 if os.path.exists(changelog):
-    head = codecs.open(changelog, 'r', 'utf-8', 'replace').readline()
+    head = open(changelog, 'r', encoding='utf-8').readline()
     match = re.compile(r".*\((.*)\).*").match(head)
     if match:
         version = match.group(1)

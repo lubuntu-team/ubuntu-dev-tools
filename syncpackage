@@ -20,11 +20,11 @@
 #
 # ##################################################################
 
-import codecs
 import fnmatch
 import optparse
 import os
 import shutil
+import subprocess
 import sys
 import textwrap
 import urllib.request
@@ -44,13 +44,12 @@ from ubuntutools.requestsync.mail import (
         get_debian_srcpkg as requestsync_mail_get_debian_srcpkg)
 from ubuntutools.requestsync.lp import get_debian_srcpkg, get_ubuntu_srcpkg
 from ubuntutools.version import Version
-from ubuntutools import subprocess
 
 
 def remove_signature(dscname):
     '''Removes the signature from a .dsc file if the .dsc file is signed.'''
 
-    dsc_file = codecs.open(dscname, encoding='utf-8')
+    dsc_file = open(dscname, encoding='utf-8')
     if dsc_file.readline().strip() == "-----BEGIN PGP SIGNED MESSAGE-----":
         unsigned_file = []
         # search until begin of body found
@@ -65,7 +64,7 @@ def remove_signature(dscname):
             unsigned_file.append(line)
 
         dsc_file.close()
-        dsc_file = codecs.open(dscname, "w", encoding='utf-8')
+        dsc_file = open(dscname, "w", encoding='utf-8')
         dsc_file.writelines(unsigned_file)
         dsc_file.close()
 
@@ -169,7 +168,7 @@ def sync_dsc(src_pkg, debian_dist, release, name, email, bugs, ubuntu_mirror,
 
     # read Debian distribution from debian/changelog if not specified
     if debian_dist is None:
-        line = codecs.open("debian/changelog", encoding='utf-8').readline()
+        line = open("debian/changelog", encoding='utf-8').readline()
         debian_dist = line.split(" ")[2].strip(";")
 
     if not fakesync:
@@ -199,7 +198,7 @@ def sync_dsc(src_pkg, debian_dist, release, name, email, bugs, ubuntu_mirror,
         shutil.rmtree(directory, True)
 
         # write changes file
-        changes_file = codecs.open(changes_filename, "w", encoding='utf-8')
+        changes_file = open(changes_filename, "w", encoding='utf-8')
         changes_file.writelines(changes)
         changes_file.close()
 

@@ -20,13 +20,12 @@
 #   Please see the /usr/share/common-licenses/GPL-2 file for the full text
 #   of the GNU General Public License license.
 
-from __future__ import print_function
-
 import os
 import re
 import sys
 import smtplib
 import socket
+import subprocess
 import tempfile
 
 from debian.changelog import Changelog, Version
@@ -36,11 +35,6 @@ from ubuntutools.archive import rmadison, FakeSPPH
 from ubuntutools.lp.udtexceptions import PackageNotFoundException
 from ubuntutools.logger import Logger
 from ubuntutools.question import confirmation_prompt, YesNoQuestion
-from ubuntutools import subprocess
-
-if sys.version_info[0] >= 3:
-    basestring = str
-    unicode = str
 
 
 __all__ = [
@@ -117,7 +111,7 @@ def get_ubuntu_delta_changelog(srcpkg):
         distribution = block.distributions.split()[0].split('-')[0]
         if debian_info.valid(distribution):
             break
-        delta += [unicode(change) for change in block.changes()
+        delta += [str(change) for change in block.changes()
                   if change.strip()]
 
     return u'\n'.join(delta)

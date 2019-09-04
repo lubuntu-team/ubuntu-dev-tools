@@ -30,6 +30,7 @@
 # that the target distribution is always meant to be Ubuntu Hardy.
 
 import os
+import subprocess
 import sys
 
 import debian.deb822
@@ -40,7 +41,6 @@ import ubuntutools.version
 from ubuntutools.config import UDTConfig
 from ubuntutools.logger import Logger
 from ubuntutools.question import YesNoQuestion
-from ubuntutools import subprocess
 
 
 class PbuilderDist(object):

@@ -17,8 +17,8 @@
 
 import os
 import re
+import subprocess
 
-from ubuntutools import subprocess
 from ubuntutools.logger import Logger
 from ubuntutools.sponsor_patch.question import ask_for_manual_fixing
 from functools import reduce

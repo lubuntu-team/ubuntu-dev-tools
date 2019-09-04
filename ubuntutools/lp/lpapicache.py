@@ -21,8 +21,6 @@
 #
 #   Based on code written by Jonathan Davies <jpds@ubuntu.com>
 
-from __future__ import print_function
-
 # Uncomment for tracing LP API calls
 # import httplib2
 # httplib2.debuglevel = 1
@@ -43,27 +41,6 @@ from ubuntutools.lp.udtexceptions import (AlreadyLoggedInError,
                                           PackageNotFoundException,
                                           PocketDoesNotExistError,
                                           SeriesNotFoundException)
-
-if sys.version_info[0] >= 3:
-    basestring = str
-    unicode = str
-
-
-# Shameless steal from python-six
-def add_metaclass(metaclass):
-    """Class decorator for creating a class with a metaclass."""
-    def wrapper(cls):
-        orig_vars = cls.__dict__.copy()
-        slots = orig_vars.get('__slots__')
-        if slots is not None:
-            if isinstance(slots, str):
-                slots = [slots]
-            for slots_var in slots:
-                orig_vars.pop(slots_var)
-        orig_vars.pop('__dict__', None)
-        orig_vars.pop('__weakref__', None)
-        return metaclass(cls.__name__, cls.__bases__, orig_vars)
-    return wrapper
 
 
 __all__ = [
@@ -140,15 +117,14 @@ class MetaWrapper(type):
         cls._cache = dict()
 
 
-@add_metaclass(MetaWrapper)
-class BaseWrapper(object):
+class BaseWrapper(object, metaclass=MetaWrapper):
     '''
     A base class from which other wrapper classes are derived.
     '''
     resource_type = None  # it's a base class after all
 
     def __new__(cls, data):
-        if isinstance(data, basestring) and data.startswith(str(Launchpad._root_uri)):
+        if isinstance(data, str) and data.startswith(str(Launchpad._root_uri)):
             # looks like a LP API URL
             # check if it's already cached
             cached = cls._cache.get(data)
@@ -225,7 +201,7 @@ class Distribution(BaseWrapper):
         '''
         Fetch the distribution object identified by 'dist' from LP.
         '''
-        if not isinstance(dist, basestring):
+        if not isinstance(dist, str):
             raise TypeError("Don't know what do with '%r'" % dist)
         cached = cls._cache.get(dist)
         if not cached:
@@ -385,7 +361,7 @@ class Archive(BaseWrapper):
         '''
         if pocket is None:
             pockets = frozenset(('Proposed', 'Updates', 'Security', 'Release'))
-        elif isinstance(pocket, basestring):
+        elif isinstance(pocket, str):
             pockets = frozenset((pocket,))
         else:
             pockets = frozenset(pocket)
@@ -593,14 +569,14 @@ class SourcePackagePublishingHistory(BaseWrapper):
         if since_version is None:
             return self._changelog
 
-        if isinstance(since_version, basestring):
+        if isinstance(since_version, str):
             since_version = Version(since_version)
 
         new_entries = []
         for block in Changelog(self._changelog):
             if block.version <= since_version:
                 break
-            new_entries.append(unicode(block))
+            new_entries.append(str(block))
         return u''.join(new_entries)
 
     def getBinaries(self):
@@ -719,8 +695,7 @@ class MetaPersonTeam(MetaWrapper):
         return cls._me
 
 
-@add_metaclass(MetaPersonTeam)
-class PersonTeam(BaseWrapper):
+class PersonTeam(BaseWrapper, metaclass=MetaPersonTeam):
     '''
     Wrapper class around a LP person or team object.
     '''
@@ -743,7 +718,7 @@ class PersonTeam(BaseWrapper):
         '''
         Fetch the person or team object identified by 'url' from LP.
         '''
-        if not isinstance(person_or_team, basestring):
+        if not isinstance(person_or_team, str):
             raise TypeError("Don't know what do with '%r'" % person_or_team)
         cached = cls._cache.get(person_or_team)
         if not cached:
@@ -771,9 +746,9 @@ class PersonTeam(BaseWrapper):
             raise TypeError("'%r' is not an Archive object." % archive)
         if not isinstance(distroseries, DistroSeries):
             raise TypeError("'%r' is not a DistroSeries object." % distroseries)
-        if package is not None and not isinstance(package, basestring):
+        if package is not None and not isinstance(package, str):
             raise TypeError('A source package name expected.')
-        if component is not None and not isinstance(component, basestring):
+        if component is not None and not isinstance(component, str):
             raise TypeError('A component name expected.')
         if package is None and component is None:
             raise ValueError('Either a source package name or a component has '

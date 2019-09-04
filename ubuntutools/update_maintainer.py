@@ -14,8 +14,6 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-from __future__ import print_function
-
 """This module is for updating the Maintainer field of an Ubuntu package."""
 
 import os

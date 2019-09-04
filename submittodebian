@@ -27,13 +27,13 @@ import os
 import re
 import shutil
 import sys
+from subprocess import call, check_call, Popen, PIPE
 from tempfile import mkdtemp
 
 from distro_info import UbuntuDistroInfo, DistroDataOutdated
 
 from ubuntutools.config import ubu_email
 from ubuntutools.question import YesNoQuestion, EditFile
-from ubuntutools.subprocess import call, check_call, Popen, PIPE
 from ubuntutools.update_maintainer import update_maintainer, restore_maintainer
 
 try:
