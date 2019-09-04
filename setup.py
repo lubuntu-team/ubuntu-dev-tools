@@ -30,6 +30,7 @@ if sys.version_info[0] >= 3:
         'pbuilder-dist-simple',
         'pull-debian-debdiff',
         'pull-debian-source',
+        'pull-lp-source',
         'pull-revu-source',
         'reverse-build-depends',
         'setup-packaging-environment',
@@ -44,7 +45,6 @@ else:
     scripts = [
         'import-bug-from-debian',
         'merge-changelog',
-        'pull-lp-source',
         'pull-uca-source',
         'requestbackport',
         'requestsync',
