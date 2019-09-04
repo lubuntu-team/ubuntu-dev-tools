@@ -16,7 +16,9 @@ if os.path.exists(changelog):
         version = match.group(1)
 
 if sys.version_info[0] >= 3:
-    scripts = []
+    scripts = [
+        'pull-debian-source',
+    ]
     data_files = []
 else:
     scripts = [
@@ -35,7 +37,6 @@ else:
         'pbuilder-dist',
         'pbuilder-dist-simple',
         'pull-debian-debdiff',
-        'pull-debian-source',
         'pull-lp-source',
         'pull-revu-source',
         'pull-uca-source',

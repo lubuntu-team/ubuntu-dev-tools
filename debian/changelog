@@ -9,6 +9,8 @@ ubuntu-dev-tools (0.172) UNRELEASED; urgency=medium
     setup.py doesn't provide these) and ubuntu-dev-tools itself.
   * dh_python2 doesn't generate a python dependency in ubuntu-dev-tools, now
     that it's scripts-only, so manually declare one.
+  * Install pull-debian-source as python 3. It was ported, and doesn't work
+    under python 2 any more. (LP: #1841127)
 
  -- Mattia Rizzolo <mattia@debian.org>  Fri, 23 Aug 2019 10:07:40 +0200
 
