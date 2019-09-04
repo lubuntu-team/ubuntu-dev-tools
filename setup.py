@@ -17,34 +17,38 @@ if os.path.exists(changelog):
 
 if sys.version_info[0] >= 3:
     scripts = [
+        'check-symbols',
+        'dch-repeat',
+        'grab-merge',
+        'mk-sbuild',
+        'pbuilder-dist-simple',
         'pull-debian-source',
+        'pull-revu-source',
+        'reverse-build-depends',
+        'setup-packaging-environment',
     ]
-    data_files = []
+    data_files = [
+        ('share/bash-completion/completions', glob.glob("bash_completion/*")),
+        ('share/man/man1', glob.glob("doc/*.1")),
+        ('share/man/man5', glob.glob("doc/*.5")),
+    ]
 else:
     scripts = [
         'backportpackage',
         'bitesize',
         'check-mir',
-        'check-symbols',
-        'dch-repeat',
-        'grab-merge',
         'grep-merges',
         'hugdaylist',
         'import-bug-from-debian',
         'merge-changelog',
-        'mk-sbuild',
         'pbuilder-dist',
-        'pbuilder-dist-simple',
         'pull-debian-debdiff',
         'pull-lp-source',
-        'pull-revu-source',
         'pull-uca-source',
         'requestbackport',
         'requestsync',
-        'reverse-build-depends',
         'reverse-depends',
         'seeded-in-ubuntu',
-        'setup-packaging-environment',
         'sponsor-patch',
         'submittodebian',
         'syncpackage',
@@ -54,9 +58,6 @@ else:
         'update-maintainer',
     ]
     data_files = [
-        ('share/bash-completion/completions', glob.glob("bash_completion/*")),
-        ('share/man/man1', glob.glob("doc/*.1")),
-        ('share/man/man5', glob.glob("doc/*.5")),
         ('share/ubuntu-dev-tools', ['enforced-editing-wrapper']),
     ]
 
