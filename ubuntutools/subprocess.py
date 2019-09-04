@@ -6,6 +6,8 @@ module whose defaults better line up with our tastes.
 In particular, it:
  - Adds support for the restore_signals flag if subprocess itself
    doesn't support it
+ - Adds support for the encoding flag if subprocess itself doesn't
+   support it
  - Defaults close_fds to True
 """
 
@@ -13,6 +15,7 @@ In particular, it:
 from __future__ import absolute_import
 
 import inspect
+import codecs
 import signal
 import subprocess
 import sys
@@ -28,8 +31,10 @@ class Popen(subprocess.Popen):
         kwargs.setdefault('close_fds', True)
         if sys.version_info[0] >= 3:
             getargs = inspect.getfullargspec
+            encoding = None
         else:
             getargs = inspect.getargspec
+            encoding = kwargs.pop('encoding', None)
 
         if 'restore_signals' not in getargs(subprocess.Popen.__init__)[0]:
             given_preexec_fn = kwargs.pop('preexec_fn', None)
@@ -47,6 +52,11 @@ class Popen(subprocess.Popen):
             kwargs['preexec_fn'] = preexec_fn
 
         subprocess.Popen.__init__(self, *args, **kwargs)
+        if encoding is not None:
+            for channel in ('stdin', 'stdout', 'stderr'):
+                fd = getattr(self, channel)
+                if fd is not None:
+                    setattr(self, channel, codecs.EncodedFile(fd, encoding))
 
 
 # call, check_call, and check_output are copied directly from the
