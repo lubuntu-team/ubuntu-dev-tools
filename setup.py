@@ -26,6 +26,7 @@ if sys.version_info[0] >= 3:
         'grep-merges',
         'hugdaylist',
         'mk-sbuild',
+        'pbuilder-dist',
         'pbuilder-dist-simple',
         'pull-debian-source',
         'pull-revu-source',
@@ -42,7 +43,6 @@ else:
     scripts = [
         'import-bug-from-debian',
         'merge-changelog',
-        'pbuilder-dist',
         'pull-debian-debdiff',
         'pull-lp-source',
         'pull-uca-source',
