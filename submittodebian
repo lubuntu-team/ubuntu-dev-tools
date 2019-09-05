@@ -30,18 +30,12 @@ import sys
 from subprocess import call, check_call, Popen, PIPE
 from tempfile import mkdtemp
 
+from debian.changelog import Changelog
 from distro_info import UbuntuDistroInfo, DistroDataOutdated
 
 from ubuntutools.config import ubu_email
 from ubuntutools.question import YesNoQuestion, EditFile
 from ubuntutools.update_maintainer import update_maintainer, restore_maintainer
-
-try:
-    from debian.changelog import Changelog
-except ImportError:
-    print("This utility requires modules from the «python3-debian» package, "
-          "which isn't currently installed.")
-    sys.exit(1)
 
 
 def get_most_recent_debian_version(changelog):
