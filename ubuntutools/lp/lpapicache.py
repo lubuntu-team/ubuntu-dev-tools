@@ -577,7 +577,7 @@ class SourcePackagePublishingHistory(BaseWrapper):
             if block.version <= since_version:
                 break
             new_entries.append(str(block))
-        return u''.join(new_entries)
+        return ''.join(new_entries)
 
     def getBinaries(self):
         '''

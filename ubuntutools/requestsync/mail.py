@@ -104,7 +104,7 @@ def get_ubuntu_delta_changelog(srcpkg):
     '''
     changelog = Changelog(srcpkg.getChangelog())
     if changelog is None:
-        return u''
+        return ''
     delta = []
     debian_info = DebianDistroInfo()
     for block in changelog:
@@ -114,7 +114,7 @@ def get_ubuntu_delta_changelog(srcpkg):
         delta += [str(change) for change in block.changes()
                   if change.strip()]
 
-    return u'\n'.join(delta)
+    return '\n'.join(delta)
 
 
 def mail_bug(srcpkg, subscribe, status, bugtitle, bugtext, bug_mail_domain,
@@ -164,7 +164,7 @@ def mail_bug(srcpkg, subscribe, status, bugtitle, bugtext, bug_mail_domain,
         sys.exit(1)
 
     # generate email
-    mail = u'''\
+    mail = '''\
 From: %s
 To: %s
 Subject: %s

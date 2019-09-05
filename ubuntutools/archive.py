@@ -591,7 +591,7 @@ class FakeSPPH(object):
             if block.version <= since_version:
                 break
             new_entries.append(str(block))
-        return u''.join(new_entries)
+        return ''.join(new_entries)
 
 
 def rmadison(url, package, suite=None, arch=None):
