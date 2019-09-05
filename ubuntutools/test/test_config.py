@@ -15,15 +15,11 @@
 # OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 # PERFORMANCE OF THIS SOFTWARE.
 
+import locale
+import mock
 import os
 import sys
-import locale
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
-
-import mock
+from io import StringIO
 
 from ubuntutools.config import UDTConfig, ubu_email
 from ubuntutools.logger import Logger

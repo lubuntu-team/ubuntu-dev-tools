@@ -18,12 +18,7 @@
 #   the GNU General Public License license.
 #
 
-# Modules.
-try:
-    from urllib.parse import urlsplit, urlencode, urlunsplit
-except ImportError:
-    from urllib import urlencode
-    from urlparse import urlsplit, urlunsplit
+from urllib.parse import urlsplit, urlencode, urlunsplit
 
 
 def query_to_dict(query_string):

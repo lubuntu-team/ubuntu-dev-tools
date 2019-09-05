@@ -15,20 +15,16 @@
 # PERFORMANCE OF THIS SOFTWARE.
 
 
+import mock
 import os.path
 import shutil
 import tempfile
 from io import BytesIO
-try:
-    from urllib.request import OpenerDirector, urlopen
-    from urllib.error import HTTPError, URLError
-except ImportError:
-    from urllib2 import OpenerDirector, urlopen
-    from urllib2 import HTTPError, URLError
-import httplib2
-import mock
+from urllib.error import HTTPError, URLError
+from urllib.request import OpenerDirector, urlopen
 
 import debian.deb822
+import httplib2
 
 import ubuntutools.archive
 from ubuntutools.test import unittest

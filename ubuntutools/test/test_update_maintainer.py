@@ -16,15 +16,10 @@
 
 """Test suite for ubuntutools.update_maintainer"""
 
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
-
+import mock
 import os
 import sys
-
-import mock
+from io import StringIO
 
 from ubuntutools.logger import Logger
 from ubuntutools.test import unittest
