@@ -19,6 +19,9 @@ ubuntu-dev-tools (0.173) UNRELEASED; urgency=medium
   [ Scott Kitterman ]
   * Update requestsync to python3.  Closes: #927147
 
+  [ Mattia Rizzolo ]
+  * Explicitly require Python3 >= 3.6.
+
  -- Mattia Rizzolo <mattia@debian.org>  Tue, 10 Sep 2019 10:55:34 +0200
 
 ubuntu-dev-tools (0.172) unstable; urgency=medium
