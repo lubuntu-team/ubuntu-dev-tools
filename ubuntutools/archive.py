@@ -613,10 +613,7 @@ def rmadison(url, package, suite=None, arch=None):
     if suite:
         suite = suite.replace('-proposed-updates', '-p-u')
 
-    # pylint bug: http://www.logilab.org/ticket/46273
-    # pylint: disable=E1103
     for line in output.strip().splitlines():
-        # pylint: enable=E1103
         pkg, ver, dist, archs = [x.strip() for x in line.split('|')]
         comp = 'main'
         if '/' in dist:
