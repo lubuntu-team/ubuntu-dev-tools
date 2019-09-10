@@ -1,9 +1,17 @@
 ubuntu-dev-tools (0.173) UNRELEASED; urgency=medium
 
-  * pull-debian-debdiff: Don't unpack the older source package, it will often
-    use the same directory as the newer one, and break.
+  [ Stefano Rivera ]
+  * pull-debian-debdiff:
+    + Don't unpack the older source package, it will often use the same
+      directory as the newer one, and break.
 
- -- Stefano Rivera <stefanor@debian.org>  Wed, 04 Sep 2019 16:31:28 -0300
+  [ Dan Streetman ]
+  * pull-pkg:
+    + Use ubuntutools.version.Version which has strip_epoch() instead
+      of debian.debian_support.Version.
+  * Have ubuntu-dev-tools depend on the matching version of python-ubuntutools.
+
+ -- Mattia Rizzolo <mattia@debian.org>  Tue, 10 Sep 2019 10:55:34 +0200
 
 ubuntu-dev-tools (0.172) unstable; urgency=medium
 
