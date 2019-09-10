@@ -17,11 +17,8 @@
 
 import os
 import re
-try:
-    from urllib.parse import unquote
-    from urllib.request import urlretrieve
-except ImportError:
-    from urllib import unquote, urlretrieve
+from urllib.parse import unquote
+from urllib.request import urlretrieve
 
 import distro_info
 import httplib2

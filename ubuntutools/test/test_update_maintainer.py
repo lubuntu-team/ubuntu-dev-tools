@@ -16,15 +16,10 @@
 
 """Test suite for ubuntutools.update_maintainer"""
 
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
-
+import mock
 import os
 import sys
-
-import mock
+from io import StringIO
 
 from ubuntutools.logger import Logger
 from ubuntutools.test import unittest
@@ -231,15 +226,9 @@ class UpdateMaintainerTestCase(unittest.TestCase):
 
     # pylint: disable=C0103
     def setUp(self):
-        if sys.version_info[0] < 3:
-            self.assertRegex = self.assertRegexpMatches
         m = mock.mock_open()
         m.side_effect = self._fake_open
-        if sys.version_info[0] >= 3:
-            target = 'builtins.open'
-        else:
-            target = '__builtin__.open'
-        patcher = mock.patch(target, m)
+        patcher = mock.patch('builtins.open', m)
         self.addCleanup(patcher.stop)
         patcher.start()
         m = mock.MagicMock(side_effect=self._fake_isfile)

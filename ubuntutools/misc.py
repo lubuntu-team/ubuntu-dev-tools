@@ -22,9 +22,8 @@
 #
 # ##################################################################
 
-from __future__ import print_function
-
 # Modules.
+from subprocess import Popen, PIPE
 import locale
 import os
 import sys
@@ -32,7 +31,6 @@ import sys
 import distro_info
 
 from ubuntutools.lp.udtexceptions import PocketDoesNotExistError
-from ubuntutools.subprocess import Popen, PIPE
 
 _system_distribution_chain = []
 
@@ -50,7 +48,7 @@ def system_distribution_chain():
     if len(_system_distribution_chain) == 0:
         try:
             p = Popen(('dpkg-vendor', '--query', 'Vendor'),
-                      stdout=PIPE)
+                      stdout=PIPE, encoding='utf-8')
             _system_distribution_chain.append(p.communicate()[0].strip())
         except OSError:
             print('Error: Could not determine what distribution you are running.')
@@ -61,7 +59,7 @@ def system_distribution_chain():
                 p = Popen(('dpkg-vendor',
                            '--vendor', _system_distribution_chain[-1],
                            '--query', 'Parent'),
-                          stdout=PIPE)
+                          stdout=PIPE, encoding='utf-8')
                 parent = p.communicate()[0].strip()
                 # Don't check return code, because if a vendor has no
                 # parent, dpkg-vendor returns 1

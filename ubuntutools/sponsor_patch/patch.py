@@ -17,8 +17,8 @@
 
 import os
 import re
+import subprocess
 
-from ubuntutools import subprocess
 from ubuntutools.logger import Logger
 from ubuntutools.sponsor_patch.question import ask_for_manual_fixing
 from functools import reduce
@@ -71,8 +71,7 @@ class Patch(object):
         patch_f.close()
 
         cmd = ["diffstat", "-l", "-p0", self._full_path]
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-        changed_files = process.communicate()[0]
+        changed_files = subprocess.check_output(cmd, encoding='utf-8')
         self._changed_files = [f for f in changed_files.split("\n") if f != ""]
 
     def get_strip_level(self):

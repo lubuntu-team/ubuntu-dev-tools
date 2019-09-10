@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/python3
 #
 # grep-merges - search for pending merges from Debian
 #
@@ -51,12 +51,12 @@ def main():
         url = 'https://merges.ubuntu.com/%s.json' % component
         try:
             headers, page = Http().request(url)
-        except HttpLib2Error, e:
-            print >> sys.stderr, str(e)
+        except HttpLib2Error as e:
+            print(str(e), file=sys.stderr)
             sys.exit(1)
         if headers.status != 200:
-            print >> sys.stderr, "%s: %s %s" % (url, headers.status,
-                                                headers.reason)
+            print("%s: %s %s" % (url, headers.status, headers.reason),
+                  file=sys.stderr)
             sys.exit(1)
 
         for merge in json.loads(page):
@@ -66,16 +66,12 @@ def main():
                 author = merge['user']
             if merge.get('uploader'):
                 uploader = '(%s)' % merge['uploader']
-            try:
-                teams = merge['teams']
-            except e:
-                teams = []
+            teams = merge.get('teams', [])
 
-            pretty_uploader = u'{} {}'.format(author, uploader)
+            pretty_uploader = '{} {}'.format(author, uploader)
             if (match is None or match in package or match in author
                or match in uploader or match in teams):
-                print '%s\t%s' % (package.encode("utf-8"),
-                                  pretty_uploader.encode("utf-8"))
+                print('%s\t%s' % (package, pretty_uploader))
 
 
 if __name__ == '__main__':

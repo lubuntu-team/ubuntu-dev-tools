@@ -20,8 +20,6 @@
 #   Please see the /usr/share/common-licenses/GPL-2 file for the full text
 #   of the GNU General Public License license.
 
-from __future__ import print_function
-
 import re
 
 from debian.deb822 import Changes

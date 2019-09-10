@@ -4,12 +4,20 @@ ubuntu-dev-tools (0.173) UNRELEASED; urgency=medium
   * pull-debian-debdiff:
     + Don't unpack the older source package, it will often use the same
       directory as the newer one, and break.
+  * merge-changelog:
+    + Use ubuntutools.version.Version, to support Python 3.
+  * Drop 404main, it's been totally broken for years.
+  * Port all the Python scripts to Python 3, and remove Python 2 support.
+    Closes: #938740, LP: #1099537
 
   [ Dan Streetman ]
   * pull-pkg:
     + Use ubuntutools.version.Version which has strip_epoch() instead
       of debian.debian_support.Version.
-  * Have ubuntu-dev-tools depend on the matching version of python-ubuntutools.
+  * Have ubuntu-dev-tools depend on the matching version of python3-ubuntutools.
+
+  [ Scott Kitterman ]
+  * Update requestsync to python3.  Closes: #927147
 
  -- Mattia Rizzolo <mattia@debian.org>  Tue, 10 Sep 2019 10:55:34 +0200
 

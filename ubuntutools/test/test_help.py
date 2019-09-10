@@ -18,10 +18,10 @@ import fcntl
 import os
 import select
 import signal
+import subprocess
 import time
 
 import setup
-from ubuntutools import subprocess
 from ubuntutools.test import unittest
 
 TIMEOUT = 10
@@ -46,7 +46,7 @@ class HelpTestCase(unittest.TestCase):
         def tester(self):
             null = open('/dev/null', 'r')
             process = subprocess.Popen(['./' + script, '--help'],
-                                       close_fds=True, stdin=null,
+                                       encoding='utf-8', stdin=null,
                                        universal_newlines=True,
                                        stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE)
@@ -73,6 +73,8 @@ class HelpTestCase(unittest.TestCase):
                 if process.poll() is None:
                     os.kill(process.pid, signal.SIGKILL)
             null.close()
+            process.stdout.close()
+            process.stderr.close()
 
             self.assertEqual(process.poll(), 0,
                              "%s failed to return usage within %i seconds.\n"

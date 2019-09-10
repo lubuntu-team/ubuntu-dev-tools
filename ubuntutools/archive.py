@@ -27,19 +27,15 @@ Approach:
 3. Verify checksums.
 """
 
-from __future__ import with_statement, print_function
-
+from urllib.error import URLError, HTTPError
+from urllib.parse import urlparse
+from urllib.request import ProxyHandler, build_opener, urlopen
 import codecs
 import hashlib
+import json
 import os.path
-try:
-    from urllib.request import ProxyHandler, build_opener, urlopen
-    from urllib.parse import urlparse
-    from urllib.error import URLError, HTTPError
-except ImportError:
-    from urllib2 import ProxyHandler, build_opener, urlopen, URLError, HTTPError
-    from urlparse import urlparse
 import re
+import subprocess
 import sys
 
 from debian.changelog import Changelog
@@ -51,11 +47,6 @@ from ubuntutools.lp.lpapicache import (Launchpad, Distribution,
                                        SourcePackagePublishingHistory)
 from ubuntutools.logger import Logger
 from ubuntutools.version import Version
-from ubuntutools import subprocess
-
-if sys.version_info[0] >= 3:
-    basestring = str
-    unicode = str
 
 
 class DownloadError(Exception):
@@ -493,15 +484,6 @@ class DebianSourcePackage(SourcePackage):
     def snapshot_list(self):
         "Return a filename -> hash dictionary from snapshot.debian.org"
         if self._snapshot_list is None:
-            try:
-                import json
-            except ImportError:
-                import simplejson as json
-            except ImportError:
-                Logger.error("Please install python-simplejson.")
-                raise DownloadError("Unable to dowload from "
-                                    "snapshot.debian.org without "
-                                    "python-simplejson")
 
             try:
                 data = self.url_opener.open(
@@ -598,15 +580,15 @@ class FakeSPPH(object):
         if since_version is None:
             return self._changelog
 
-        if isinstance(since_version, basestring):
+        if isinstance(since_version, str):
             since_version = Version(since_version)
 
         new_entries = []
         for block in Changelog(self._changelog):
             if block.version <= since_version:
                 break
-            new_entries.append(unicode(block))
-        return u''.join(new_entries)
+            new_entries.append(str(block))
+        return ''.join(new_entries)
 
 
 def rmadison(url, package, suite=None, arch=None):
@@ -617,8 +599,8 @@ def rmadison(url, package, suite=None, arch=None):
     if arch:
         cmd += ['-a', arch]
     cmd.append(package)
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE, close_fds=True)
+    process = subprocess.Popen(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
     output, error_output = process.communicate()
     if process.wait() != 0:
         if error_output:
@@ -633,7 +615,7 @@ def rmadison(url, package, suite=None, arch=None):
 
     # pylint bug: http://www.logilab.org/ticket/46273
     # pylint: disable=E1103
-    for line in output.decode().strip().splitlines():
+    for line in output.strip().splitlines():
         # pylint: enable=E1103
         pkg, ver, dist, archs = [x.strip() for x in line.split('|')]
         comp = 'main'

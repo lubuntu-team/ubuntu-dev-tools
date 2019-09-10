@@ -15,16 +15,14 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-from __future__ import print_function
-
 import os
 import re
+import subprocess
 import sys
 
 import debian.changelog
 import debian.deb822
 
-from ubuntutools import subprocess
 from ubuntutools.logger import Logger
 from ubuntutools.question import Question, YesNoQuestion
 
@@ -327,8 +325,7 @@ class SourcePackage(object):
         if not Logger.verbose:
             cmd.insert(1, "-q")
         Logger.command(cmd + [">", self._debdiff_filename])
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-        debdiff = process.communicate()[0]
+        debdiff = subprocess.check_output(cmd, encoding='utf-8')
 
         # write debdiff file
         debdiff_file = open(self._debdiff_filename, "w")
@@ -421,8 +418,7 @@ class SourcePackage(object):
                                         self._package + "_" +
                                         strip_epoch(self._version) + ".lintian")
         Logger.command(cmd + [">", lintian_filename])
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-        report = process.communicate()[0]
+        report = subprocess.check_output(cmd, encoding='utf-8')
 
         # write lintian report file
         lintian_file = open(lintian_filename, "w")

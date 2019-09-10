@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 #   ubuntu-build - command line interface for Launchpad buildd operations.
 #
@@ -108,15 +108,15 @@ def main():
 
         # Check our operation.
         if op not in ("rescore", "retry", "status"):
-            print >> sys.stderr, "Invalid operation: %s." % op
+            print("Invalid operation: %s." % op, file=sys.stderr)
             sys.exit(1)
 
         # If the user has specified an architecture to build, we only wish to
         # rebuild it and nothing else.
         if options.architecture:
             if options.architecture[0] not in valid_archs:
-                print >> sys.stderr, ("Invalid architecture specified: %s."
-                                      % options.architecture[0])
+                print("Invalid architecture specified: %s."
+                      % options.architecture[0], file=sys.stderr)
                 sys.exit(1)
             else:
                 one_arch = True
@@ -126,8 +126,8 @@ def main():
         # split release and pocket
         try:
             (release, pocket) = split_release_pocket(release)
-        except PocketDoesNotExistError, error:
-            print 'E: %s' % error
+        except PocketDoesNotExistError as error:
+            print('E: %s' % error)
             sys.exit(1)
 
         # Get the ubuntu archive
@@ -140,8 +140,8 @@ def main():
         try:
             sources = ubuntu_archive.getSourcePackage(package, release, pocket)
             distroseries = Distribution('ubuntu').getSeries(release)
-        except (SeriesNotFoundException, PackageNotFoundException), error:
-            print error
+        except (SeriesNotFoundException, PackageNotFoundException) as error:
+            print(error)
             sys.exit(1)
         # Get list of builds for that package.
         builds = sources.getBuilds()
@@ -163,16 +163,16 @@ def main():
                                                   pocket=pocket)
 
         if op in ('rescore', 'retry') and not necessary_privs:
-            print >> sys.stderr, ("You cannot perform the %s operation on a %s "
-                                  "package as you do not have the permissions "
-                                  "to do this action." % (op, component))
+            print(("You cannot perform the %s operation on a %s package as "
+                   "you do not have the permissions to do this action.")
+                  % (op, component), file=sys.stderr)
             sys.exit(1)
 
         # Output details.
-        print("The source version for '%s' in %s (%s) is at %s." %
-              (package, release.capitalize(), component, version))
+        print("The source version for '%s' in %s (%s) is at %s."
+              % (package, release.capitalize(), component, version))
 
-        print "Current build status for this package:"
+        print("Current build status for this package:")
 
         # Output list of arches for package and their status.
         done = False
@@ -182,28 +182,29 @@ def main():
                 continue
 
             done = True
-            print "%s: %s." % (build.arch_tag, build.buildstate)
+            print("%s: %s." % (build.arch_tag, build.buildstate))
             if op == 'rescore':
                 if build.can_be_rescored:
                     # FIXME: make priority an option
                     priority = 5000
-                    print 'Rescoring build %s to %d...' % (build.arch_tag, priority)
+                    print('Rescoring build %s to %d...'
+                          % (build.arch_tag, priority))
                     build.rescore(score=priority)
                 else:
-                    print 'Cannot rescore build on %s.' % build.arch_tag
+                    print('Cannot rescore build on %s.' % build.arch_tag)
             if op == 'retry':
                 if build.can_be_retried:
-                    print 'Retrying build on %s...' % build.arch_tag
+                    print('Retrying build on %s...' % build.arch_tag)
                     build.retry()
                 else:
-                    print 'Cannot retry build on %s.' % build.arch_tag
+                    print('Cannot retry build on %s.' % build.arch_tag)
 
         # We are done
         if done:
             sys.exit(0)
 
-        print("No builds for '%s' found in the %s release - it may have been "
-              "built in a former release." % (package, release.capitalize()))
+        print(("No builds for '%s' found in the %s release - it may have been "
+               "built in a former release.") % (package, release.capitalize()))
         sys.exit(0)
 
     # Batch mode
@@ -223,15 +224,15 @@ def main():
                    + '-proposed')
     try:
         (release, pocket) = split_release_pocket(release)
-    except PocketDoesNotExistError, error:
-        print 'E: %s' % error
+    except PocketDoesNotExistError as error:
+        print('E: %s' % error)
         sys.exit(1)
 
     ubuntu_archive = Distribution('ubuntu').getArchive()
     try:
         distroseries = Distribution('ubuntu').getSeries(release)
-    except SeriesNotFoundException, error:
-        print error
+    except SeriesNotFoundException as error:
+        print(error)
         sys.exit(1)
     me = PersonTeam.me
 
@@ -240,14 +241,14 @@ def main():
                     and me.isLpTeamMember('launchpad-buildd-admins'))
                    or False)
     if options.priority and not can_rescore:
-        print >> sys.stderr, ("You don't have the permissions to rescore "
-                              "builds. Ignoring your rescore request.")
+        print("You don't have the permissions to rescore builds. "
+              "Ignoring your rescore request.", file=sys.stderr)
 
     for pkg in args:
         try:
             pkg = ubuntu_archive.getSourcePackage(pkg, release, pocket)
-        except PackageNotFoundException, error:
-            print error
+        except PackageNotFoundException as error:
+            print(error)
             continue
 
         # Check permissions (part 2): check upload permissions for the source
@@ -257,20 +258,20 @@ def main():
                                                           pkg.getPackageName(),
                                                           pkg.getComponent())
         if options.retry and not can_retry:
-            print >> sys.stderr, ("You don't have the permissions to retry the "
-                                  "build of '%s'. Ignoring your request."
-                                  % pkg.getPackageName())
+            print(("You don't have the permissions to retry the build of "
+                   "'%s'. Ignoring your request.")
+                  % pkg.getPackageName(), file=sys.stderr)
 
-        print "The source version for '%s' in '%s' (%s) is: %s" % (
-                pkg.getPackageName(), release, pocket, pkg.getVersion())
+        print("The source version for '%s' in '%s' (%s) is: %s"
+              % (pkg.getPackageName(), release, pocket, pkg.getVersion()))
 
-        print pkg.getBuildStates(archs)
+        print(pkg.getBuildStates(archs))
         if can_retry:
-            print pkg.retryBuilds(archs)
+            print(pkg.retryBuilds(archs))
         if options.priority and can_rescore:
-            print pkg.rescoreBuilds(archs, options.priority)
+            print(pkg.rescoreBuilds(archs, options.priority))
 
-        print ''
+        print()
 
 
 if __name__ == '__main__':

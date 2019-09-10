@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Copyright (C) 2011, Stefano Rivera <stefanor@ubuntu.com>
 #
@@ -20,7 +20,7 @@ import json
 import optparse
 import os
 import time
-import urllib
+import urllib.request
 
 from ubuntutools.lp.lpapicache import (Distribution, Launchpad,
                                        PackageNotFoundException)
@@ -40,12 +40,12 @@ def load_index(url):
             or time.time() - os.path.getmtime(fn) > 60 * 60 * 2):
         if not os.path.isdir(cachedir):
             os.makedirs(cachedir)
-        urllib.urlretrieve(url, fn)
+        urllib.request.urlretrieve(url, fn)
 
     try:
         with gzip.open(fn, 'r') as f:
             return json.load(f)
-    except Exception, e:
+    except Exception as e:
         Logger.error("Unable to parse seed data: %s. "
                      "Deleting cached data, please try again.",
                      str(e))
@@ -61,7 +61,7 @@ def resolve_binaries(sources):
     for source in sources:
         try:
             spph = archive.getSourcePackage(source)
-        except PackageNotFoundException, e:
+        except PackageNotFoundException as e:
             Logger.error(str(e))
             continue
         binaries[source] = sorted(set(bpph.getPackageName()
@@ -75,11 +75,11 @@ def present_on(appearences):
     present = collections.defaultdict(set)
     for flavor, type_ in appearences:
         present[flavor].add(type_)
-    for flavor, types in present.iteritems():
+    for flavor, types in present.items():
         if len(types) > 1:
             types.discard('supported')
     output = ['  %s: %s' % (flavor, ', '.join(sorted(types)))
-              for flavor, types in present.iteritems()]
+              for flavor, types in present.items()]
     output.sort()
     return '\n'.join(output)
 
@@ -88,28 +88,28 @@ def output_binaries(index, binaries):
     '''Print binaries found in index'''
     for binary in binaries:
         if binary in index:
-            print "%s is seeded in:" % binary
-            print present_on(index[binary])
+            print("%s is seeded in:" % binary)
+            print(present_on(index[binary]))
         else:
-            print "%s is not seeded (and may not exist)." % binary
+            print("%s is not seeded (and may not exist)." % binary)
 
 
 def output_by_source(index, by_source):
     '''Print binaries found in index. Grouped by source'''
-    for source, binaries in by_source.iteritems():
+    for source, binaries in by_source.items():
         seen = False
         if not binaries:
-            print ("Status unknown: No binary packages built by the latest "
-                   "%s.\nTry again using -b and the expected binary packages."
-                   % source)
+            print("Status unknown: No binary packages built by the latest "
+                  "%s.\nTry again using -b and the expected binary packages."
+                  % source)
             continue
         for binary in binaries:
             if binary in index:
                 seen = True
-                print "%s (from %s) is seeded in:" % (binary, source)
-                print present_on(index[binary])
+                print("%s (from %s) is seeded in:" % (binary, source))
+                print(present_on(index[binary]))
         if not seen:
-            print "%s's binaries are not seeded." % source
+            print("%s's binaries are not seeded." % source)
 
 
 def main():

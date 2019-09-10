@@ -17,10 +17,10 @@
 
 import os
 import re
+import subprocess
 import sys
 
 from ubuntutools.test import get_source_files, unittest, unittest_verbosity
-from ubuntutools import subprocess
 
 CONFIG = os.path.join(os.path.dirname(__file__), "pylint.conf")
 
@@ -40,8 +40,9 @@ class PylintTestCase(unittest.TestCase):
                "-E", "--"] + get_source_files()
         if unittest_verbosity() >= 2:
             sys.stderr.write("Running following command:\n{}\n".format(" ".join(cmd)))
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                   close_fds=True)
+        process = subprocess.Popen(
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            encoding='utf-8')
         out, err = process.communicate()
 
         if process.returncode != 0:  # pragma: no cover
@@ -50,11 +51,11 @@ class PylintTestCase(unittest.TestCase):
             # ------------------------------------
             # Your code has been rated at 10.00/10
             #
-            out = re.sub("^(-+|Your code has been rated at .*)$", "", out.decode(),
+            out = re.sub("^(-+|Your code has been rated at .*)$", "", out,
                          flags=re.MULTILINE).rstrip()
 
             # Strip logging of used config file (introduced in pylint 1.8)
-            err = re.sub("^Using config file .*\n", "", err.decode()).rstrip()
+            err = re.sub("^Using config file .*\n", "", err).rstrip()
 
             msgs = []
             if err:

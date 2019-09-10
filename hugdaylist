@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2007 Canonical Ltd., Daniel Holbach
@@ -57,8 +57,8 @@ def check_args():
 
     # Check that we have an URL.
     if not args:
-        print >> sys.stderr, "An URL pointing to a Launchpad bug list is " \
-           "required."
+        print("An URL pointing to a Launchpad bug list is required.",
+              file=sys.stderr)
         opt_parser.print_help()
         sys.exit(1)
     else:
@@ -87,24 +87,25 @@ def main():
     if len(url.split("?", 1)) == 2:
         # search options not supported, because there is no mapping web ui
         # options <-> API options
-        print >> sys.stderr, "Options in url are not supported, url: %s" % url
+        print("Options in url are not supported, url: %s" % url,
+              file=sys.stderr)
         sys.exit(1)
 
     launchpad = None
     try:
         launchpad = Launchpad.login_with("ubuntu-dev-tools", 'production')
-    except IOError, error:
-        print error
+    except IOError as error:
+        print(error)
         sys.exit(1)
 
     api_url = translate_web_api(url, launchpad)
     try:
         product = launchpad.load(api_url)
-    except Exception, error:
+    except Exception as error:
         response = getattr(error, "response", {})
         if response.get("status", None) == "404":
-            print >> sys.stderr, ("The URL at '%s' does not appear to be a "
-                                  "valid url to a product") % url
+            print(("The URL at '%s' does not appear to be a valid url to a "
+                   "product") % url, file=sys.stderr)
             sys.exit(1)
         else:
             raise
@@ -112,28 +113,28 @@ def main():
     bug_list = [b for b in product.searchTasks() if filter_unsolved(b)]
 
     if not bug_list:
-        print "Bug list of %s is empty." % url
+        print("Bug list of %s is empty." % url)
         sys.exit(0)
     if howmany == -1:
         howmany = len(bug_list)
 
-    print """
+    print("""
 ## ||<rowbgcolor="#CCFFCC"> This task is done || somebody || ||
 ## ||<rowbgcolor="#FFFFCC"> This task is assigned || somebody || <status> ||
 ## ||<rowbgcolor="#FFEBBB"> This task isn't || ... || ||
 ## ||<rowbgcolor="#FFCCCC"> This task is blocked on something || somebody || <explanation> ||
 
-|| Bug || Subject || Triager ||"""
+|| Bug || Subject || Triager ||""")
 
     for i in list(bug_list)[:howmany]:
         bug = i.bug
-        print '||<rowbgcolor="#FFEBBB"> [%s %s] || %s || ||' % \
-            (bug.web_link, bug.id, bug.title)
+        print('||<rowbgcolor="#FFEBBB"> [%s %s] || %s || ||'
+              % (bug.web_link, bug.id, bug.title))
 
 
 if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
-        print >> sys.stderr, "Aborted."
+        print("Aborted.", file=sys.stderr)
         sys.exit(1)

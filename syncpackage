@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2008-2010 Martin Pitt <martin.pitt@canonical.com>,
@@ -20,14 +20,14 @@
 #
 # ##################################################################
 
-import codecs
 import fnmatch
 import optparse
 import os
 import shutil
+import subprocess
 import sys
 import textwrap
-import urllib
+import urllib.request
 
 from lazr.restfulclient.errors import HTTPError
 
@@ -44,13 +44,12 @@ from ubuntutools.requestsync.mail import (
         get_debian_srcpkg as requestsync_mail_get_debian_srcpkg)
 from ubuntutools.requestsync.lp import get_debian_srcpkg, get_ubuntu_srcpkg
 from ubuntutools.version import Version
-from ubuntutools import subprocess
 
 
 def remove_signature(dscname):
     '''Removes the signature from a .dsc file if the .dsc file is signed.'''
 
-    dsc_file = open(dscname)
+    dsc_file = open(dscname, encoding='utf-8')
     if dsc_file.readline().strip() == "-----BEGIN PGP SIGNED MESSAGE-----":
         unsigned_file = []
         # search until begin of body found
@@ -65,7 +64,7 @@ def remove_signature(dscname):
             unsigned_file.append(line)
 
         dsc_file.close()
-        dsc_file = open(dscname, "w")
+        dsc_file = open(dscname, "w", encoding='utf-8')
         dsc_file.writelines(unsigned_file)
         dsc_file.close()
 
@@ -78,7 +77,7 @@ def add_fixed_bugs(changes, bugs):
     # Remove duplicates
     bugs = set(str(bug) for bug in bugs)
 
-    for i in xrange(len(changes)):
+    for i in range(len(changes)):
         if changes[i].startswith("Launchpad-Bugs-Fixed:"):
             bugs.update(changes[i][22:].strip().split(" "))
             changes[i] = "Launchpad-Bugs-Fixed: %s" % (" ".join(bugs))
@@ -137,7 +136,7 @@ def sync_dsc(src_pkg, debian_dist, release, name, email, bugs, ubuntu_mirror,
 
     try:
         src_pkg.pull()
-    except DownloadError, e:
+    except DownloadError as e:
         Logger.error('Failed to download: %s', str(e))
         sys.exit(1)
     src_pkg.unpack()
@@ -158,7 +157,7 @@ def sync_dsc(src_pkg, debian_dist, release, name, email, bugs, ubuntu_mirror,
         # Download Ubuntu files (override Debian source tarballs)
         try:
             ubu_pkg.pull()
-        except DownloadError, e:
+        except DownloadError as e:
             Logger.error('Failed to download: %s', str(e))
             sys.exit(1)
 
@@ -169,7 +168,7 @@ def sync_dsc(src_pkg, debian_dist, release, name, email, bugs, ubuntu_mirror,
 
     # read Debian distribution from debian/changelog if not specified
     if debian_dist is None:
-        line = open("debian/changelog").readline()
+        line = open("debian/changelog", encoding='utf-8').readline()
         debian_dist = line.split(" ")[2].strip(";")
 
     if not fakesync:
@@ -187,8 +186,7 @@ def sync_dsc(src_pkg, debian_dist, release, name, email, bugs, ubuntu_mirror,
         if not Logger.verbose:
             cmd += ["-q"]
         Logger.command(cmd + ['>', '../' + changes_filename])
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-        changes = process.communicate()[0]
+        changes = subprocess.check_output(cmd, encoding='utf-8')
 
         # Add additional bug numbers
         if len(bugs) > 0:
@@ -200,7 +198,7 @@ def sync_dsc(src_pkg, debian_dist, release, name, email, bugs, ubuntu_mirror,
         shutil.rmtree(directory, True)
 
         # write changes file
-        changes_file = open(changes_filename, "w")
+        changes_file = open(changes_filename, "w", encoding='utf-8')
         changes_file.writelines(changes)
         changes_file.close()
 
@@ -274,7 +272,7 @@ def fetch_source_pkg(package, dist, version, component, ubuntu_release,
         try:
             debian_srcpkg = get_debian_srcpkg(package, dist)
         except (udtexceptions.PackageNotFoundException,
-                udtexceptions.SeriesNotFoundException), e:
+                udtexceptions.SeriesNotFoundException) as e:
             Logger.error(str(e))
             sys.exit(1)
         if version is None:
@@ -286,7 +284,7 @@ def fetch_source_pkg(package, dist, version, component, ubuntu_release,
             ubuntu_version = Version(ubuntu_srcpkg.getVersion())
         except udtexceptions.PackageNotFoundException:
             ubuntu_version = Version('~')
-        except udtexceptions.SeriesNotFoundException, e:
+        except udtexceptions.SeriesNotFoundException as e:
             Logger.error(str(e))
             sys.exit(1)
         if ubuntu_version >= version:
@@ -388,7 +386,7 @@ def copy(src_pkg, release, bugs, sponsoree=None, simulate=False, force=False):
             to_pocket=ubuntu_pocket,
             include_binaries=False,
             sponsored=sponsoree)
-    except HTTPError, error:
+    except HTTPError as error:
         Logger.error("HTTP Error %s: %s", error.response.status,
                      error.response.reason)
         Logger.error(error.content)
@@ -416,7 +414,7 @@ def is_blacklisted(query):
     series = Launchpad.distributions['ubuntu'].current_series
     lp_comments = series.getDifferenceComments(source_package_name=query)
     blacklisted = False
-    comments = [u'%s\n  -- %s  %s'
+    comments = ['%s\n  -- %s  %s'
                 % (c.body_text, c.comment_author.name,
                    c.comment_date.strftime('%a, %d %b %Y %H:%M:%S +0000'))
                 for c in lp_comments]
@@ -430,9 +428,10 @@ def is_blacklisted(query):
 
     # Old blacklist:
     url = 'http://people.canonical.com/~ubuntu-archive/sync-blacklist.txt'
-    with codecs.EncodedFile(urllib.urlopen(url), 'UTF-8') as f:
+    with urllib.request.urlopen(url) as f:
         applicable_lines = []
         for line in f:
+            line = line.decode('utf-8')
             if not line.strip():
                 applicable_lines = []
                 continue
@@ -475,7 +474,7 @@ def close_bugs(bugs, package, version, changes, sponsoree):
                     bug.newMessage(content=message)
                 break
         else:
-            Logger.error(u"Cannot find any tasks on LP: #%i to close.", bug.id)
+            Logger.error("Cannot find any tasks on LP: #%i to close.", bug.id)
 
 
 def parse():
@@ -686,9 +685,9 @@ def main():
                              "reasoning and subscribe ~ubuntu-archive."]
 
         if blacklist_fail:
-            Logger.error(u"Source package %s is blacklisted.", src_pkg.source)
+            Logger.error("Source package %s is blacklisted.", src_pkg.source)
         elif blacklisted == 'ALWAYS':
-            Logger.normal(u"Source package %s is blacklisted.", src_pkg.source)
+            Logger.normal("Source package %s is blacklisted.", src_pkg.source)
         if messages:
             for message in messages:
                 for line in textwrap.wrap(message):
@@ -698,7 +697,7 @@ def main():
         Logger.normal("Blacklist Comments:")
         for comment in comments:
             for line in textwrap.wrap(comment):
-                Logger.normal(u"  " + line)
+                Logger.normal("  " + line)
 
     if blacklist_fail:
         sys.exit(1)

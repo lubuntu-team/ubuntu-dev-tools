@@ -15,21 +15,16 @@
 # PERFORMANCE OF THIS SOFTWARE.
 
 
+import mock
 import os.path
 import shutil
-import sys
 import tempfile
 from io import BytesIO
-try:
-    from urllib.request import OpenerDirector, urlopen
-    from urllib.error import HTTPError, URLError
-except ImportError:
-    from urllib2 import OpenerDirector, urlopen
-    from urllib2 import HTTPError, URLError
-import httplib2
-import mock
+from urllib.error import HTTPError, URLError
+from urllib.request import OpenerDirector, urlopen
 
 import debian.deb822
+import httplib2
 
 import ubuntutools.archive
 from ubuntutools.test import unittest
@@ -64,18 +59,11 @@ class DscVerificationTestCase(unittest.TestCase):
         fn = 'test-data/example_1.0.orig.tar.gz'
         with open(fn, 'rb') as f:
             data = f.read()
-        if sys.version_info[0] >= 3:
-            last_byte = chr(data[-1] ^ 8).encode()
-        else:
-            last_byte = chr(ord(data[-1]) ^ 8)
+        last_byte = chr(data[-1] ^ 8).encode()
         data = data[:-1] + last_byte
         m = mock.MagicMock(name='open', spec=open)
         m.return_value = BytesIO(data)
-        if sys.version_info[0] >= 3:
-            target = 'builtins.open'
-        else:
-            target = '__builtin__.open'
-        with mock.patch(target, m):
+        with mock.patch('builtins.open', m):
             self.assertFalse(self.dsc.verify_file(fn))
 
     def test_sha1(self):

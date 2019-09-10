@@ -20,13 +20,12 @@
 #   Please see the /usr/share/common-licenses/GPL-2 file for the full text
 #   of the GNU General Public License license.
 
-from __future__ import print_function
-
 import os
 import re
 import sys
 import smtplib
 import socket
+import subprocess
 import tempfile
 
 from debian.changelog import Changelog
@@ -37,11 +36,6 @@ from ubuntutools.lp.udtexceptions import PackageNotFoundException
 from ubuntutools.logger import Logger
 from ubuntutools.question import confirmation_prompt, YesNoQuestion
 from ubuntutools.version import Version
-from ubuntutools import subprocess
-
-if sys.version_info[0] >= 3:
-    basestring = str
-    unicode = str
 
 
 __all__ = [
@@ -111,17 +105,17 @@ def get_ubuntu_delta_changelog(srcpkg):
     '''
     changelog = Changelog(srcpkg.getChangelog())
     if changelog is None:
-        return u''
+        return ''
     delta = []
     debian_info = DebianDistroInfo()
     for block in changelog:
         distribution = block.distributions.split()[0].split('-')[0]
         if debian_info.valid(distribution):
             break
-        delta += [unicode(change) for change in block.changes()
+        delta += [str(change) for change in block.changes()
                   if change.strip()]
 
-    return u'\n'.join(delta)
+    return '\n'.join(delta)
 
 
 def mail_bug(srcpkg, subscribe, status, bugtitle, bugtext, bug_mail_domain,
@@ -162,15 +156,16 @@ def mail_bug(srcpkg, subscribe, status, bugtitle, bugtext, bug_mail_domain,
         gpg_command.extend(('-u', keyid))
 
     # sign the mail body
-    gpg = subprocess.Popen(gpg_command, stdin=subprocess.PIPE,
-                           stdout=subprocess.PIPE)
-    signed_report = gpg.communicate(mailbody.encode('utf-8'))[0].decode('utf-8')
+    gpg = subprocess.Popen(
+        gpg_command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+        encoding='utf-8')
+    signed_report = gpg.communicate(mailbody)[0]
     if gpg.returncode != 0:
         Logger.error("%s failed.", gpg_command[0])
         sys.exit(1)
 
     # generate email
-    mail = u'''\
+    mail = '''\
 From: %s
 To: %s
 Subject: %s

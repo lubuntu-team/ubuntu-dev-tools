@@ -15,20 +15,10 @@ Build-Depends:
  libwww-perl,
  lsb-release,
  pylint (>= 2),
- python-all (>= 2.6.5-13~),
- python-apt (>= 0.7.93~),
- python-debian (>= 0.1.20~),
- python-distro-info (>= 0.4~),
- python-flake8,
- python-httplib2,
- python-launchpadlib (>= 1.5.7),
- python-mock,
- python-setuptools,
- python-soappy,
- python-unittest2,
  python3-all,
  python3-apt,
  python3-debian,
+ python3-debianbts,
  python3-distro-info,
  python3-flake8,
  python3-httplib2,
@@ -54,17 +44,15 @@ Depends:
  distro-info (>= 0.2~),
  dpkg-dev,
  lsb-release,
- python,
- python-apt (>= 0.7.93~),
- python-debian (>= 0.1.20~),
- python-distro-info (>= 0.4~),
- python-httplib2,
- python-launchpadlib (>= 1.5.7),
- python-lazr.restfulclient,
- python-ubuntutools (= ${binary:Version}),
  python3,
+ python3-apt,
+ python3-debian,
  python3-distro-info,
  python3-ubuntutools (= ${binary:Version}),
+ python3-httplib2,
+ python3-launchpadlib,
+ python3-lazr.restfulclient,
+ python3-ubuntutools,
  sensible-utils,
  sudo,
  ${misc:Depends},
@@ -82,13 +70,12 @@ Recommends:
  lintian,
  patch,
  pbuilder | cowbuilder | sbuild,
- python-dns,
- python-soappy,
+ python3-debianbts,
+ python3-dns,
  quilt,
  reportbug (>= 3.39ubuntu1),
  ubuntu-keyring | ubuntu-archive-keyring,
 Suggests:
- python-simplejson | python (>= 2.7),
  qemu-user-static,
 Description: useful tools for Ubuntu developers
  This is a collection of useful tools that Ubuntu developers use to make their
@@ -96,8 +83,6 @@ Description: useful tools for Ubuntu developers
  .
  Such tools include:
  .
-  - 404main - used to check what components a package's deps are in, for
-    doing a main inclusion report for example.
   - backportpackage - helper to test package backports
   - bitesize - add the 'bitesize' tag to a bug and comment that you are
     willing to help fix it.
@@ -138,27 +123,6 @@ Description: useful tools for Ubuntu developers
   - ubuntu-upload-permission - query / list the upload permissions for a
     package.
   - update-maintainer - script to update maintainer field in ubuntu packages.
-
-Package: python-ubuntutools
-Architecture: all
-Section: python
-Depends:
- python-debian,
- python-distro-info,
- python-httplib2,
- python-launchpadlib,
- sensible-utils,
- ${misc:Depends},
- ${python:Depends},
-Breaks:
- ubuntu-dev-tools (<< 0.154),
-Replaces:
- ubuntu-dev-tools (<< 0.154),
-Description: useful APIs for Ubuntu developer tools — Python 2 library
- This package ships a collection of APIs, helpers and wrappers used to
- develop useful utilities for Ubuntu developers.
- .
- This package installs the library for Python 2.
 
 Package: python3-ubuntutools
 Architecture: all

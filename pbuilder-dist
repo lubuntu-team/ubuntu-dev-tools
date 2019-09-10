@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/python3
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2007-2010, Siegfried-A. Gevatter <rainct@ubuntu.com>,
@@ -30,6 +30,7 @@
 # that the target distribution is always meant to be Ubuntu Hardy.
 
 import os
+import subprocess
 import sys
 
 import debian.deb822
@@ -40,7 +41,6 @@ import ubuntutools.version
 from ubuntutools.config import UDTConfig
 from ubuntutools.logger import Logger
 from ubuntutools.question import YesNoQuestion
-from ubuntutools import subprocess
 
 
 class PbuilderDist(object):
@@ -279,7 +279,7 @@ class PbuilderDist(object):
             try:
                 codename = debian_info.codename(self.target_distro,
                                                 default=self.target_distro)
-            except DistroDataOutdated, error:
+            except DistroDataOutdated as error:
                 Logger.warn(error)
             if codename in (debian_info.devel(), 'experimental'):
                 self.enable_security = False
@@ -306,7 +306,7 @@ class PbuilderDist(object):
         else:
             try:
                 dev_release = self.target_distro == UbuntuDistroInfo().devel()
-            except DistroDataOutdated, error:
+            except DistroDataOutdated as error:
                 Logger.warn(error)
                 dev_release = True
 
@@ -396,7 +396,7 @@ def show_help(exit_code=0):
 
     Print a help message for pbuilder-dist, and exit with the given code.
     """
-    print 'See  man pbuilder-dist  for more information.'
+    print('See  man pbuilder-dist  for more information.')
 
     sys.exit(exit_code)
 
@@ -498,7 +498,7 @@ def main():
     if '--debug-echo' not in args:
         sys.exit(subprocess.call(app.get_command(args)))
     else:
-        print app.get_command([arg for arg in args if arg != '--debug-echo'])
+        print(app.get_command([arg for arg in args if arg != '--debug-echo']))
 
 
 if __name__ == '__main__':

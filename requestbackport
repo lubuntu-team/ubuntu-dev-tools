@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Copyright (C) 2011, Stefano Rivera <stefanor@ubuntu.com>
 #
@@ -102,7 +102,12 @@ def check_existing(package, destinations):
     Logger.normal("There are existing bug reports that look similar to your "
                   "request. Please check before continuing:")
 
-    for bug in sorted(set(bug_task.bug for bug_task in bugs)):
+    by_id = {}
+    for bug_task in bugs:
+        bug = bug_task.bug
+        by_id[bug.id] = bug
+
+    for id_, bug in sorted(by_id.items()):
         Logger.normal(" * LP: #%-7i: %s  %s", bug.id, bug.title, bug.web_link)
 
     confirmation_prompt()
@@ -123,7 +128,7 @@ def find_rdepends(releases, published_binaries):
                 except RDependsException:
                     # Not published? TODO: Check
                     continue
-                for relationship, rdeps in raw_rdeps.iteritems():
+                for relationship, rdeps in raw_rdeps.items():
                     for rdep in rdeps:
                         # Ignore circular deps:
                         if rdep['Package'] in published_binaries:
@@ -134,14 +139,14 @@ def find_rdepends(releases, published_binaries):
                         intermediate[binpkg][rdep['Package']].append((release, relationship))
 
     output = []
-    for binpkg, rdeps in intermediate.iteritems():
+    for binpkg, rdeps in intermediate.items():
         output += ['', binpkg, '-' * len(binpkg)]
-        for pkg, appearences in rdeps.iteritems():
+        for pkg, appearences in rdeps.items():
             output += ['* %s' % pkg]
             for release, relationship in appearences:
                 output += ['  [ ] %s (%s)' % (release, relationship)]
 
-    found_any = sum(len(rdeps) for rdeps in intermediate.itervalues())
+    found_any = sum(len(rdeps) for rdeps in intermediate.values())
     if found_any:
         output = [
             "Reverse dependencies:",
@@ -168,7 +173,7 @@ def locate_package(package, distribution):
         try:
             package_spph = archive.getSourcePackage(package, distribution)
             return package_spph
-        except PackageNotFoundException, e:
+        except PackageNotFoundException as e:
             if pass_ == 'binary':
                 Logger.error(str(e))
                 sys.exit(1)
@@ -292,7 +297,7 @@ def main():
     try:
         destinations = determine_destinations(options.source,
                                               options.destination)
-    except DestinationException, e:
+    except DestinationException as e:
         Logger.error(str(e))
         sys.exit(1)
 

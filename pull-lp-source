@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # pull-lp-source -- pull a source package from Launchpad
 # Basic usage: pull-lp-source <source package> [<release>]
@@ -26,7 +26,8 @@
 import json
 import os
 import sys
-import urllib2
+import urllib.error
+import urllib.request
 from optparse import OptionParser
 
 from distro_info import UbuntuDistroInfo, DistroDataOutdated
@@ -49,11 +50,11 @@ def source_package_for(binary, release):
            % (release, binary))
     data = None
     try:
-        data = json.load(urllib2.urlopen(url))['r']
-    except urllib2.URLError, e:
+        data = json.load(urllib.request.urlopen(url))['r']
+    except urllib.error.URLError as e:
         Logger.error('Unable to retrieve package information from DDE: '
                      '%s (%s)', url, str(e))
-    except ValueError, e:
+    except ValueError as e:
         Logger.error('Unable to parse JSON response from DDE: '
                      '%s (%s)', url, str(e))
     if not data:
@@ -94,7 +95,7 @@ def main():
     else:
         try:
             version = os.getenv('DIST') or ubuntu_info.devel()
-        except DistroDataOutdated, e:
+        except DistroDataOutdated as e:
             Logger.warn("%s\nOr specify a distribution.", e)
             sys.exit(1)
     component = None
@@ -104,16 +105,16 @@ def main():
     pocket = None
     try:
         (release, pocket) = split_release_pocket(version, default=None)
-    except PocketDoesNotExistError, e:
+    except PocketDoesNotExistError:
         pass
     if release in ubuntu_info.all:
         archive = Distribution('ubuntu').getArchive()
         try:
             spph = archive.getSourcePackage(package, release, pocket)
-        except SeriesNotFoundException, e:
+        except SeriesNotFoundException as e:
             Logger.error(str(e))
             sys.exit(1)
-        except PackageNotFoundException, e:
+        except PackageNotFoundException as e:
             source_package = source_package_for(package, release)
             if source_package is not None and source_package != package:
                 try:
@@ -135,7 +136,7 @@ def main():
                                  mirrors=[options.ubuntu_mirror])
     try:
         srcpkg.pull()
-    except DownloadError, e:
+    except DownloadError as e:
         Logger.error('Failed to download: %s', str(e))
         sys.exit(1)
     if not options.download_only:
