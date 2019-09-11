@@ -23,10 +23,10 @@
 # ##################################################################
 
 # Modules.
-from subprocess import Popen, PIPE
 import locale
 import os
 import sys
+from subprocess import check_output, CalledProcessError
 
 import distro_info
 
@@ -47,29 +47,22 @@ def system_distribution_chain():
     global _system_distribution_chain
     if len(_system_distribution_chain) == 0:
         try:
-            p = Popen(('dpkg-vendor', '--query', 'Vendor'),
-                      stdout=PIPE, encoding='utf-8')
-            _system_distribution_chain.append(p.communicate()[0].strip())
-        except OSError:
+            vendor = check_output(('dpkg-vendor', '--query', 'Vendor'),
+                                   encoding='utf-8').strip()
+            _system_distribution_chain.append(vendor)
+        except CalledProcessError:
             print('Error: Could not determine what distribution you are running.')
             return []
 
         while True:
             try:
-                p = Popen(('dpkg-vendor',
-                           '--vendor', _system_distribution_chain[-1],
-                           '--query', 'Parent'),
-                          stdout=PIPE, encoding='utf-8')
-                parent = p.communicate()[0].strip()
-                # Don't check return code, because if a vendor has no
-                # parent, dpkg-vendor returns 1
-                if not parent:
-                    break
-                _system_distribution_chain.append(parent)
-            except Exception:
-                print(('Error: Could not determine the parent of the '
-                       'distribution %s' % _system_distribution_chain[-1]))
-                return []
+                parent = check_output((
+                    'dpkg-vendor', '--vendor', _system_distribution_chain[-1],
+                    '--query', 'Parent'), encoding='utf-8').strip()
+            except CalledProcessError:
+                # Vendor has no parent
+                break
+            _system_distribution_chain.append(parent)
 
     return _system_distribution_chain
 
@@ -91,14 +84,18 @@ def host_architecture():
     architecture can't be determined, print an error message and return None.
     """
 
-    arch = Popen(['dpkg', '--print-architecture'], stdout=PIPE,
-                 stderr=PIPE).communicate()[0].split()
+    try:
+        arch = check_output(('dpkg', '--print-architecture'),
+                            encoding='utf-8').strip()
+    except CalledProcessError:
+        arch = None
 
-    if not arch or 'not found' in arch[0]:
-        print('Error: Not running on a Debian based system; could not detect its architecture.')
+    if not arch or 'not found' in arch:
+        print('Error: Not running on a Debian based system; '
+              'could not detect its architecture.')
         return None
 
-    return arch[0]
+    return arch
 
 
 def readlist(filename, uniq=True):
