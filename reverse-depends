@@ -120,7 +120,12 @@ def main():
                 data[field] = filtered
 
     if options.arch == 'source':
-        fields = ['Reverse-Build-Depends', 'Reverse-Build-Depends-Indep']
+        fields = [
+            'Reverse-Build-Depends',
+            'Reverse-Build-Depends-Indep',
+            'Reverse-Build-Depends-Arch',
+            'Reverse-Testsuite-Triggers',
+        ]
     else:
         fields = ['Reverse-Depends']
         if options.recommends:
