@@ -109,7 +109,8 @@ def readlist(filename, uniq=True):
         print('File "%s" does not exist.' % filename)
         return False
 
-    content = open(filename).read().replace('\n', ' ').replace(',', ' ')
+    with open(filename) as f:
+        content = f.read().replace('\n', ' ').replace(',', ' ')
 
     if not content.strip():
         print('File "%s" is empty.' % filename)
