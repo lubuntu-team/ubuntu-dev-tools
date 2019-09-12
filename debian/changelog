@@ -1,9 +1,13 @@
-ubuntu-dev-tools (0.174) UNRELEASED; urgency=medium
+ubuntu-dev-tools (0.174) UNRLEASED; urgency=medium
 
-  * reverse-depends: Support Reverse-Testsuite-Triggers and
-    Reverse-Build-Depends-Arch (LP: #1843614)
+  [ Stefano Rivera ]
+  * reverse-depends:
+    + Support reverse test dependencies as well.  LP: #1843614
+  * ubuntutools.misc:
+    + Replace Popen() calls with check_output().  Closes: #940040
+    + Use a context manager to open file, to be sure to close them.
 
- -- Stefano Rivera <stefanor@debian.org>  Wed, 11 Sep 2019 16:00:27 -0300
+ -- Mattia Rizzolo <mattia@debian.org>  Thu, 12 Sep 2019 14:34:16 +0200
 
 ubuntu-dev-tools (0.173) unstable; urgency=medium
 
