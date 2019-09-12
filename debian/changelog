@@ -9,6 +9,10 @@ ubuntu-dev-tools (0.174) UNRLEASED; urgency=medium
 
   [ Dan Streetman ]
   * Update setup.py to also use python3.
+  * reverse-depends:
+    + Move from optparse to argparse.
+    + Rename the typoed --recursive-deph to --recursive-depth.
+    + Use list comprehensions to simplify del-during-iteration functions.
 
  -- Mattia Rizzolo <mattia@debian.org>  Thu, 12 Sep 2019 14:34:16 +0200
 
