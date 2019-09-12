@@ -7,6 +7,9 @@ ubuntu-dev-tools (0.174) UNRLEASED; urgency=medium
     + Replace Popen() calls with check_output().  Closes: #940040
     + Use a context manager to open file, to be sure to close them.
 
+  [ Dan Streetman ]
+  * Update setup.py to also use python3.
+
  -- Mattia Rizzolo <mattia@debian.org>  Thu, 12 Sep 2019 14:34:16 +0200
 
 ubuntu-dev-tools (0.173) unstable; urgency=medium
