@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 
 # Copyright © 2009 James Westby <james.westby@ubuntu.com>,
 #             2010, 2011 Stefano Rivera <stefanor@ubuntu.com>
@@ -23,7 +22,6 @@
 # ##################################################################
 
 import argparse
-import debianbts
 import logging
 import re
 import sys
@@ -33,6 +31,12 @@ from launchpadlib.launchpad import Launchpad
 
 from ubuntutools.config import UDTConfig
 from ubuntutools.logger import Logger
+
+try:
+    import debianbts
+except ImportError:
+    Logger.error("Please install 'python3-debianbts' in order to use this utility.")
+    sys.exit(1)
 
 
 def main():
