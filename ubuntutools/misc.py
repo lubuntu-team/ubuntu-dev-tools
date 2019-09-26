@@ -48,7 +48,7 @@ def system_distribution_chain():
     if len(_system_distribution_chain) == 0:
         try:
             vendor = check_output(('dpkg-vendor', '--query', 'Vendor'),
-                                   encoding='utf-8').strip()
+                                  encoding='utf-8').strip()
             _system_distribution_chain.append(vendor)
         except CalledProcessError:
             print('Error: Could not determine what distribution you are running.')
