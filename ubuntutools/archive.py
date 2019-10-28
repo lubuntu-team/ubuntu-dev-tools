@@ -265,7 +265,10 @@ class SourcePackage(object):
         message = None
         gpg_info = None
         try:
-            gpg_info = self.dsc.get_gpg_info()
+            gpg_info = self.dsc.get_gpg_info((
+                '/usr/share/keyrings/debian-keyring.gpg',
+                '/usr/share/keyrings/debian-maintainers.gpg',
+            ))
             valid = gpg_info.valid()
         except IOError:
             message = ('Signature on %s could not be verified, install '
