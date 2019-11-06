@@ -142,6 +142,7 @@ class SourcePackage(object):
         quiet = kwargs.get('quiet', False)
         series = kwargs.get('series')
         pocket = kwargs.get('pocket')
+        status = kwargs.get('status')
         verify_signature = kwargs.get('verify_signature', False)
 
         assert (package is not None or dscfile is not None)
@@ -154,6 +155,7 @@ class SourcePackage(object):
         self.quiet = quiet
         self._series = series
         self._pocket = pocket
+        self._status = status
         self._dsc_source = dscfile
         self._verify_signature = verify_signature
 
@@ -200,6 +202,8 @@ class SourcePackage(object):
         else:
             # We always want to search all series, if not specified
             params['search_all_series'] = True
+
+        params['status'] = self._status
 
         try:
             self._spph = archive.getSourcePackage(self.source,

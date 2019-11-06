@@ -35,6 +35,9 @@ from ubuntutools.lp.udtexceptions import PocketDoesNotExistError
 DEFAULT_POCKETS = ('Release', 'Security', 'Updates', 'Proposed')
 POCKETS = DEFAULT_POCKETS + ('Backports',)
 
+DEFAULT_STATUSES = ('Pending', 'Published')
+STATUSES = DEFAULT_STATUSES + ('Superseded', 'Deleted', 'Obsolete')
+
 _system_distribution_chain = []
 
 

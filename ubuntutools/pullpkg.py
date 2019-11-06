@@ -40,7 +40,7 @@ from ubuntutools.lp.udtexceptions import (SeriesNotFoundException,
                                           PocketDoesNotExistError,
                                           InvalidDistroValueError)
 from ubuntutools.logger import Logger
-from ubuntutools.misc import (split_release_pocket, host_architecture)
+from ubuntutools.misc import (split_release_pocket, host_architecture, STATUSES)
 
 PULL_SOURCE = 'source'
 PULL_DEBS = 'debs'
@@ -114,7 +114,11 @@ class PullPkg(object):
         help_default_arch = ("Get binary packages for arch")
         help_default_arch += ("(default: %s)" % self._default_arch)
 
-        parser = ArgumentParser()
+        epilog = ("Note on --status: if a version is provided, all status types "
+                  "will be searched; if no version is provided, by default only "
+                  "'Pending' and 'Published' status will be searched.")
+
+        parser = ArgumentParser(epilog=epilog)
         parser.add_argument('-v', '--verbose', action='store_true',
                             help="Print verbose/debug messages")
         parser.add_argument('-d', '--download-only', action='store_true',
@@ -125,6 +129,8 @@ class PullPkg(object):
                             help="Don't read config files or environment variables")
         parser.add_argument('--no-verify-signature', action='store_true',
                             help="Don't fail if dsc signature can't be verified")
+        parser.add_argument('-s', '--status', action='append', default=[],
+                            help="Search for packages with specific status(es)")
         parser.add_argument('-a', '--arch', default=self._default_arch,
                             help=help_default_arch)
         parser.add_argument('-p', '--pull', default=self._default_pull,
@@ -265,6 +271,7 @@ class PullPkg(object):
         assert 'download_only' in options
         assert 'no_conf' in options
         assert 'no_verify_signature' in options
+        assert 'status' in options
         # type string
         assert 'pull' in options
         assert 'distro' in options
@@ -315,6 +322,8 @@ class PullPkg(object):
             params['mirrors'] = mirrors
 
         params['verify_signature'] = not options['no_verify_signature']
+
+        params['status'] = STATUSES if 'all' in options['status'] else options['status']
 
         return (pull, distro, params)
 

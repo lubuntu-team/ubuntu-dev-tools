@@ -38,7 +38,8 @@ from lazr.restfulclient.resource import Entry
 from ubuntutools.version import Version
 from ubuntutools.lp import (service, api_version)
 from ubuntutools.misc import (host_architecture,
-                              DEFAULT_POCKETS, POCKETS)
+                              DEFAULT_POCKETS, POCKETS,
+                              DEFAULT_STATUSES, STATUSES)
 from ubuntutools.lp.udtexceptions import (AlreadyLoggedInError,
                                           ArchiveNotFoundException,
                                           ArchSeriesNotFoundException,
@@ -373,6 +374,11 @@ class Archive(BaseWrapper):
         specific version, it defaults to all pockets.  Pocket strings must
         be capitalized.
 
+        status may be a string or a list.  If no version is provided, it
+        defaults to only 'Pending' and 'Published'; if searching for a
+        specific version, it defaults to all statuses.  Status strings must
+        be capitalized.
+
         wrapper is the class to return an instance of; defaults to
         SourcePackagePublishingHistory.
 
@@ -380,7 +386,6 @@ class Archive(BaseWrapper):
         search only the latest devel series, and if True all series
         will be searched, in reverse order, starting with the latest
         devel series.  Defaults to False.
-        status is optional, to restrict search to a given status only.
 
         If the requested source package doesn't exist a
         PackageNotFoundException is raised.
@@ -413,6 +418,11 @@ class Archive(BaseWrapper):
         specific version, it defaults to all pockets.  Pocket strings must
         be capitalized.
 
+        status may be a string or a list.  If no version is provided, it
+        defaults to only 'Pending' and 'Published'; if searching for a
+        specific version, it defaults to all statuses.  Status strings must
+        be capitalized.
+
         wrapper is the class to return an instance of; defaults to
         BinaryPackagePublishingHistory.
 
@@ -420,7 +430,6 @@ class Archive(BaseWrapper):
         search only the latest devel series, and if True all series
         will be searched, in reverse order, starting with the latest
         devel series.  Defaults to False.
-        status is optional, to restrict search to a given status only.
 
         If the requested binary package doesn't exist a
         PackageNotFoundException is raised.
@@ -460,6 +469,21 @@ class Archive(BaseWrapper):
             if p not in POCKETS:
                 raise PocketDoesNotExistError("Pocket '%s' does not exist." % p)
 
+        if not status:
+            if version:
+                # check ALL statuses if specific version
+                statuses = STATUSES
+            else:
+                # otherwise, only check 'Pending' and 'Published'
+                statuses = DEFAULT_STATUSES
+        elif isinstance(status, str):
+            statuses = (status,)
+        else:
+            statuses = tuple(status)
+
+        for s in statuses:
+            if s not in STATUSES:
+                raise ValueError("Status '%s' is not valid." % s)
 
         dist = Distribution(self.distribution_link)
 
@@ -499,7 +523,7 @@ class Archive(BaseWrapper):
                 if archtag is None:
                     archtag = host_architecture()
 
-            index = (name, getattr(series, 'name', None), archtag, pockets, status, version)
+            index = (name, getattr(series, 'name', None), archtag, pockets, statuses, version)
 
             if index in cache:
                 return cache[index]
@@ -517,6 +541,8 @@ class Archive(BaseWrapper):
             if len(pockets) == 1:
                 params['pocket'] = pockets[0]
 
+            if len(statuses) == 1:
+                params['status'] = statuses[0]
 
             if version:
                 params['version'] = version
@@ -540,6 +566,9 @@ class Archive(BaseWrapper):
                     err_msg = 'pocket %s not in (%s)' % (record.pocket, ','.join(pockets))
                     Logger.debug(skipmsg + err_msg)
                     continue
+                if record.status not in statuses:
+                    err_msg = 'status %s not in (%s)' % (record.status, ','.join(statuses))
+                    Logger.debug(skipmsg + err_msg)
                     continue
                 r = wrapper(record)
                 if binary and archtag and archtag != r.arch:
@@ -587,6 +616,10 @@ class Archive(BaseWrapper):
                 msg += "-%s" % pockets[0]
             elif len(pockets) != len(POCKETS):
                 msg += " for pockets " + ', '.join(pockets)
+        if len(statuses) == 1:
+            msg += " with status %s" % statuses[0]
+        elif len(statuses) != len(STATUSES):
+            msg += " with status in " + ', '.join(statuses)
         if version_with_epoch:
             msg += " (did you forget the epoch? try %s)" % version_with_epoch
         raise PackageNotFoundException(msg)
