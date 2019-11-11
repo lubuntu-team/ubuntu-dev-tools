@@ -4,6 +4,9 @@ ubuntu-dev-tools (0.175) UNRELEASED; urgency=medium
   * Trust the installed debian-keyring when checking validity of dsc
     signatures.
 
+  [ Stefano Rivera ]
+  * merge-changelog: rewrite the changelog handling to use python3-debian.
+
   [ Dan Streetman ]
   * tests/pylint.conf: use jobs=0 to speed up tests.
   * submittodebian: use a context manager while opening a file.
