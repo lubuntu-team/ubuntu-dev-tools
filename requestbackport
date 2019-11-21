@@ -90,7 +90,14 @@ def check_existing(package, destinations):
     query = re.findall(r'[a-z]+', package)
     bugs = []
     for release in destinations:
-        project = Launchpad.projects[release + '-backports']
+        project_name = '{}-backports'.format(release)
+        try:
+            project = Launchpad.projects[project_name]
+        except KeyError:
+            Logger.error("The backports tracking project '%s' doesn't seem to "
+                         "exist.  Please check the situation with the "
+                         "backports team.", project_name)
+            sys.exit(1)
         bugs += project.searchTasks(omit_duplicates=True,
                                     search_text=query,
                                     status=["Incomplete", "New", "Confirmed",
