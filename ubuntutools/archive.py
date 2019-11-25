@@ -314,7 +314,7 @@ class SourcePackage(object):
                 yield self._mirror_url(mirror, name)
         yield self._lp_url(name)
 
-    def _binary_urls(self, name, default_url):
+    def _binary_urls(self, name, default_urls):
         "Generator of URLs for name"
         for mirror in self.mirrors:
             yield self._mirror_url(mirror, name)
@@ -322,11 +322,13 @@ class SourcePackage(object):
             if mirror not in self.mirrors:
                 yield self._mirror_url(mirror, name)
         yield self._lp_url(name)
-        yield default_url
+        for url in default_urls:
+            yield url
 
-    def _binary_files_info(self, arch, name):
-        for bpph in self.lp_spph.getBinaries(arch=arch, name=name):
-            yield (bpph.getFileName(), bpph.getUrl(), 0)
+    def _binary_files_info(self, arch, name, ext):
+        for bpph in self.lp_spph.getBinaries(arch=arch, name=name, ext=ext):
+            urls = bpph.binaryFileUrls() + [bpph.getUrl()]
+            yield (bpph.getFileName(), urls, 0)
 
     def pull_dsc(self):
         "Retrieve dscfile and parse"
@@ -508,20 +510,26 @@ class SourcePackage(object):
             else:
                 raise DownloadError('File %s could not be found' % name)
 
-    def pull_binaries(self, arch, name=None):
+    def pull_binaries(self, arch, name=None, ext=None):
         """Pull binary debs into workdir.
         If name is specified, only binary packages matching the regex are included.
+
+        If ext is specified, only binary packages with that ext are included; for
+        example to only download dbgsym ddebs, specify ext='ddeb'.
+
         Must specify arch, or use 'all' to pull all archs.
         Returns the number of files downloaded.
         """
         total = 0
 
+        Logger.debug("pull_binaries(arch=%s, name=%s, ext=%s)" % (arch, name, ext))
+
         if not arch:
             raise RuntimeError("Must specify arch")
 
-        for (fname, furl, fsize) in self._binary_files_info(arch, name):
+        for (fname, furls, fsize) in self._binary_files_info(arch, name, ext):
             found = False
-            for url in self._binary_urls(fname, furl):
+            for url in self._binary_urls(fname, furls):
                 try:
                     if self._download_file(url, fname, False, fsize):
                         found = True
@@ -591,11 +599,11 @@ class DebianSPPH(SourcePackagePublishingHistory):
     """
     resource_type = 'source_package_publishing_history'
 
-    def getBinaries(self, arch, name=None):
+    def getBinaries(self, arch, name=None, ext=None):
         Logger.info('Using Snapshot to find binary packages')
         srcpkg = Snapshot.getSourcePackage(self.getPackageName(),
                                            version=self.getVersion())
-        return srcpkg.getSPPH().getBinaries(arch=arch, name=name)
+        return srcpkg.getSPPH().getBinaries(arch=arch, name=name, ext=ext)
 
 
 class DebianSourcePackage(SourcePackage):
@@ -655,9 +663,9 @@ class DebianSourcePackage(SourcePackage):
                 break
         yield self.snapshot_files[name]
 
-    def _binary_files_info(self, arch, name):
-        for f in self.snapshot_package.getBinaryFiles(arch=arch, name=name):
-            yield (f.name, f.getUrl(), f.size)
+    def _binary_files_info(self, arch, name, ext):
+        for f in self.snapshot_package.getBinaryFiles(arch=arch, name=name, ext=ext):
+            yield (f.name, [f.getUrl()], f.size)
 
     def pull_dsc(self):
         "Retrieve dscfile and parse"
@@ -973,7 +981,7 @@ class SnapshotSourcePackage(SnapshotPackage):
     def getAllFiles(self):
         return self.getFiles() + self.getBinaryFiles()
 
-    def getBinaryFiles(self, arch=None, name=None):
+    def getBinaryFiles(self, arch=None, name=None, ext=None):
         if not self._binary_files:
             url = "/mr/package/{}/{}/allfiles".format(self.name, self.version)
             response = Snapshot.load("{}?fileinfo=1".format(url))
@@ -985,9 +993,11 @@ class SnapshotSourcePackage(SnapshotPackage):
             self._binary_files = files
         bins = list(self._binary_files)
         if arch:
-            bins = filter(lambda b: b.isArch(arch), bins)
+            bins = [b for b in bins if b.isArch(arch)]
         if name:
-            bins = filter(lambda b: re.match(name, b.name), bins)
+            bins = [b for b in bins if re.match(name, b.package_name)]
+        if ext:
+            bins = [b for b in bins if re.match(ext, b.ext)]
         return bins
 
     def getFiles(self):
@@ -1038,7 +1048,7 @@ class SnapshotBinaryPackage(SnapshotPackage):
                            for r in response['result']]
         if not arch:
             return list(self._files)
-        return filter(lambda f: f.isArch(arch), self._files)
+        return [f for f in self._files if f.isArch(arch)]
 
 
 class SnapshotFile(object):
@@ -1060,6 +1070,10 @@ class SnapshotFile(object):
     @property
     def name(self):
         return self._obj['name']
+
+    @property
+    def ext(self):
+        return self.name.rpartition('.')[2]
 
     @property
     def path(self):
@@ -1199,9 +1213,9 @@ class SnapshotSPPH(object):
             new_entries.append(str(block))
         return ''.join(new_entries)
 
-    def getBinaries(self, arch, name=None):
+    def getBinaries(self, arch, name=None, ext=None):
         return [b.getBPPH()
-                for b in self._pkg.getBinaryFiles(arch=arch, name=name)]
+                for b in self._pkg.getBinaryFiles(arch=arch, name=name, ext=ext)]
 
 
 class SnapshotBPPH(object):
@@ -1255,11 +1269,23 @@ class SnapshotBPPH(object):
     def getComponent(self):
         return self._file.component
 
+    def binaryFileUrls(self):
+        return [self.getUrl()]
+
     def getBuild(self):
         return None
 
     def getUrl(self):
         return self._file.getUrl()
+
+    def getFileVersion(self):
+        return self.getVersion()
+
+    def getFileArch(self):
+        return self.arch
+
+    def getFileExt(self):
+        return self._file.ext
 
     def getFileName(self):
         return self._file.name

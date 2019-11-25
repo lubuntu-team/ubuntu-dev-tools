@@ -53,6 +53,7 @@ PULL_UDEBS = 'udebs'
 PULL_LIST = 'list'
 
 VALID_PULLS = [PULL_SOURCE, PULL_DEBS, PULL_DDEBS, PULL_UDEBS, PULL_LIST]
+VALID_BINARY_PULLS = [PULL_DEBS, PULL_DDEBS, PULL_UDEBS]
 
 DISTRO_DEBIAN = 'debian'
 DISTRO_UBUNTU = 'ubuntu'
@@ -388,24 +389,32 @@ class PullPkg(object):
                 Logger.debug("--download-only specified, not extracting")
             else:
                 srcpkg.unpack()
-        else:
-            name = '.*'
+        elif pull in VALID_BINARY_PULLS:
+            name = None
             if package != spph.getPackageName():
                 Logger.info("Pulling only binary package '%s'", package)
                 Logger.info("Use package name '%s' to pull all binary packages",
                             spph.getPackageName())
                 name = package
-            if pull == PULL_DEBS:
-                name = r'{}(?<!-di)(?<!-dbgsym)$'.format(name)
-            elif pull == PULL_DDEBS:
-                name += '-dbgsym$'
-            elif pull == PULL_UDEBS:
-                name += '-di$'
-            else:
-                raise InvalidPullValueError("Invalid pull value %s" % pull)
+
+            # e.g. 'debs' -> 'deb'
+            ext = pull.rstrip('s')
+
+            if distro == DISTRO_DEBIAN:
+                # Debian ddebs don't use .ddeb extension, unfortunately :(
+                if pull in [PULL_DEBS, PULL_DDEBS]:
+                    name = name or '.*'
+                    ext = 'deb'
+                if pull == PULL_DEBS:
+                    name += r'(?<!-dbgsym)$'
+                if pull == PULL_DDEBS:
+                    name += r'-dbgsym$'
 
             # allow DownloadError to flow up to caller
-            total = srcpkg.pull_binaries(name=name, arch=options['arch'])
+            total = srcpkg.pull_binaries(name=name, ext=ext, arch=options['arch'])
             if total < 1:
                 Logger.error("No %s found for %s %s", pull,
                              package, spph.getVersion())
+        else:
+            Logger.error("Internal error: invalid pull value after parse_pull()")
+            raise InvalidPullValueError("Invalid pull value '%s'" % pull)

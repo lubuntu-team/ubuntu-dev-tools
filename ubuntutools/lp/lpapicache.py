@@ -795,11 +795,14 @@ class SourcePackagePublishingHistory(BaseWrapper):
             new_entries.append(str(block))
         return ''.join(new_entries)
 
-    def getBinaries(self, arch, name=None):
+    def getBinaries(self, arch, name=None, ext=None):
         '''
         Returns the resulting BinaryPackagePublishingHistorys.
         Must specify arch, or use 'all' to get all archs.
+
         If name is specified, only returns BPPH matching that (regex) name.
+
+        If ext is specified, only returns BPPH matching that (regex) ext.
         '''
         if not arch:
             raise RuntimeError("Must specify arch")
@@ -834,7 +837,7 @@ class SourcePackagePublishingHistory(BaseWrapper):
                 # strip out the URL leading text.
                 filename = url.rsplit('/', 1)[1]
                 # strip the file suffix
-                pkgname = filename.rsplit('.', 1)[0]
+                (pkgname, _, e) = filename.rpartition('.')
                 # split into name, version, arch
                 (n, v, a) = pkgname.rsplit('_', 2)
                 if a == 'all':
@@ -844,6 +847,9 @@ class SourcePackagePublishingHistory(BaseWrapper):
                     continue
                 # Only check the name requested - saves time
                 if name and not re.match(name, n):
+                    continue
+                # Only check the ext requested - saves time
+                if ext and not re.match(ext, e):
                     continue
                 # If we already have this BPPH, keep going
                 if a in self._binaries and n in self._binaries[a]:
@@ -862,7 +868,7 @@ class SourcePackagePublishingHistory(BaseWrapper):
                 if a not in self._binaries:
                     self._binaries[a] = {}
                 self._binaries[a][n] = bpph
-            if not name and arch == 'all':
+            if not name and not ext and arch == 'all':
                 # We must have got them all
                 self._have_all_binaries = True
 
@@ -874,7 +880,10 @@ class SourcePackagePublishingHistory(BaseWrapper):
             bpphs = self._binaries[arch].copy().values()
 
         if name:
-            bpphs = filter(lambda b: re.match(name, b.binary_package_name), bpphs)
+            bpphs = [b for b in bpphs if re.match(name, b.binary_package_name)]
+
+        if ext:
+            bpphs = [b for b in bpphs if re.match(ext, b.getFileExt())]
 
         return bpphs
 
@@ -938,6 +947,7 @@ class BinaryPackagePublishingHistory(BaseWrapper):
 
     def __init__(self, *args):
         self._arch = None
+        self._ext = None
 
     @property
     def arch(self):
@@ -976,7 +986,11 @@ class BinaryPackagePublishingHistory(BaseWrapper):
         Only available in the devel API, not 1.0
         '''
         try:
-            return self._lpobject.binaryFileUrls()
+            urls = self._lpobject.binaryFileUrls()
+            if not urls:
+                Logger.warning('BPPH %s_%s has no binaryFileUrls' %
+                               (self.getPackageName(), self.getVersion()))
+            return urls
         except AttributeError:
             raise AttributeError("binaryFileUrls can only be found in lpapi "
                                  "devel, not 1.0. Login using devel to have it.")
@@ -1013,12 +1027,33 @@ class BinaryPackagePublishingHistory(BaseWrapper):
         '''
         Returns the file extension; "deb", "ddeb", or "udeb".
         '''
-        if self.getPackageName().endswith("-dbgsym"):
-            return "ddeb"
-        elif self.getPackageName().endswith("-di"):
+        if not self._ext:
+            self._ext = self._getFileExt()
+
+        return self._ext
+
+    def _getFileExt(self):
+        try:
+            # this is the best way, from the actual URL filename
+            return self.binaryFileUrls()[0].rpartition('.')[2]
+        except (AttributeError, IndexError):
+            Logger.debug('Could not get file ext from url, trying to guess...')
+
+        # is_debug should be reliable way of detecting ddeb...?
+        try:
+            if self.is_debug:
+                return "ddeb"
+        except AttributeError:
+            # is_debug only available with api version 'devel'
+            if self.getPackageName().endswith("-dbgsym"):
+                return "ddeb"
+
+        # is this reliable?
+        if self.getPackageName().endswith("-di") or self.getPackageName().endswith("-udeb"):
             return "udeb"
-        else:
-            return "deb"
+
+        # everything else - assume regular deb
+        return "deb"
 
     def getFileName(self):
         '''
