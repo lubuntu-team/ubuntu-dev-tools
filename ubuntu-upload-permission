@@ -20,8 +20,10 @@ import sys
 from ubuntutools.lp.lpapicache import (Launchpad, Distribution, PersonTeam,
                                        Packageset, PackageNotFoundException,
                                        SeriesNotFoundException)
-from ubuntutools.logger import Logger
 from ubuntutools.misc import split_release_pocket
+
+from ubuntutools import getLogger
+Logger = getLogger(__name__)
 
 
 def parse_arguments():
@@ -77,52 +79,50 @@ def main():
 
         component_uploader = archive.getUploadersForComponent(
                 component_name=component)[0]
-        print("All upload permissions for %s:" % package)
-        print()
-        print("Component (%s)" % component)
-        print("============" + ("=" * len(component)))
+        Logger.info("All upload permissions for %s:" % package)
+        Logger.info("")
+        Logger.info("Component (%s)" % component)
+        Logger.info("============" + ("=" * len(component)))
         print_uploaders([component_uploader], options.list_team_members)
 
         packagesets = sorted(Packageset.setsIncludingSource(
                 distroseries=series,
                 sourcepackagename=package))
         if packagesets:
-            print()
-            print("Packagesets")
-            print("===========")
+            Logger.info("")
+            Logger.info("Packagesets")
+            Logger.info("===========")
             for packageset in packagesets:
-                print()
-                print("%s:" % packageset.name)
+                Logger.info("")
+                Logger.info("%s:" % packageset.name)
                 print_uploaders(archive.getUploadersForPackageset(
                     packageset=packageset), options.list_team_members)
 
         ppu_uploaders = archive.getUploadersForPackage(
                 source_package_name=package)
         if ppu_uploaders:
-            print()
-            print("Per-Package-Uploaders")
-            print("=====================")
-            print()
+            Logger.info("")
+            Logger.info("Per-Package-Uploaders")
+            Logger.info("=====================")
+            Logger.info("")
             print_uploaders(ppu_uploaders, options.list_team_members)
-        print()
+        Logger.info("")
 
     if PersonTeam.me.canUploadPackage(archive, series, package, component,
                                       pocket):
-        print("You can upload %s to %s." % (package, options.release))
+        Logger.info("You can upload %s to %s." % (package, options.release))
     else:
-        print("You can not upload %s to %s, yourself."
-              % (package, options.release))
+        Logger.info("You can not upload %s to %s, yourself." % (package, options.release))
         if (series.status in ('Current Stable Release', 'Supported', 'Obsolete')
                 and pocket == 'Release'):
-            print(("%s is in the '%s' state. You may want to query the "
-                   "%s-proposed pocket.")
-                  % (release, series.status, release))
+            Logger.info("%s is in the '%s' state. You may want to query the %s-proposed pocket." %
+                        (release, series.status, release))
         else:
-            print("But you can still contribute to it via the sponsorship "
-                  "process: https://wiki.ubuntu.com/SponsorshipProcess")
+            Logger.info("But you can still contribute to it via the sponsorship "
+                        "process: https://wiki.ubuntu.com/SponsorshipProcess")
             if not options.list_uploaders:
-                print("To see who has the necessary upload rights, "
-                      "use the --list-uploaders option.")
+                Logger.info("To see who has the necessary upload rights, "
+                            "use the --list-uploaders option.")
         sys.exit(1)
 
 
@@ -133,9 +133,9 @@ def print_uploaders(uploaders, expand_teams=False, prefix=''):
     recursion.
     """
     for uploader in sorted(uploaders, key=lambda p: p.display_name):
-        print(("%s* %s (%s)%s" %
-              (prefix, uploader.display_name, uploader.name,
-               ' [team]' if uploader.is_team else '')))
+        Logger.info("%s* %s (%s)%s" %
+                    (prefix, uploader.display_name, uploader.name,
+                     ' [team]' if uploader.is_team else ''))
         if expand_teams and uploader.is_team:
             print_uploaders(uploader.participants, True, prefix=prefix + '  ')
 

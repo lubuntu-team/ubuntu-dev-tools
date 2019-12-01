@@ -19,9 +19,11 @@ import os
 import re
 import subprocess
 
-from ubuntutools.logger import Logger
 from ubuntutools.sponsor_patch.question import ask_for_manual_fixing
 from functools import reduce
+
+import logging
+Logger = logging.getLogger(__name__)
 
 
 class Patch(object):
@@ -32,8 +34,8 @@ class Patch(object):
         self._patch_file = re.sub(" |/", "_", patch.title)
         if not reduce(lambda r, x: r or self._patch.title.endswith(x),
                       (".debdiff", ".diff", ".patch"), False):
-            Logger.info("Patch %s does not have a proper file extension." %
-                        (self._patch.title))
+            Logger.debug("Patch %s does not have a proper file extension." %
+                         (self._patch.title))
             self._patch_file += ".patch"
         self._full_path = os.path.realpath(self._patch_file)
         self._changed_files = None
@@ -45,7 +47,7 @@ class Patch(object):
         if self.is_debdiff():
             cmd = ["patch", "--merge", "--force", "-p",
                    str(self.get_strip_level()), "-i", self._full_path]
-            Logger.command(cmd)
+            Logger.debug(' '.join(cmd))
             if subprocess.call(cmd) != 0:
                 Logger.error("Failed to apply debdiff %s to %s %s.",
                              self._patch_file, task.package, task.get_version())
@@ -54,7 +56,7 @@ class Patch(object):
                     edit = True
         else:
             cmd = ["add-patch", self._full_path]
-            Logger.command(cmd)
+            Logger.debug(' '.join(cmd))
             if subprocess.call(cmd) != 0:
                 Logger.error("Failed to apply diff %s to %s %s.",
                              self._patch_file, task.package, task.get_version())
@@ -65,7 +67,7 @@ class Patch(object):
 
     def download(self):
         """Downloads the patch from Launchpad."""
-        Logger.info("Downloading %s." % (self._patch_file))
+        Logger.debug("Downloading %s." % (self._patch_file))
         patch_f = open(self._patch_file, "w")
         patch_f.write(self._patch.data.open().read())
         patch_f.close()

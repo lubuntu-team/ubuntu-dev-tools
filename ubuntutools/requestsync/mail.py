@@ -31,11 +31,12 @@ import tempfile
 from debian.changelog import Changelog
 from distro_info import DebianDistroInfo, DistroDataOutdated
 
-from ubuntutools.archive import rmadison, FakeSPPH
+from ubuntutools.archive import DebianSourcePackage, UbuntuSourcePackage
 from ubuntutools.lp.udtexceptions import PackageNotFoundException
-from ubuntutools.logger import Logger
 from ubuntutools.question import confirmation_prompt, YesNoQuestion
-from ubuntutools.version import Version
+
+import logging
+Logger = logging.getLogger(__name__)
 
 
 __all__ = [
@@ -48,32 +49,21 @@ __all__ = [
 ]
 
 
-def _get_srcpkg(distro, name, release):
-    if distro == 'debian':
-        # Canonicalise release:
-        debian_info = DebianDistroInfo()
-        try:
-            codename = debian_info.codename(release, default=release)
-        except DistroDataOutdated as e:
-            Logger.warn(e)
-
-    lines = list(rmadison(distro, name, suite=codename, arch='source'))
-    if not lines:
-        lines = list(rmadison(distro, name, suite=release, arch='source'))
-        if not lines:
-            raise PackageNotFoundException("'%s' doesn't appear to exist in %s '%s'" %
-                                           (name, distro.capitalize(), release))
-    pkg = max(lines, key=lambda x: Version(x['version']))
-
-    return FakeSPPH(pkg['source'], pkg['version'], pkg['component'], distro)
-
-
 def get_debian_srcpkg(name, release):
-    return _get_srcpkg('debian', name, release)
+    # Canonicalise release:
+    debian_info = DebianDistroInfo()
+    try:
+        codename = debian_info.codename(release, default=release)
+        return DebianSourcePackage(package=name, series=codename).lp_spph
+    except DistroDataOutdated as e:
+        Logger.warning(e)
+    except PackageNotFoundException:
+        pass
+    return DebianSourcePackage(package=name, series=release).lp_spph
 
 
 def get_ubuntu_srcpkg(name, release):
-    return _get_srcpkg('ubuntu', name, release)
+    return UbuntuSourcePackage(package=name, series=release).lp_spph
 
 
 def need_sponsorship(name, component, release):
@@ -185,14 +175,14 @@ Content-Type: text/plain; charset=UTF-8
     with backup:
         backup.write(mail)
 
-    Logger.normal('The e-mail has been saved in %s and will be deleted '
-                  'after succesful transmission', backup.name)
+    Logger.info('The e-mail has been saved in %s and will be deleted '
+                'after succesful transmission', backup.name)
 
     # connect to the server
     while True:
         try:
-            Logger.normal('Connecting to %s:%s ...', mailserver_host,
-                          mailserver_port)
+            Logger.info('Connecting to %s:%s ...', mailserver_host,
+                        mailserver_port)
             s = smtplib.SMTP(mailserver_host, mailserver_port)
             break
         except smtplib.SMTPConnectError as s:
@@ -238,7 +228,7 @@ Content-Type: text/plain; charset=UTF-8
             s.sendmail(myemailaddr, to, mail.encode('utf-8'))
             s.quit()
             os.remove(backup.name)
-            Logger.normal('Sync request mailed.')
+            Logger.info('Sync request mailed.')
             break
         except smtplib.SMTPRecipientsRefused as smtperror:
             smtp_code, smtp_message = smtperror.recipients[to]

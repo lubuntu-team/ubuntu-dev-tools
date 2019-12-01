@@ -19,11 +19,14 @@ import os
 import shutil
 import sys
 import tempfile
+import logging
 
 from ubuntutools.builder import get_builder
 from ubuntutools.config import UDTConfig
-from ubuntutools.logger import Logger
 from ubuntutools.sponsor_patch.sponsor_patch import sponsor_patch, check_dependencies
+
+from ubuntutools import getLogger
+Logger = getLogger(__name__)
 
 
 def parse(script_name):
@@ -64,7 +67,8 @@ def parse(script_name):
                            "temporary directory, deleted afterwards).")
 
     (options, args) = parser.parse_args()
-    Logger.set_verbosity(options.verbose)
+    if options.verbose:
+        Logger.setLevel(logging.DEBUG)
     check_dependencies()
 
     if len(args) == 0:
@@ -123,7 +127,7 @@ def main():
                       options.keyid, options.lpinstance, options.update,
                       options.upload, workdir)
     except KeyboardInterrupt:
-        print("\nUser abort.")
+        Logger.error("User abort.")
         sys.exit(2)
     finally:
         if options.workdir is None:

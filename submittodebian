@@ -27,7 +27,9 @@ import os
 import re
 import shutil
 import sys
-from subprocess import call, check_call, Popen, PIPE
+
+from subprocess import call, check_call, run, Popen, PIPE, DEVNULL
+
 from tempfile import mkdtemp
 
 from debian.changelog import Changelog
@@ -36,6 +38,9 @@ from distro_info import UbuntuDistroInfo, DistroDataOutdated
 from ubuntutools.config import ubu_email
 from ubuntutools.question import YesNoQuestion, EditFile
 from ubuntutools.update_maintainer import update_maintainer, restore_maintainer
+
+from ubuntutools import getLogger
+Logger = getLogger(__name__)
 
 
 def get_most_recent_debian_version(changelog):
@@ -85,10 +90,9 @@ def gen_debdiff(tmpdir, changelog):
 
     debdiff = os.path.join(tmpdir, '%s_%s.debdiff' % (pkg, newver))
 
-    devnull = open('/dev/null', 'w')
     diff_cmd = ['bzr', 'diff', '-r', 'tag:' + str(oldver)]
-    if call(diff_cmd, stdout=devnull, stderr=devnull) == 1:
-        print("Extracting bzr diff between %s and %s" % (oldver, newver))
+    if call(diff_cmd, stdout=DEVNULL, stderr=DEVNULL) == 1:
+        Logger.info("Extracting bzr diff between %s and %s" % (oldver, newver))
     else:
         if oldver.epoch is not None:
             oldver = str(oldver)[str(oldver).index(":") + 1:]
@@ -101,17 +105,13 @@ def gen_debdiff(tmpdir, changelog):
         check_file(olddsc)
         check_file(newdsc)
 
-        print("Generating debdiff between %s and %s" % (oldver, newver))
+        Logger.info("Generating debdiff between %s and %s" % (oldver, newver))
         diff_cmd = ['debdiff', olddsc, newdsc]
 
-    diff = Popen(diff_cmd, stdout=PIPE)
-    debdiff_f = open(debdiff, 'w')
-    filterdiff = Popen(['filterdiff', '-x', '*changelog*'],
-                       stdin=diff.stdout, stdout=debdiff_f)
-    diff.stdout.close()
-    filterdiff.wait()
-    debdiff_f.close()
-    devnull.close()
+    with Popen(diff_cmd, stdout=PIPE, encoding='utf-8') as diff:
+        with open(debdiff, 'w', encoding='utf-8') as debdiff_f:
+            run(['filterdiff', '-x', '*changelog*'],
+                stdin=diff.stdout, stdout=debdiff_f, encoding='utf-8')
 
     return debdiff
 
@@ -122,7 +122,7 @@ def check_file(fname, critical=True):
     else:
         if not critical:
             return False
-        print("Couldn't find «%s».\n" % fname)
+        Logger.info("Couldn't find «%s».\n" % fname)
         sys.exit(1)
 
 
@@ -130,7 +130,7 @@ def submit_bugreport(body, debdiff, deb_version, changelog):
     try:
         devel = UbuntuDistroInfo().devel()
     except DistroDataOutdated as e:
-        print(str(e))
+        Logger.info(str(e))
         devel = ''
 
     if os.path.dirname(sys.argv[0]).startswith('/usr/bin'):
@@ -200,7 +200,7 @@ no-cc
     with open(fn, 'w') as f:
         f.write(reportbugrc)
 
-    print("""\
+    Logger.info("""\
 You have not configured reportbug. Assuming this is the first time you have
 used it. Writing a ~/.reportbugrc that will use Debian's mail server, and CC
 the bug to you at <%s>
@@ -224,8 +224,8 @@ def main():
     parser.parse_args()
 
     if not os.path.exists('/usr/bin/reportbug'):
-        print("This utility requires the «reportbug» package, which isn't "
-              "currently installed.")
+        Logger.error("This utility requires the «reportbug» package, which isn't "
+                     "currently installed.")
         sys.exit(1)
 
     check_reportbug_config()

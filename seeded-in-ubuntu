@@ -24,7 +24,9 @@ import urllib.request
 
 from ubuntutools.lp.lpapicache import (Distribution, Launchpad,
                                        PackageNotFoundException)
-from ubuntutools.logger import Logger
+
+from ubuntutools import getLogger
+Logger = getLogger(__name__)
 
 DATA_URL = 'http://qa.ubuntuwire.org/ubuntu-seeded-packages/seeded.json.gz'
 
@@ -88,28 +90,28 @@ def output_binaries(index, binaries):
     '''Print binaries found in index'''
     for binary in binaries:
         if binary in index:
-            print("%s is seeded in:" % binary)
-            print(present_on(index[binary]))
+            Logger.info("%s is seeded in:" % binary)
+            Logger.info(present_on(index[binary]))
         else:
-            print("%s is not seeded (and may not exist)." % binary)
+            Logger.info("%s is not seeded (and may not exist)." % binary)
 
 
 def output_by_source(index, by_source):
-    '''Print binaries found in index. Grouped by source'''
+    '''Logger.Info(binaries found in index. Grouped by source'''
     for source, binaries in by_source.items():
         seen = False
         if not binaries:
-            print("Status unknown: No binary packages built by the latest "
-                  "%s.\nTry again using -b and the expected binary packages."
-                  % source)
+            Logger.info("Status unknown: No binary packages built by the latest "
+                        "%s.\nTry again using -b and the expected binary packages."
+                        % source)
             continue
         for binary in binaries:
             if binary in index:
                 seen = True
-                print("%s (from %s) is seeded in:" % (binary, source))
-                print(present_on(index[binary]))
+                Logger.info("%s (from %s) is seeded in:" % (binary, source))
+                Logger.info(present_on(index[binary]))
         if not seen:
-            print("%s's binaries are not seeded." % source)
+            Logger.info("%s's binaries are not seeded." % source)
 
 
 def main():

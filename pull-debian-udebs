@@ -1,0 +1,11 @@
+#!/usr/bin/python3
+#
+# pull-debian-udebs -- pull udeb package files for debian
+# Basic usage: pull-debian-udebs <package name> [version|release]
+#
+# See pull-pkg
+
+from ubuntutools.pullpkg import PullPkg
+
+if __name__ == '__main__':
+    PullPkg.main(distro='debian', pull='udebs')

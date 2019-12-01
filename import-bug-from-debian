@@ -30,7 +30,9 @@ import webbrowser
 from launchpadlib.launchpad import Launchpad
 
 from ubuntutools.config import UDTConfig
-from ubuntutools.logger import Logger
+
+from ubuntutools import getLogger
+Logger = getLogger(__name__)
 
 try:
     import debianbts
@@ -134,7 +136,7 @@ def main():
         d_watch = u_bug.addWatch(remote_bug=bug_num, bug_tracker=lp_debbugs)
         d_task.bug_watch = d_watch
         d_task.lp_save()
-        Logger.normal("Opened %s", u_bug.web_link)
+        Logger.info("Opened %s", u_bug.web_link)
         if not options.browserless:
             webbrowser.open(u_bug.web_link)
 

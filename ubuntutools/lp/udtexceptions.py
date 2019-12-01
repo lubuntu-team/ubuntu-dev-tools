@@ -26,3 +26,8 @@ class AlreadyLoggedInError(Exception):
 class ArchSeriesNotFoundException(BaseException):
     """Thrown when a distroarchseries is not found."""
     pass
+
+
+class InvalidDistroValueError(ValueError):
+    """ Thrown when distro value is invalid """
+    pass

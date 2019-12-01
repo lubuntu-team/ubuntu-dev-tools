@@ -28,7 +28,9 @@ from launchpadlib.launchpad import Launchpad
 from launchpadlib.errors import HTTPError
 
 from ubuntutools.config import UDTConfig
-from ubuntutools.logger import Logger
+
+from ubuntutools import getLogger
+Logger = getLogger(__name__)
 
 
 def error_out(msg):

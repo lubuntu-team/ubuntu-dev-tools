@@ -25,7 +25,6 @@ from distro_info import UbuntuDistroInfo
 
 from launchpadlib.launchpad import Launchpad
 
-from ubuntutools.logger import Logger
 from ubuntutools.update_maintainer import (update_maintainer,
                                            MaintainerUpdateException)
 from ubuntutools.question import input_number
@@ -34,6 +33,9 @@ from ubuntutools.sponsor_patch.bugtask import BugTask, is_sync
 from ubuntutools.sponsor_patch.patch import Patch
 from ubuntutools.sponsor_patch.question import ask_for_manual_fixing
 from ubuntutools.sponsor_patch.source_package import SourcePackage
+
+import logging
+Logger = logging.getLogger(__name__)
 
 
 def is_command_available(command, check_sbin=False):
@@ -59,8 +61,8 @@ def check_dependencies():
         missing.append('pbuilder/cowbuilder/sbuild')
 
     if missing:
-        Logger.warn("sponsor-patch requires %s to be installed for full "
-                    "functionality", ', '.join(missing))
+        Logger.warning("sponsor-patch requires %s to be installed for full "
+                       "functionality", ', '.join(missing))
 
 
 def get_source_package_name(bug_task):
@@ -82,7 +84,7 @@ def get_user_shell():
 def edit_source():
     # Spawn shell to allow modifications
     cmd = [get_user_shell()]
-    Logger.command(cmd)
+    Logger.debug(' '.join(cmd))
     print("""An interactive shell was launched in
 file://%s
 Edit your files. When you are done, exit the shell. If you wish to abort the
@@ -112,7 +114,7 @@ def ask_for_patch_or_branch(bug, attached_patches, linked_branches):
             patches += "es"
         msg = "https://launchpad.net/bugs/%i has %s linked and %s attached:" % \
               (bug.id, branches, patches)
-    Logger.normal(msg)
+    Logger.info(msg)
     i = 0
     for linked_branch in linked_branches:
         i += 1
@@ -160,7 +162,7 @@ def download_branch(branch):
     if os.path.isdir(dir_name):
         shutil.rmtree(dir_name)
     cmd = ["bzr", "branch", branch]
-    Logger.command(cmd)
+    Logger.debug(' '.join(cmd))
     if subprocess.call(cmd) != 0:
         Logger.error("Failed to download branch %s." % (branch))
         sys.exit(1)
@@ -170,7 +172,7 @@ def download_branch(branch):
 def merge_branch(branch):
     edit = False
     cmd = ["bzr", "merge", branch]
-    Logger.command(cmd)
+    Logger.debug(' '.join(cmd))
     if subprocess.call(cmd) != 0:
         Logger.error("Failed to merge branch %s." % (branch))
         ask_for_manual_fixing()
@@ -182,7 +184,7 @@ def extract_source(dsc_file, verbose=False):
     cmd = ["dpkg-source", "--no-preparation", "-x", dsc_file]
     if not verbose:
         cmd.insert(1, "-q")
-    Logger.command(cmd)
+    Logger.debug(' '.join(cmd))
     if subprocess.call(cmd) != 0:
         Logger.error("Extraction of %s failed." % (os.path.basename(dsc_file)))
         sys.exit(1)
@@ -219,21 +221,21 @@ def get_open_ubuntu_bug_task(launchpad, bug, branch=None):
         task = tasks[0]
     elif len(ubuntu_tasks) > 1:
         task_list = [t.get_short_info() for t in ubuntu_tasks]
-        Logger.info("%i Ubuntu tasks exist for bug #%i.\n%s", len(ubuntu_tasks),
-                    bug_id, "\n".join(task_list))
+        Logger.debug("%i Ubuntu tasks exist for bug #%i.\n%s", len(ubuntu_tasks),
+                     bug_id, "\n".join(task_list))
         open_ubuntu_tasks = [x for x in ubuntu_tasks if not x.is_complete()]
         if len(open_ubuntu_tasks) == 1:
             task = open_ubuntu_tasks[0]
         else:
-            Logger.normal("https://launchpad.net/bugs/%i has %i Ubuntu tasks:" %
-                          (bug_id, len(ubuntu_tasks)))
+            Logger.info("https://launchpad.net/bugs/%i has %i Ubuntu tasks:" %
+                        (bug_id, len(ubuntu_tasks)))
             for i in range(len(ubuntu_tasks)):
                 print("%i) %s" % (i + 1,
                                   ubuntu_tasks[i].get_package_and_series()))
             selected = input_number("To which Ubuntu task does the patch belong",
                                     1, len(ubuntu_tasks))
             task = ubuntu_tasks[selected - 1]
-    Logger.info("Selected Ubuntu task: %s" % (task.get_short_info()))
+    Logger.debug("Selected Ubuntu task: %s" % (task.get_short_info()))
     return task
 
 
@@ -248,15 +250,15 @@ def _create_and_change_into(workdir):
                          (workdir, error.errno, error.strerror))
             sys.exit(1)
     if workdir != os.getcwd():
-        Logger.command(["cd", workdir])
+        Logger.debug("cd " + workdir)
         os.chdir(workdir)
 
 
 def _update_maintainer_field():
     """Update the Maintainer field in debian/control."""
-    Logger.command(["update-maintainer"])
+    Logger.debug("update-maintainer")
     try:
-        update_maintainer("debian", Logger.verbose)
+        update_maintainer("debian", Logger.isEnabledFor(logging.DEBUG))
     except MaintainerUpdateException as e:
         Logger.error("update-maintainer failed: %s", str(e))
         sys.exit(1)
@@ -265,9 +267,9 @@ def _update_maintainer_field():
 def _update_timestamp():
     """Run dch to update the timestamp of debian/changelog."""
     cmd = ["dch", "--maintmaint", "--release", ""]
-    Logger.command(cmd)
+    Logger.debug(' '.join(cmd))
     if subprocess.call(cmd) != 0:
-        Logger.info("Failed to update timestamp in debian/changelog.")
+        Logger.debug("Failed to update timestamp in debian/changelog.")
 
 
 def _download_and_change_into(task, dsc_file, patch, branch):
@@ -277,23 +279,23 @@ def _download_and_change_into(task, dsc_file, patch, branch):
         branch_dir = download_branch(task.get_branch_link())
 
         # change directory
-        Logger.command(["cd", branch_dir])
+        Logger.debug("cd " + branch_dir)
         os.chdir(branch_dir)
     else:
         if patch:
             patch.download()
 
-        Logger.info("Ubuntu package: %s" % (task.package))
+        Logger.debug("Ubuntu package: %s" % (task.package))
         if task.is_merge():
-            Logger.info("The task is a merge request.")
+            Logger.debug("The task is a merge request.")
         if task.is_sync():
-            Logger.info("The task is a sync request.")
+            Logger.debug("The task is a sync request.")
 
-        extract_source(dsc_file, Logger.verbose)
+        extract_source(dsc_file, Logger.isEnabledFor(logging.DEBUG))
 
         # change directory
         directory = task.package + '-' + task.get_version().upstream_version
-        Logger.command(["cd", directory])
+        Logger.debug("cd " + directory)
         os.chdir(directory)
 
 

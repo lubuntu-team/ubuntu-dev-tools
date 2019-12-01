@@ -23,7 +23,8 @@ import socket
 import sys
 import locale
 
-from ubuntutools.logger import Logger
+import logging
+Logger = logging.getLogger(__name__)
 
 
 class UDTConfig(object):
@@ -37,10 +38,12 @@ class UDTConfig(object):
         'BUILDER': 'pbuilder',
         'DEBIAN_MIRROR': 'http://deb.debian.org/debian',
         'DEBSEC_MIRROR': 'http://security.debian.org',
+        'DEBIAN_DDEBS_MIRROR': 'http://debug.mirrors.debian.org/debian-debug',
         'LPINSTANCE': 'production',
         'MIRROR_FALLBACK': True,
         'UBUNTU_MIRROR': 'http://archive.ubuntu.com/ubuntu',
         'UBUNTU_PORTS_MIRROR': 'http://ports.ubuntu.com',
+        'UBUNTU_DDEBS_MIRROR': 'http://ddebs.ubuntu.com',
         'UPDATE_BUILDER': False,
         'WORKDIR': None,
         'KEYID': None,
@@ -69,8 +72,8 @@ class UDTConfig(object):
             for line in f:
                 parsed = shlex.split(line, comments=True)
                 if len(parsed) > 1:
-                    Logger.warn('Cannot parse variable assignment in %s: %s',
-                                getattr(f, 'name', '<config>'), line)
+                    Logger.warning('Cannot parse variable assignment in %s: %s',
+                                   getattr(f, 'name', '<config>'), line)
                 if len(parsed) >= 1 and '=' in parsed[0]:
                     key, value = parsed[0].split('=', 1)
                     config[key] = value
@@ -109,10 +112,8 @@ class UDTConfig(object):
                         replacements = self.prefix + '_' + key
                         if key in self.defaults:
                             replacements += 'or UBUNTUTOOLS_' + key
-                        Logger.warn(
-                                'Using deprecated configuration variable %s. '
-                                'You should use %s.',
-                                k, replacements)
+                        Logger.warning('Using deprecated configuration variable %s. '
+                                       'You should use %s.', k, replacements)
                     return value
         return default
 

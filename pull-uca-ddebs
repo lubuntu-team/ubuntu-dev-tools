@@ -1,0 +1,11 @@
+#!/usr/bin/python3
+#
+# pull-uca-ddebs -- pull ddeb package files for ubuntu cloud archive
+# Basic usage: pull-uca-ddebs <package name> [version|release]
+#
+# See pull-pkg
+
+from ubuntutools.pullpkg import PullPkg
+
+if __name__ == '__main__':
+    PullPkg.main(distro='uca', pull='ddebs')

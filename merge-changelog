@@ -22,9 +22,12 @@ import sys
 
 from debian.changelog import Changelog
 
+from ubuntutools import getLogger
+Logger = getLogger(__name__)
+
 
 def usage(exit_code=1):
-    print('''Usage: merge-changelog <left changelog> <right changelog>
+    Logger.info('''Usage: merge-changelog <left changelog> <right changelog>
 
 merge-changelog takes two changelogs that once shared a common source,
 merges them back together, and prints the merged result to stdout.  This
@@ -61,7 +64,7 @@ def merge_changelog(left_changelog, right_changelog):
 
         assert block.version == version
 
-        print(str(block).strip(), end='\n\n')
+        Logger.info(str(block).strip() + '\n\n')
 
 
 def main():

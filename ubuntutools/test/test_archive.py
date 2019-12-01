@@ -20,10 +20,9 @@ import os.path
 import shutil
 import tempfile
 from io import BytesIO
-from urllib.error import HTTPError, URLError
+from urllib.error import HTTPError
 from urllib.request import OpenerDirector, urlopen
 
-import debian.deb822
 import httplib2
 
 import ubuntutools.archive
@@ -85,17 +84,12 @@ class LocalSourcePackageTestCase(unittest.TestCase):
         self.workdir = tempfile.mkdtemp(prefix='udt-test')
 
         self._stubout('ubuntutools.archive.Distribution')
-        self._stubout('ubuntutools.archive.rmadison')
 
         self.mock_http = self._stubout('httplib2.Http.request')
         self.mock_http.side_effect = self.request_proxy
 
         self.url_opener = mock.MagicMock(spec=OpenerDirector)
         self.url_opener.open.side_effect = self.urlopen_proxy
-
-        # Silence the tests a little:
-        self._stubout('ubuntutools.logger.Logger.stdout')
-        self._stubout('ubuntutools.logger.Logger.stderr')
 
     def _stubout(self, stub):
         patcher = mock.patch(stub)
@@ -146,11 +140,13 @@ class LocalSourcePackageTestCase(unittest.TestCase):
         return self.request_404(url)
 
     def test_local_copy(self):
-        pkg = self.SourcePackage('example', '1.0-1', 'main',
+        pkg = self.SourcePackage(package='example',
+                                 version='1.0-1',
+                                 component='main',
                                  dscfile='test-data/example_1.0-1.dsc',
-                                 workdir=self.workdir)
-        pkg.quiet = True
-        pkg.pull(verify_signature=False)
+                                 workdir=self.workdir,
+                                 verify_signature=False)
+        pkg.pull()
         pkg.unpack()
 
     def test_workdir_srcpkg_noinfo(self):
@@ -160,9 +156,9 @@ class LocalSourcePackageTestCase(unittest.TestCase):
 
         pkg = self.SourcePackage(dscfile=os.path.join(self.workdir,
                                                       'example_1.0-1.dsc'),
-                                 workdir=self.workdir)
-        pkg.quiet = True
-        pkg.pull(verify_signature=False)
+                                 workdir=self.workdir,
+                                 verify_signature=False)
+        pkg.pull()
         pkg.unpack()
 
     def test_workdir_srcpkg_info(self):
@@ -170,12 +166,13 @@ class LocalSourcePackageTestCase(unittest.TestCase):
         shutil.copy2('test-data/example_1.0.orig.tar.gz', self.workdir)
         shutil.copy2('test-data/example_1.0-1.debian.tar.xz', self.workdir)
 
-        pkg = self.SourcePackage('example', '1.0-1', 'main',
+        pkg = self.SourcePackage(package='example', version='1.0-1',
+                                 component='main',
                                  dscfile=os.path.join(self.workdir,
                                                       'example_1.0-1.dsc'),
-                                 workdir=self.workdir)
-        pkg.quiet = True
-        pkg.pull(verify_signature=False)
+                                 workdir=self.workdir,
+                                 verify_signature=False)
+        pkg.pull()
         pkg.unpack()
 
     def test_verification(self):
@@ -186,103 +183,18 @@ class LocalSourcePackageTestCase(unittest.TestCase):
                   'r+b') as f:
             f.write(b'CORRUPTION')
 
-        pkg = self.SourcePackage('example', '1.0-1', 'main',
+        pkg = self.SourcePackage(package='example',
+                                 version='1.0-1',
+                                 component='main',
                                  dscfile='test-data/example_1.0-1.dsc',
-                                 workdir=self.workdir)
-        pkg.quiet = True
-        pkg.pull(verify_signature=False)
-
-    def test_pull(self):
-        pkg = self.SourcePackage('example', '1.0-1', 'main',
-                                 workdir=self.workdir)
-
-        pkg.url_opener = self.url_opener
-        pkg.quiet = True
-        pkg.pull(verify_signature=False)
-
-    def test_mirrors(self):
-        mirror = 'http://mirror'
-        sequence = [self.urlopen_null, self.urlopen_404, self.urlopen_proxy,
-                    self.urlopen_proxy]
-
-        def _callable_iter(*args, **kwargs):
-            return sequence.pop(0)(*args, **kwargs)
-        url_opener = mock.MagicMock(spec=OpenerDirector)
-        url_opener.open.side_effect = _callable_iter
-
-        pkg = self.SourcePackage('example', '1.0-1', 'main',
-                                 workdir=self.workdir, mirrors=[mirror])
-        pkg.url_opener = url_opener
-        pkg.quiet = True
-        pkg.pull(verify_signature=False)
+                                 workdir=self.workdir,
+                                 verify_signature=False)
+        pkg.pull()
 
     def test_dsc_missing(self):
         self.mock_http.side_effect = self.request_404
-        pkg = self.SourcePackage('example', '1.0-1', 'main',
+        pkg = self.SourcePackage(package='example',
+                                 version='1.0-1',
+                                 component='main',
                                  workdir=self.workdir)
-        pkg.quiet = True
         self.assertRaises(ubuntutools.archive.DownloadError, pkg.pull)
-
-
-class DebianLocalSourcePackageTestCase(LocalSourcePackageTestCase):
-    SourcePackage = ubuntutools.archive.DebianSourcePackage
-
-    def test_mirrors(self):
-        debian_mirror = 'http://mirror/debian'
-        debsec_mirror = 'http://mirror/debsec'
-
-        sequence = [self.urlopen_null,
-                    self.urlopen_404,
-                    self.urlopen_404,
-                    self.urlopen_404,
-                    self.urlopen_404,
-                    lambda x: BytesIO(
-                        b'{"fileinfo": {"hashabc": [{"name": "example_1.0.orig.tar.gz"}]}}'),
-                    self.urlopen_file('example_1.0.orig.tar.gz'),
-                    self.urlopen_proxy]
-
-        def _callable_iter(*args, **kwargs):
-            return sequence.pop(0)(*args, **kwargs)
-        url_opener = mock.MagicMock(spec=OpenerDirector)
-        url_opener.open.side_effect = _callable_iter
-
-        pkg = self.SourcePackage('example', '1.0-1', 'main',
-                                 workdir=self.workdir, mirrors=[debian_mirror,
-                                                                debsec_mirror])
-        pkg.quiet = True
-        pkg.url_opener = url_opener
-        pkg.pull(verify_signature=False)
-        pkg.unpack()
-
-    def test_dsc_missing(self):
-        mirror = 'http://mirror'
-        self.mock_http.side_effect = self.request_404_then_proxy
-
-        patcher = mock.patch.object(debian.deb822.GpgInfo, 'from_sequence')
-        self.addCleanup(patcher.stop)
-        mock_gpg_info = patcher.start()
-        mock_gpg_info.return_value = debian.deb822.GpgInfo.from_output(
-            '[GNUPG:] GOODSIG DEADBEEF Joe Developer '
-            '<joe@example.net>')
-
-        pkg = self.SourcePackage('example', '1.0-1', 'main',
-                                 workdir=self.workdir, mirrors=[mirror])
-        pkg.url_opener = self.url_opener
-        pkg.pull(verify_signature=False)
-
-    def test_dsc_badsig(self):
-        mirror = 'http://mirror'
-        self.mock_http.side_effect = self.request_404_then_proxy
-
-        patcher = mock.patch.object(debian.deb822.GpgInfo, 'from_sequence')
-        self.addCleanup(patcher.stop)
-        mock_gpg_info = patcher.start()
-        mock_gpg_info.return_value = debian.deb822.GpgInfo.from_output(
-            '[GNUPG:] ERRSIG DEADBEEF')
-
-        pkg = self.SourcePackage('example', '1.0-1', 'main',
-                                 workdir=self.workdir, mirrors=[mirror])
-        try:
-            self.assertRaises(ubuntutools.archive.DownloadError, pkg.pull)
-        except URLError:
-            raise unittest.SkipTest('Test needs addr resolution to work')

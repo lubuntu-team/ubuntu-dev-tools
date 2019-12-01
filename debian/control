@@ -104,7 +104,13 @@ Description: useful tools for Ubuntu developers
     a Debian package and its immediate parent to generate a debdiff.
   - pull-debian-source - downloads the latest source package available in
     Debian of a package.
-  - pull-lp-source - downloads latest source package from Launchpad.
+  - pull-lp-source - downloads source package from Launchpad.
+  - pull-lp-debs - downloads debs package(s) from Launchpad.
+  - pull-lp-ddebs - downloads dbgsym/ddebs package(s) from Launchpad.
+  - pull-lp-udebs - downloads udebs package(s) from Launchpad.
+  - pull-debian-* - same as pull-lp-* but for Debian packages.
+  - pull-uca-* - same as pull-lp-* but for Ubuntu Cloud Archive packages.
+  - pull-pkg - common script that provides above pull-* functionality.
   - pull-revu-source - downloads the latest source package from REVU
   - requestbackport - file a backporting request.
   - requestsync - files a sync request with Debian changelog and rationale.
@@ -132,6 +138,7 @@ Depends:
  python3-distro-info,
  python3-httplib2,
  python3-launchpadlib,
+ python3-lazr.restfulclient,
  sensible-utils,
  ${misc:Depends},
  ${python3:Depends},

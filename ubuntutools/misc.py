@@ -32,6 +32,12 @@ import distro_info
 
 from ubuntutools.lp.udtexceptions import PocketDoesNotExistError
 
+DEFAULT_POCKETS = ('Release', 'Security', 'Updates', 'Proposed')
+POCKETS = DEFAULT_POCKETS + ('Backports',)
+
+DEFAULT_STATUSES = ('Pending', 'Published')
+STATUSES = DEFAULT_STATUSES + ('Superseded', 'Deleted', 'Obsolete')
+
 _system_distribution_chain = []
 
 
@@ -141,7 +147,7 @@ def split_release_pocket(release, default='Release'):
         (release, pocket) = release.rsplit('-', 1)
         pocket = pocket.capitalize()
 
-        if pocket not in ('Release', 'Security', 'Updates', 'Proposed', 'Backports'):
+        if pocket not in POCKETS:
             raise PocketDoesNotExistError("Pocket '%s' does not exist." % pocket)
 
     return (release, pocket)

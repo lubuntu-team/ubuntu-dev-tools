@@ -1,0 +1,29 @@
+#!/usr/bin/python3
+#
+# pull-pkg -- pull package files for debian/ubuntu/uca/ppa
+# Basic usage: pull-pkg -D distro -p type <package name> [version|release]
+#
+# Copyright (C) 2008,      Iain Lane <iain@orangesquash.org.uk>,
+#               2010-2011, Stefano Rivera <stefanor@ubuntu.com>
+#               2017-2018, Dan Streetman <ddstreet@canonical.com>
+#
+# ##################################################################
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 3
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# See file /usr/share/common-licenses/GPL for more details.
+#
+# ##################################################################
+
+from ubuntutools.pullpkg import PullPkg
+
+if __name__ == '__main__':
+    PullPkg.main()
