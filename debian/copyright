@@ -105,12 +105,10 @@ Files: dch-repeat
        doc/dch-repeat.1
        doc/grep-merges.1
        doc/mk-sbuild.1
-       doc/pull-lp-source.1
        doc/pull-revu-source.1
        doc/ubuntu-build.1
        grep-merges
        mk-sbuild
-       pull-lp-source
        pull-revu-source
        ubuntu-build
        ubuntutools/lp/libsupport.py
@@ -141,7 +139,7 @@ License: GPL-3+
  version 3 can be found in the /usr/share/common-licenses/GPL-3 file.
 
 Files: doc/pull-debian-debdiff.1
-       doc/pull-debian-source.1
+       doc/pull-pkg.1
        doc/requestbackport.1
        doc/reverse-depends.1
        doc/seeded-in-ubuntu.1
@@ -151,7 +149,7 @@ Files: doc/pull-debian-debdiff.1
        doc/update-maintainer.1
        enforced-editing-wrapper
        pull-debian-debdiff
-       pull-debian-source
+       pull-pkg
        requestbackport
        reverse-depends
        seeded-in-ubuntu
@@ -171,6 +169,7 @@ Copyright: 2009-2011, Benjamin Drung <bdrung@ubuntu.com>
            2010,      Evan Broder <evan@ebroder.net>
            2008,      Siegfried-Angel Gevatter Pujals <rainct@ubuntu.com>
            2010-2011, Stefano Rivera <stefanor@ubuntu.com>
+           2017-2019, Dan Streetman <ddstreet@canonical.com>
 License: ISC
  Permission to use, copy, modify, and/or distribute this software for any
  purpose with or without fee is hereby granted, provided that the above
