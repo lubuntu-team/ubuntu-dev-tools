@@ -1,10 +1,11 @@
-ubuntu-dev-tools (0.175) UNRELEASED; urgency=medium
+ubuntu-dev-tools (0.175) unstable; urgency=medium
 
   [ Mattia Rizzolo ]
   * Trust the installed debian-keyring when checking validity of dsc
     signatures.
   * requestbackport:
-    + Error out nicely when a tracking project doens't exist.  LP: #1852901
+    + Error out nicely when a tracking project doesn't exist.  LP: #1852901
+  * d/control: Bump Standards-Version to 4.4.1, no changes needed.
 
   [ Stefano Rivera ]
   * merge-changelog: rewrite the changelog handling to use python3-debian.

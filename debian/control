@@ -28,7 +28,7 @@ Build-Depends:
  python3-setuptools,
  python3-termcolor <!nocheck>,
  python3-yaml <!nocheck>,
-Standards-Version: 4.4.0
+Standards-Version: 4.4.1
 Rules-Requires-Root: no
 Vcs-Git: https://git.launchpad.net/ubuntu-dev-tools
 Vcs-Browser: https://git.launchpad.net/ubuntu-dev-tools
