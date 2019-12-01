@@ -19,7 +19,7 @@ ubuntu-dev-tools (0.175) unstable; urgency=medium
   * Unify the logging using the standard python logging module, and remove the
     local ubuntutools.logger module.
 
- -- Mattia Rizzolo <mattia@debian.org>  Mon, 28 Oct 2019 14:32:20 +0100
+ -- Mattia Rizzolo <mattia@debian.org>  Sun, 01 Dec 2019 19:36:23 +0100
 
 ubuntu-dev-tools (0.174) unstable; urgency=medium
 
