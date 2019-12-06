@@ -2382,7 +2382,7 @@ ubuntu-dev-tools (0.66) jaunty; urgency=low
   [ Jonathan Davies ]
   * Added grab-merge from merges.ubuntu.com (LP: #155098).
 
- -- Jonathan Davies <jpds@ubuntu.com>  Thu, 09 Mar 2009 17:01:19 +0000
+ -- Jonathan Davies <jpds@ubuntu.com>  Mon, 09 Mar 2009 17:01:19 +0000
 
 ubuntu-dev-tools (0.65) jaunty; urgency=low
 
