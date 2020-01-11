@@ -6,6 +6,8 @@ ubuntu-dev-tools (0.175) unstable; urgency=medium
   * requestbackport:
     + Error out nicely when a tracking project doesn't exist.  LP: #1852901
   * d/control: Bump Standards-Version to 4.4.1, no changes needed.
+  * pbuilder-dist:
+    + Add support for riscv64.  LP: #1859277
 
   [ Stefano Rivera ]
   * merge-changelog: rewrite the changelog handling to use python3-debian.

@@ -443,7 +443,7 @@ def main():
     elif len(args) > 0 and args[0] in (
             'alpha', 'amd64', 'arm', 'armeb', 'armel', 'armhf', 'arm64',
             'i386', 'lpia', 'm68k', 'mips', 'mipsel', 'powerpc', 'ppc64',
-            'ppc64el', 's390x', 'sh4', 'sh4eb', 'sparc', 'sparc64'):
+            'ppc64el', 'riscv64', 's390x', 'sh4', 'sh4eb', 'sparc', 'sparc64'):
         requested_arch = args.pop(0)
     else:
         requested_arch = None
