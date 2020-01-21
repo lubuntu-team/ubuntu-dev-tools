@@ -28,7 +28,7 @@ Approach:
 """
 
 from urllib.error import (URLError, HTTPError)
-from urllib.parse import urlparse
+from urllib.parse import (quote, urlparse)
 from urllib.request import urlopen
 import codecs
 import hashlib
@@ -298,10 +298,16 @@ class SourcePackage(object):
         return os.path.join(mirror, 'pool', self.component, group,
                             self.source, filename)
 
-    def _lp_url(self, filename):
-        "Build a source package URL on Launchpad"
-        return os.path.join('https://launchpad.net', self.distribution,
-                            '+archive', 'primary', '+files', filename)
+    def _lp_url(self, filename, source=False):
+        "Build an archive file URL on Launchpad"
+        if source:
+            suffix = '+sourcefiles/%s/%s/%s' % (
+                quote(self.source), quote(self.version.full_version),
+                quote(filename))
+        else:
+            suffix = '+files/%s' % quote(filename)
+        return 'https://launchpad.net/%s/+archive/primary/%s' % (
+            quote(self.distribution), suffix)
 
     def _source_urls(self, name):
         "Generator of sources for name"
@@ -312,7 +318,7 @@ class SourcePackage(object):
         for mirror in self.masters:
             if mirror not in self.mirrors:
                 yield self._mirror_url(mirror, name)
-        yield self._lp_url(name)
+        yield self._lp_url(name, source=True)
 
     def _binary_urls(self, name, default_urls):
         "Generator of URLs for name"
@@ -339,7 +345,7 @@ class SourcePackage(object):
                 parsed = urlparse(self._dsc_source)
             url = self._dsc_source
         else:
-            url = self._lp_url(self.dsc_name)
+            url = self._lp_url(self.dsc_name, source=True)
         self._download_dsc(url)
 
         self._check_dsc()
@@ -755,11 +761,17 @@ class PersonalPackageArchiveSourcePackage(UbuntuSourcePackage):
         self._team = None
         self._ppa = None
 
-    def _lp_url(self, filename):
-        "Build a source package URL on Launchpad"
-        return os.path.join('https://launchpad.net', '~' + self._ppateam,
-                            '+archive', self.distribution, self._ppaname,
-                            '+files', filename)
+    def _lp_url(self, filename, source=False):
+        "Build an archive file URL on Launchpad"
+        if source:
+            suffix = '+sourcefiles/%s/%s/%s' % (
+                quote(self.source), quote(self.version.full_version),
+                quote(filename))
+        else:
+            suffix = '+files/%s' % quote(filename)
+        return 'https://launchpad.net/~%s/+archive/%s/%s/%s' % (
+            quote(self._ppateam), quote(self.distribution),
+            quote(self._ppaname), suffix)
 
 
 class UbuntuCloudArchiveSourcePackage(PersonalPackageArchiveSourcePackage):

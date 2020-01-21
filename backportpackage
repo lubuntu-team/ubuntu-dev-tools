@@ -25,6 +25,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from urllib.parse import quote
 
 import lsb_release
 from httplib2 import Http, HttpLib2Error
@@ -296,8 +297,10 @@ def orig_needed(upload, workdir, pkg):
 
     h = Http()
     for filename in glob.glob(os.path.join(workdir, '%s_%s.orig*' % (pkg.source, version))):
-        url = ('https://launchpad.net/~%s/+archive/%s/+files/%s'
-               % (user, ppa, filename))
+        url = ('https://launchpad.net/~%s/+archive/%s/+sourcefiles/%s/%s/%s'
+               % (quote(user), quote(ppa), quote(pkg.source),
+                  quote(pkg.version.full_version),
+                  quote(os.path.basename(filename))))
         try:
             headers, body = h.request(url, 'HEAD')
             if (headers.status != 200 or
