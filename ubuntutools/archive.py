@@ -471,8 +471,11 @@ class SourcePackage(object):
 
         if urlparse(url).scheme in ["", "file"]:
             frompath = os.path.abspath(urlparse(url).path)
-            Logger.info("Copying %s from %s" % (filename, frompath))
-            shutil.copyfile(frompath, pathname)
+            if frompath == pathname:
+                Logger.info("Using %s" % pathname)
+            else:
+                Logger.info("Copying %s from %s" % (filename, frompath))
+                shutil.copyfile(frompath, pathname)
         else:
             try:
                 with closing(urlopen(url)) as f:
