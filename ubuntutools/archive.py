@@ -457,13 +457,12 @@ class SourcePackage(object):
                                  (downloaded / 1024.0 / 1024,
                                   size / 1024.0 / 1024))
 
-    def _download_file(self, url, filename, verify=True, size=0):
+    def _download_file(self, url, filename, dscverify=False, size=0):
         "Download url to filename in workdir."
         pathname = os.path.join(self.workdir, filename)
-        if verify:
-            if self.dsc.verify_file(pathname):
-                Logger.debug('Using existing %s', filename)
-                return True
+        if dscverify and self.dsc.verify_file(pathname):
+            Logger.debug('Using existing %s', filename)
+            return True
 
         if urlparse(url).scheme in ["", "file"]:
             frompath = os.path.abspath(urlparse(url).path)
@@ -494,7 +493,7 @@ class SourcePackage(object):
                     return False
                 raise e
 
-        if verify and not self.dsc.verify_file(pathname):
+        if dscverify and not self.dsc.verify_file(pathname):
             Logger.error('Checksum for %s does not match.', filename)
             return False
         return True
@@ -506,7 +505,7 @@ class SourcePackage(object):
             name = entry['name']
             for url in self._source_urls(name):
                 try:
-                    if self._download_file(url, name, size=int(entry['size'])):
+                    if self._download_file(url, name, dscverify=True, size=int(entry['size'])):
                         break
                 except HTTPError as e:
                     Logger.info('HTTP Error %i: %s', e.code, str(e))
