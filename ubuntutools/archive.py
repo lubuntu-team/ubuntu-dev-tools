@@ -605,11 +605,16 @@ class DebianSPPH(SourcePackagePublishingHistory):
     """
     resource_type = 'source_package_publishing_history'
 
+    def __init__(self, *args, **kwargs):
+        super(DebianSPPH, self).__init__(*args, **kwargs)
+        self._srcpkg = None
+
     def getBinaries(self, arch=None, name=None, ext=None):
-        Logger.info('Using Snapshot to find binary packages')
-        srcpkg = Snapshot.getSourcePackage(self.getPackageName(),
-                                           version=self.getVersion())
-        return srcpkg.getSPPH().getBinaries(arch=arch, name=name, ext=ext)
+        if not self._srcpkg:
+            Logger.info('Using Snapshot to find binary packages')
+            self._srcpkg = Snapshot.getSourcePackage(self.getPackageName(),
+                                                     version=self.getVersion())
+        return self._srcpkg.getSPPH().getBinaries(arch=arch, name=name, ext=ext)
 
 
 class DebianSourcePackage(SourcePackage):
