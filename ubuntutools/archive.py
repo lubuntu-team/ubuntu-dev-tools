@@ -318,23 +318,22 @@ class SourcePackage(object):
         for mirror in self.masters:
             if mirror not in self.mirrors:
                 yield self._mirror_url(mirror, name)
+        if self.lp_spph.sourceFileUrl(name):
+            yield self.lp_spph.sourceFileUrl(name)
         yield self._lp_url(name, source=True)
 
-    def _binary_urls(self, name, default_urls):
+    def _binary_urls(self, name, bpph):
         "Generator of URLs for name"
         for mirror in self.mirrors:
             yield self._mirror_url(mirror, name)
         for mirror in self.masters:
             if mirror not in self.mirrors:
                 yield self._mirror_url(mirror, name)
+        if bpph.binaryFileUrl(name):
+            yield bpph.binaryFileUrl(name)
+        if bpph.getUrl():
+            yield bpph.getUrl()
         yield self._lp_url(name)
-        for url in default_urls:
-            yield url
-
-    def _binary_files_info(self, arch, name, ext):
-        for bpph in self.lp_spph.getBinaries(arch=arch, name=name, ext=ext):
-            urls = bpph.binaryFileUrls() + [bpph.getUrl()]
-            yield (bpph.getFileName(), urls, 0)
 
     def pull_dsc(self):
         "Retrieve dscfile and parse"
@@ -532,9 +531,13 @@ class SourcePackage(object):
         if arch == 'all':
             arch = None
 
-        for (fname, furls, fsize) in self._binary_files_info(arch, name, ext):
+        for bpph in self.lp_spph.getBinaries(arch=arch, name=name, ext=ext):
             found = False
-            for url in self._binary_urls(fname, furls):
+            fname = bpph.getFileName()
+            fsha1 = bpph.binaryFileSha1(fname)
+            fsha256 = bpph.binaryFileSha256(fname)
+            fsize = bpph.binaryFileSize(fname)
+            for url in self._binary_urls(fname, bpph):
                 try:
                     if self._download_file(url, fname, False, fsize):
                         found = True
@@ -669,10 +672,6 @@ class DebianSourcePackage(SourcePackage):
             yield url
         if name in self.snapshot_files:
             yield self.snapshot_files[name]
-
-    def _binary_files_info(self, arch, name, ext):
-        for f in self.snapshot_package.getBinaryFiles(arch=arch, name=name, ext=ext):
-            yield (f.name, [f.getUrl()], f.size)
 
     def pull_dsc(self):
         "Retrieve dscfile and parse"
