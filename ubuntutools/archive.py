@@ -464,10 +464,6 @@ class SourcePackage(object):
             if self.dsc.verify_file(pathname):
                 Logger.debug('Using existing %s', filename)
                 return True
-            size = [entry['size'] for entry in self.dsc['Files']
-                    if entry['name'] == filename]
-            assert len(size) == 1
-            size = int(size[0])
 
         if urlparse(url).scheme in ["", "file"]:
             frompath = os.path.abspath(urlparse(url).path)
@@ -510,7 +506,7 @@ class SourcePackage(object):
             name = entry['name']
             for url in self._source_urls(name):
                 try:
-                    if self._download_file(url, name):
+                    if self._download_file(url, name, size=int(entry['size'])):
                         break
                 except HTTPError as e:
                     Logger.info('HTTP Error %i: %s', e.code, str(e))
