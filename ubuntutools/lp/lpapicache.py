@@ -26,6 +26,7 @@
 # httplib2.debuglevel = 1
 
 import collections
+import os
 import re
 
 from debian.changelog import Changelog
@@ -33,6 +34,7 @@ from httplib2 import Http, HttpLib2Error
 from launchpadlib.launchpad import Launchpad as LP
 from launchpadlib.errors import HTTPError
 from lazr.restfulclient.resource import Entry
+from urllib.parse import urlparse
 
 from ubuntutools.version import Version
 from ubuntutools.lp import (service, api_version)
@@ -700,6 +702,7 @@ class SourcePackagePublishingHistory(BaseWrapper):
         self._changelog = None
         self._binaries = {}
         self._distro_series = None
+        self._source_urls = None
         # Don't share _builds between different
         # SourcePackagePublishingHistory objects
         if '_builds' not in self.__dict__:
@@ -793,6 +796,84 @@ class SourcePackagePublishingHistory(BaseWrapper):
                 break
             new_entries.append(str(block))
         return ''.join(new_entries)
+
+    def sourceFileUrls(self, include_meta=False):
+        '''
+        Return the URL for this source publication's files.
+
+        The include_meta param changes the return value;
+        when it is False (the default), an array of url strings is
+        returned.  When include_meta is True, an array is returned
+        with dicts, containing the entries:
+          url: the url string
+          sha1: the SHA1 checksum of the source file (if provided)
+          sha256: the SHA256 checksum of the source file
+          size: the size of the source file
+        Also, this function adds a 'filename' field:
+          filename: the filename parsed from the url path
+        '''
+        if not self._source_urls:
+            urls = self._lpobject.sourceFileUrls(include_meta=True)
+            if not urls:
+                Logger.warning('SPPH %s_%s has no sourceFileUrls' %
+                               (self.getPackageName(), self.getVersion()))
+            for u in urls:
+                u['filename'] = os.path.basename(urlparse(u['url']).path)
+            self._source_urls = urls
+
+        if include_meta:
+            return list(self._source_urls)
+        return [f['url'] for f in self._source_urls]
+
+    def sourceFileUrl(self, filename):
+        '''
+        Returns the URL for the specified source filename.
+
+        If the filename is not found in the sourceFileUrls(), this returns None.
+        '''
+        for f in self.sourceFileUrls(include_meta=True):
+            if filename == f['filename']:
+                return f['url']
+        return None
+
+    def sourceFileSha1(self, url_or_filename):
+        '''
+        Returns the SHA1 checksum for the specified source file url.
+
+        If the url is not found in the sourceFileUrls(), this returns None.
+
+        The url may be specified as a filename.
+        '''
+        for f in self.sourceFileUrls(include_meta=True):
+            if url_or_filename in [f['url'], f['filename']]:
+                return f['sha1']
+        return None
+
+    def sourceFileSha256(self, url_or_filename):
+        '''
+        Returns the SHA256 checksum for the specified source file url.
+
+        If the url is not found in the sourceFileUrls(), this returns None.
+
+        The url may be specified as a filename.
+        '''
+        for f in self.sourceFileUrls(include_meta=True):
+            if url_or_filename in [f['url'], f['filename']]:
+                return f['sha256']
+        return None
+
+    def sourceFileSize(self, url_or_filename):
+        '''
+        Returns the size for the specified source file url.
+
+        If the url is not found in the sourceFileUrls(), this returns 0.
+
+        The url may be specified as a filename.
+        '''
+        for f in self.sourceFileUrls(include_meta=True):
+            if url_or_filename in [f['url'], f['filename']]:
+                return int(f['size'])
+        return 0
 
     def getBinaries(self, arch=None, name=None, ext=None):
         '''
@@ -936,6 +1017,7 @@ class BinaryPackagePublishingHistory(BaseWrapper):
     def __init__(self, *args):
         self._arch = None
         self._ext = None
+        self._binary_urls = None
 
     @property
     def arch(self):
@@ -968,20 +1050,89 @@ class BinaryPackagePublishingHistory(BaseWrapper):
         '''
         return self._lpobject.component_name
 
-    def binaryFileUrls(self):
+    def binaryFileUrls(self, include_meta=False):
         '''
         Return the URL for this binary publication's files.
         Only available in the devel API, not 1.0
+
+        The include_meta param changes the return value;
+        when it is False (the default), an array of url strings is
+        returned (but typically there is only a single url in the array).
+        When include_meta is True, an array (again, with typically only one
+        entry) is returned with dicts, containing the entries:
+          url: the url string
+          sha1: the SHA1 checksum of the binary file
+          sha256: the SHA256 checksum of the binary file
+          size: the size of the binary file
+        Also, this function adds a 'filename' field:
+          filename: the filename parsed from the url path
         '''
-        try:
-            urls = self._lpobject.binaryFileUrls()
+        if not self._binary_urls:
+            try:
+                urls = self._lpobject.binaryFileUrls(include_meta=True)
+            except AttributeError:
+                raise AttributeError("binaryFileUrls can only be found in lpapi "
+                                     "devel, not 1.0. Login using devel to have it.")
             if not urls:
                 Logger.warning('BPPH %s_%s has no binaryFileUrls' %
                                (self.getPackageName(), self.getVersion()))
-            return urls
-        except AttributeError:
-            raise AttributeError("binaryFileUrls can only be found in lpapi "
-                                 "devel, not 1.0. Login using devel to have it.")
+            for u in urls:
+                u['filename'] = os.path.basename(urlparse(u['url']).path)
+            self._binary_urls = urls
+
+        if include_meta:
+            return list(self._binary_urls)
+        return [f['url'] for f in self._binary_urls]
+
+    def binaryFileUrl(self, filename):
+        '''
+        Returns the URL for the specified binary filename.
+
+        If the filename is not found in the binaryFileUrls(), this returns None.
+        '''
+        for f in self.binaryFileUrls(include_meta=True):
+            if filename == f['filename']:
+                return f['url']
+        return None
+
+    def binaryFileSha1(self, url_or_filename):
+        '''
+        Returns the SHA1 checksum for the specified binary file url.
+
+        If the url is not found in the binaryFileUrls(), this returns None.
+
+        The url may be specified as a filename.
+        '''
+        for f in self.binaryFileUrls(include_meta=True):
+            if url_or_filename in [f['url'], f['filename']]:
+                return f['sha1']
+        return None
+
+    def binaryFileSha256(self, url_or_filename):
+        '''
+        Returns the SHA256 checksum for the specified binary file url.
+
+        If the url is not found in the binaryFileUrls(), this returns None.
+
+        The url may be specified as a filename.
+        '''
+        for f in self.binaryFileUrls(include_meta=True):
+            if url_or_filename in [f['url'], f['filename']]:
+                return f['sha256']
+        return None
+
+    def binaryFileSize(self, url_or_filename):
+        '''
+        Returns the size for the specified binary file url.
+
+        If the url is not found in the binaryFileUrls(), this returns 0.
+
+        The url may be specified as a filename.
+        '''
+        for f in self.binaryFileUrls(include_meta=True):
+            if url_or_filename in [f['url'], f['filename']]:
+                return int(f['size'])
+        return 0
 
     def getBuild(self):
         '''

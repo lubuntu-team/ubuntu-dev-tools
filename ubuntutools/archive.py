@@ -1094,7 +1094,7 @@ class SnapshotFile(object):
 
     @property
     def size(self):
-        return self._obj['size']
+        return int(self._obj['size'])
 
     @property
     def date(self):
@@ -1187,6 +1187,37 @@ class SnapshotSPPH(object):
 
     def getComponent(self):
         return self._pkg.component
+
+    def sourceFileUrls(self, include_meta=False):
+        if include_meta:
+            return [{'url': f.getUrl(),
+                     'filename': f.name,
+                     'sha1': f.getHash(),
+                     'sha256': None,
+                     'size': f.size}
+                    for f in self._pkg.getFiles()]
+        return [f.getUrl() for f in self._pkg.getFiles()]
+
+    def sourceFileUrl(self, filename):
+        for f in self.sourceFileUrls(include_meta=True):
+            if filename == f['filename']:
+                return f['url']
+        return None
+
+    def sourceFileSha1(self, url_or_filename):
+        for f in self.sourceFileUrls(include_meta=True):
+            if url_or_filename in [f['url'], f['filename']]:
+                return f['sha1']
+        return None
+
+    def sourceFileSha256(self, url_or_filename):
+        return None
+
+    def sourceFileSize(self, url_or_filename):
+        for f in self.sourceFileUrls(include_meta=True):
+            if url_or_filename in [f['url'], f['filename']]:
+                return int(f['size'])
+        return 0
 
     def getChangelog(self, since_version=None):
         '''
@@ -1282,8 +1313,32 @@ class SnapshotBPPH(object):
     def getComponent(self):
         return self._file.component
 
-    def binaryFileUrls(self):
+    def binaryFileUrls(self, include_meta=False):
+        if include_meta:
+            return [{'url': self.getUrl(),
+                     'filename': self.getFileName(),
+                     'sha1': self._file.getHash(),
+                     'sha256': None,
+                     'size': self._file.size}]
         return [self.getUrl()]
+
+    def binaryFileUrl(self, filename):
+        if filename == self.getFileName():
+            return self.getUrl()
+        return None
+
+    def binaryFileSha1(self, url_or_filename):
+        if url_or_filename in [self.getUrl(), self.getFileName()]:
+            return self._file.getHash()
+        return None
+
+    def binaryFileSha256(self, url_or_filename):
+        return None
+
+    def binaryFileSize(self, url_or_filename):
+        if url_or_filename in [self.getUrl(), self.getFileName()]:
+            return int(self._file.size)
+        return 0
 
     def getBuild(self):
         return None
