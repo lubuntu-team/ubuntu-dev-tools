@@ -23,6 +23,7 @@
 # ##################################################################
 
 # Modules.
+import hashlib
 import locale
 import os
 import sys
@@ -31,6 +32,10 @@ from subprocess import check_output, CalledProcessError
 import distro_info
 
 from ubuntutools.lp.udtexceptions import PocketDoesNotExistError
+
+import logging
+Logger = logging.getLogger(__name__)
+
 
 DEFAULT_POCKETS = ('Release', 'Security', 'Updates', 'Proposed')
 POCKETS = DEFAULT_POCKETS + ('Backports',)
@@ -188,3 +193,29 @@ def codename_to_distribution(codename):
 
         if info().valid(codename):
             return distro
+
+
+def verify_file_checksum(pathname, alg, checksum, size=0):
+    if not os.path.isfile(pathname):
+        Logger.error('File not found: %s', pathname)
+        return False
+    filename = os.path.basename(pathname)
+    if size and size != os.path.getsize(pathname):
+        Logger.error('File %s incorrect size, got %s expected %s',
+                     filename, os.path.getsize(pathname), size)
+        return False
+    h = hashlib.new(alg)
+    with open(pathname, 'rb') as f:
+        while True:
+            block = f.read(h.block_size)
+            if len(block) == 0:
+                break
+            h.update(block)
+    match = h.hexdigest() == checksum
+    if match:
+        Logger.debug('File %s checksum (%s) verified: %s',
+                     filename, alg, checksum)
+    else:
+        Logger.error('File %s checksum (%s) mismatch: got %s expected %s',
+                     filename, alg, h.hexdigest(), checksum)
+    return match
