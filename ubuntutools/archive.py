@@ -28,7 +28,7 @@ Approach:
 """
 
 from urllib.error import (URLError, HTTPError)
-from urllib.parse import (quote, urlparse)
+from urllib.parse import urlparse
 from urllib.request import urlopen
 import codecs
 import json
@@ -288,17 +288,6 @@ class SourcePackage(object):
         return os.path.join(mirror, 'pool', self.component, group,
                             self.source, filename)
 
-    def _lp_url(self, filename, source=False):
-        "Build an archive file URL on Launchpad"
-        if source:
-            suffix = '+sourcefiles/%s/%s/%s' % (
-                quote(self.source), quote(self.version.full_version),
-                quote(filename))
-        else:
-            suffix = '+files/%s' % quote(filename)
-        return 'https://launchpad.net/%s/+archive/primary/%s' % (
-            quote(self.distribution), suffix)
-
     def _source_urls(self, name):
         "Generator of sources for name"
         if self._dsc_source:
@@ -310,7 +299,6 @@ class SourcePackage(object):
                 yield self._mirror_url(mirror, name)
         if self.lp_spph.sourceFileUrl(name):
             yield self.lp_spph.sourceFileUrl(name)
-        yield self._lp_url(name, source=True)
 
     def _binary_urls(self, name, bpph):
         "Generator of URLs for name"
@@ -323,7 +311,6 @@ class SourcePackage(object):
             yield bpph.binaryFileUrl(name)
         if bpph.getUrl():
             yield bpph.getUrl()
-        yield self._lp_url(name)
 
     def pull_dsc(self):
         "Retrieve dscfile and parse"
@@ -764,18 +751,6 @@ class PersonalPackageArchiveSourcePackage(UbuntuSourcePackage):
         self._ppaname = name
         self._team = None
         self._ppa = None
-
-    def _lp_url(self, filename, source=False):
-        "Build an archive file URL on Launchpad"
-        if source:
-            suffix = '+sourcefiles/%s/%s/%s' % (
-                quote(self.source), quote(self.version.full_version),
-                quote(filename))
-        else:
-            suffix = '+files/%s' % quote(filename)
-        return 'https://launchpad.net/~%s/+archive/%s/%s/%s' % (
-            quote(self._ppateam), quote(self.distribution),
-            quote(self._ppaname), suffix)
 
 
 class UbuntuCloudArchiveSourcePackage(PersonalPackageArchiveSourcePackage):
