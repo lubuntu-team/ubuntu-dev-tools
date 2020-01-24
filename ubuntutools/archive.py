@@ -665,13 +665,10 @@ class DebianSourcePackage(SourcePackage):
 
     def _source_urls(self, name):
         "Generator of sources for name"
-        wrapped_iterator = super(DebianSourcePackage, self)._source_urls(name)
-        while True:
-            try:
-                yield next(wrapped_iterator)
-            except StopIteration:
-                break
-        yield self.snapshot_files[name]
+        for url in super(DebianSourcePackage, self)._source_urls(name):
+            yield url
+        if name in self.snapshot_files:
+            yield self.snapshot_files[name]
 
     def _binary_files_info(self, arch, name, ext):
         for f in self.snapshot_package.getBinaryFiles(arch=arch, name=name, ext=ext):
