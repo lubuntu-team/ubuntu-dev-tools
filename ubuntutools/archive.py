@@ -31,7 +31,6 @@ from urllib.error import (URLError, HTTPError)
 from urllib.parse import (quote, urlparse)
 from urllib.request import urlopen
 import codecs
-import hashlib
 import json
 import os.path
 import re
@@ -82,21 +81,11 @@ class Dsc(debian.deb822.Dsc):
 
     def verify_file(self, pathname):
         "Verify that pathname matches the checksums in the dsc"
-        if os.path.isfile(pathname):
-            alg, checksums = self.get_strongest_checksum()
-            size, digest = checksums[os.path.basename(pathname)]
-            if os.path.getsize(pathname) != size:
-                return False
-            hash_func = getattr(hashlib, alg)()
-            f = open(pathname, 'rb')
-            while True:
-                buf = f.read(hash_func.block_size)
-                if buf == b'':
-                    break
-                hash_func.update(buf)
-            f.close()
-            return hash_func.hexdigest() == digest
-        return False
+        if not os.path.isfile(pathname):
+            return False
+        alg, checksums = self.get_strongest_checksum()
+        size, digest = checksums[os.path.basename(pathname)]
+        return verify_file_checksum(pathname, alg, digest, size)
 
     def compare_dsc(self, other):
         """Check whether any files in these two dscs that have the same name
@@ -343,11 +332,17 @@ class SourcePackage(object):
             if parsed.scheme == '':
                 self._dsc_source = 'file://' + os.path.abspath(self._dsc_source)
                 parsed = urlparse(self._dsc_source)
-            url = self._dsc_source
+            self._download_dsc(self._dsc_source)
         else:
-            url = self._lp_url(self.dsc_name, source=True)
-        self._download_dsc(url)
-
+            for url in self._source_urls(self.dsc_name):
+                dlerr = None
+                try:
+                    self._download_dsc(url)
+                    break
+                except DownloadError as e:
+                    dlerr = e
+            else:
+                raise dlerr
         self._check_dsc()
 
     def _download_dsc(self, url):
