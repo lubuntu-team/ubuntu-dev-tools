@@ -20,10 +20,6 @@ import os.path
 import shutil
 import tempfile
 from io import BytesIO
-from urllib.error import HTTPError
-from urllib.request import OpenerDirector, urlopen
-
-import httplib2
 
 import ubuntutools.archive
 from ubuntutools.test import unittest
@@ -83,61 +79,8 @@ class LocalSourcePackageTestCase(unittest.TestCase):
     def setUp(self):
         self.workdir = tempfile.mkdtemp(prefix='udt-test')
 
-        self._stubout('ubuntutools.archive.Distribution')
-
-        self.mock_http = self._stubout('httplib2.Http.request')
-        self.mock_http.side_effect = self.request_proxy
-
-        self.url_opener = mock.MagicMock(spec=OpenerDirector)
-        self.url_opener.open.side_effect = self.urlopen_proxy
-
-    def _stubout(self, stub):
-        patcher = mock.patch(stub)
-        self.addCleanup(patcher.stop)
-        return patcher.start()
-
     def tearDown(self):
         shutil.rmtree(self.workdir)
-
-    def urlopen_proxy(self, url, destname=None):
-        "urllib2 proxy for grabbing the file from test-data"
-        if destname is None:
-            destname = os.path.basename(url)
-        destpath = os.path.join(os.path.abspath('test-data'), destname)
-        return urlopen('file://' + destpath)
-
-    def urlopen_file(self, filename):
-        "Wrapper for urlopen_proxy for named files"
-        return lambda url: self.urlopen_proxy(url, filename)
-
-    def urlopen_null(self, url):
-        "urlopen for zero length files"
-        return BytesIO(b'')
-
-    def urlopen_404(self, url):
-        "urlopen for errors"
-        raise HTTPError(url, 404, "Not Found", {}, None)
-
-    def request_proxy(self, url, destname=None):
-        "httplib2 proxy for grabbing the file from test-data"
-        if destname is None:
-            destname = os.path.basename(url)
-        destpath = os.path.join(os.path.abspath('test-data'), destname)
-        response = httplib2.Response({})
-        with open(destpath, 'rb') as f:
-            body = f.read()
-        return response, body
-
-    def request_404(self, url):
-        "httplib2 for errors"
-        response = httplib2.Response({'status': 404})
-        return response, "I'm a 404 Error"
-
-    def request_404_then_proxy(self, url, destname=None):
-        "mock side_effect callable to chain request 404 & proxy"
-        if self.mock_http.called:
-            return self.request_proxy(url, destname)
-        return self.request_404(url)
 
     def test_local_copy(self):
         pkg = self.SourcePackage(package='example',
@@ -190,11 +133,3 @@ class LocalSourcePackageTestCase(unittest.TestCase):
                                  workdir=self.workdir,
                                  verify_signature=False)
         pkg.pull()
-
-    def test_dsc_missing(self):
-        self.mock_http.side_effect = self.request_404
-        pkg = self.SourcePackage(package='example',
-                                 version='1.0-1',
-                                 component='main',
-                                 workdir=self.workdir)
-        self.assertRaises(ubuntutools.archive.DownloadError, pkg.pull)
