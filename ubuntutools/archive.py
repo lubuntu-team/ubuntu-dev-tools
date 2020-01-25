@@ -452,11 +452,25 @@ class SourcePackage(object):
                                  (downloaded / 1024.0 / 1024,
                                   size / 1024.0 / 1024))
 
+    def _verify_file(self, pathname, dscverify=False, sha1sum=False, sha256sum=False, size=0):
+        if not os.path.exists(pathname):
+            return False
+        if size and size != os.path.getsize(pathname):
+            return False
+        if dscverify and not self.dsc.verify_file(pathname):
+            return False
+        if sha1sum and not verify_file_checksum(pathname, 'SHA1', sha1sum, size):
+            return False
+        if sha256sum and not verify_file_checksum(pathname, 'SHA256', sha256sum, size):
+            return False
+        return True
+
     def _download_file(self, url, filename, size, dscverify=False, sha1sum=None, sha256sum=None):
         "Download url to filename in workdir."
         pathname = os.path.join(self.workdir, filename)
-        if dscverify and self.dsc.verify_file(pathname):
-            Logger.debug('Using existing %s', filename)
+
+        if self._verify_file(pathname, dscverify, sha1sum, sha256sum, size):
+            Logger.debug('Using existing file %s', filename)
             return True
 
         if urlparse(url).scheme in ["", "file"]:
@@ -487,14 +501,7 @@ class SourcePackage(object):
                 if e.code == 404:
                     return False
                 raise e
-
-        if dscverify and not self.dsc.verify_file(pathname):
-            return False
-        if sha1sum and not verify_file_checksum(pathname, 'SHA1', sha1sum, size):
-            return False
-        if sha256sum and not verify_file_checksum(pathname, 'SHA256', sha256sum, size):
-            return False
-        return True
+        return self._verify_file(pathname, dscverify, sha1sum, sha256sum, size)
 
     def pull(self):
         "Pull into workdir"
