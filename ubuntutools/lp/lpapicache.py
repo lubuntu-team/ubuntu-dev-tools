@@ -824,7 +824,7 @@ class SourcePackagePublishingHistory(BaseWrapper):
             urls = self.binaryFileUrls()
             for url in urls:
                 # strip out the URL leading text.
-                filename = url.rsplit('/', 1)[1]
+                filename = os.path.basename(urlparse(url).path)
                 # strip the file suffix
                 (pkgname, _, e) = filename.rpartition('.')
                 # split into name, version, arch
