@@ -699,7 +699,6 @@ class SourcePackagePublishingHistory(BaseWrapper):
         self._archive = None
         self._changelog = None
         self._binaries = {}
-        self._have_all_binaries = False
         self._distro_series = None
         # Don't share _builds between different
         # SourcePackagePublishingHistory objects
@@ -813,10 +812,7 @@ class SourcePackagePublishingHistory(BaseWrapper):
         if fallback_arch == 'all':
             fallback_arch = host_architecture()
 
-        if self._have_all_binaries:
-            # Great!
-            pass
-        elif self.status in ["Pending", "Published"]:
+        if self.status in ["Pending", "Published"]:
             # Published, great!  Directly query the list of binaries
             binaries = map(BinaryPackagePublishingHistory,
                            self._lpobject.getPublishedBinaries())
@@ -827,7 +823,6 @@ class SourcePackagePublishingHistory(BaseWrapper):
                 if a not in self._binaries:
                     self._binaries[a] = {}
                 self._binaries[a][b.binary_package_name] = b
-            self._have_all_binaries = True
         else:
             # we have to go the long way :(
             Logger.info("Please wait, this may take some time...")
@@ -868,9 +863,6 @@ class SourcePackagePublishingHistory(BaseWrapper):
                 if a not in self._binaries:
                     self._binaries[a] = {}
                 self._binaries[a][n] = bpph
-            if not name and not ext and arch == 'all':
-                # We must have got them all
-                self._have_all_binaries = True
 
         bpphs = []
         if arch == 'all':
