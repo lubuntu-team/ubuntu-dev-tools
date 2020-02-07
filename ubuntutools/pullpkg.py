@@ -381,7 +381,11 @@ class PullPkg(object):
                 Logger.info("  %s", f['name'])
             Logger.info("Binary files:")
             for f in spph.getBinaries(options['arch']):
-                Logger.info("  %s", f.getFileName())
+                archtext = ''
+                name = f.getFileName()
+                if name.rpartition('.')[0].endswith('all'):
+                    archtext = f" ({f.arch})"
+                Logger.info(f"  {name}{archtext}")
         elif pull == PULL_SOURCE:
             # allow DownloadError to flow up to caller
             srcpkg.pull()
