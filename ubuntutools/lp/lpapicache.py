@@ -806,20 +806,12 @@ class SourcePackagePublishingHistory(BaseWrapper):
         if not arch:
             raise RuntimeError("Must specify arch")
 
-        # debs with arch 'all' have to be categorized as a specific arch
-        # so use requested arch if not 'all', or system arch
-        fallback_arch = arch
-        if fallback_arch == 'all':
-            fallback_arch = host_architecture()
-
         if self.status in ["Pending", "Published"]:
             # Published, great!  Directly query the list of binaries
             binaries = map(BinaryPackagePublishingHistory,
                            self._lpobject.getPublishedBinaries())
             for b in binaries:
                 a = b.arch
-                if a == 'all':
-                    a = fallback_arch
                 if a not in self._binaries:
                     self._binaries[a] = {}
                 self._binaries[a][b.binary_package_name] = b
@@ -835,10 +827,12 @@ class SourcePackagePublishingHistory(BaseWrapper):
                 (pkgname, _, e) = filename.rpartition('.')
                 # split into name, version, arch
                 (n, v, a) = pkgname.rsplit('_', 2)
+                # arch 'all' has separate bpph for each real arch,
+                # but all point to the same binary url
                 if a == 'all':
-                    a = fallback_arch
+                    a = arch or host_architecture()
                 # Only check the arch requested - saves time
-                if arch != 'all' and arch != a:
+                if arch and arch != a:
                     continue
                 # Only check the name requested - saves time
                 if name and not re.match(name, n):
@@ -864,12 +858,12 @@ class SourcePackagePublishingHistory(BaseWrapper):
                     self._binaries[a] = {}
                 self._binaries[a][n] = bpph
 
-        bpphs = []
-        if arch == 'all':
-            for a in self._binaries.values():
-                bpphs += a.values()
+        if not arch:
+            bpphs = [b for a in self._binaries.values() for b in a.values()]
         elif arch in self._binaries:
-            bpphs = self._binaries[arch].copy().values()
+            bpphs = list(self._binaries[arch].values())
+        else:
+            return []
 
         if name:
             bpphs = [b for b in bpphs if re.match(name, b.binary_package_name)]
