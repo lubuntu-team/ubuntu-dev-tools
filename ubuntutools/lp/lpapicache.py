@@ -794,17 +794,19 @@ class SourcePackagePublishingHistory(BaseWrapper):
             new_entries.append(str(block))
         return ''.join(new_entries)
 
-    def getBinaries(self, arch, name=None, ext=None):
+    def getBinaries(self, arch=None, name=None, ext=None):
         '''
         Returns the resulting BinaryPackagePublishingHistorys.
-        Must specify arch, or use 'all' to get all archs.
+        If arch is specified, it returns binaries for only that arch,
+        plus any binaries with arch 'all'.  If arch is not specified, or
+        if arch is specified as 'all', all archs are returned.
 
         If name is specified, only returns BPPH matching that (regex) name.
 
         If ext is specified, only returns BPPH matching that (regex) ext.
         '''
-        if not arch:
-            raise RuntimeError("Must specify arch")
+        if arch == 'all':
+            arch = None
 
         if self.status in ["Pending", "Published"]:
             # Published, great!  Directly query the list of binaries

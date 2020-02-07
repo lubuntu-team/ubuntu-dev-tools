@@ -608,7 +608,7 @@ class DebianSPPH(SourcePackagePublishingHistory):
     """
     resource_type = 'source_package_publishing_history'
 
-    def getBinaries(self, arch, name=None, ext=None):
+    def getBinaries(self, arch=None, name=None, ext=None):
         Logger.info('Using Snapshot to find binary packages')
         srcpkg = Snapshot.getSourcePackage(self.getPackageName(),
                                            version=self.getVersion())
@@ -1228,7 +1228,7 @@ class SnapshotSPPH(object):
             new_entries.append(str(block))
         return ''.join(new_entries)
 
-    def getBinaries(self, arch, name=None, ext=None):
+    def getBinaries(self, arch=None, name=None, ext=None):
         return [b.getBPPH()
                 for b in self._pkg.getBinaryFiles(arch=arch, name=name, ext=ext)]
 
