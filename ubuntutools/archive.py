@@ -519,22 +519,23 @@ class SourcePackage(object):
             else:
                 raise DownloadError('File %s could not be found' % name)
 
-    def pull_binaries(self, arch, name=None, ext=None):
+    def pull_binaries(self, arch=None, name=None, ext=None):
         """Pull binary debs into workdir.
         If name is specified, only binary packages matching the regex are included.
 
         If ext is specified, only binary packages with that ext are included; for
         example to only download dbgsym ddebs, specify ext='ddeb'.
 
-        Must specify arch, or use 'all' to pull all archs.
+        If arch is not specified or is 'all', pull all archs.
+
         Returns the number of files downloaded.
         """
         total = 0
 
         Logger.debug("pull_binaries(arch=%s, name=%s, ext=%s)" % (arch, name, ext))
 
-        if not arch:
-            raise RuntimeError("Must specify arch")
+        if arch == 'all':
+            arch = None
 
         for (fname, furls, fsize) in self._binary_files_info(arch, name, ext):
             found = False
