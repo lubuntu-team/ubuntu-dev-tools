@@ -87,7 +87,7 @@ def main():
 
         packagesets = sorted(Packageset.setsIncludingSource(
                 distroseries=series,
-                sourcepackagename=package))
+                sourcepackagename=package), key=lambda p: p.name)
         if packagesets:
             Logger.info("")
             Logger.info("Packagesets")
