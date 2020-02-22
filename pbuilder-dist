@@ -29,7 +29,9 @@
 # configurations. For example, a symlink called pbuilder-hardy will assume
 # that the target distribution is always meant to be Ubuntu Hardy.
 
+import distutils.spawn
 import os
+import os.path
 import subprocess
 import sys
 
@@ -440,11 +442,26 @@ def main():
 
     if len(parts) > 2:
         requested_arch = parts[2]
-    elif len(args) > 0 and args[0] in (
-            'alpha', 'amd64', 'arm', 'armeb', 'armel', 'armhf', 'arm64',
-            'i386', 'lpia', 'm68k', 'mips', 'mipsel', 'powerpc', 'ppc64',
-            'ppc64el', 'riscv64', 's390x', 'sh4', 'sh4eb', 'sparc', 'sparc64'):
-        requested_arch = args.pop(0)
+    elif len(args) > 0:
+        if distutils.spawn.find_executable('arch-test'):
+            if subprocess.run(
+                    ['arch-test', args[0]],
+                    stdout=subprocess.DEVNULL).returncode == 0:
+                requested_arch = args.pop(0)
+            elif (os.path.isdir('/usr/lib/arch-test')
+                    and args[0] in os.listdir('/usr/lib/arch-test/')):
+                Logger.error('Architecture "%s" is not supported on your '
+                             'currently running kernal. Consider installing '
+                             'the qemu-user-static package to enable the use of '
+                             'foreign architectures.', args[0])
+                sys.exit(1)
+            else:
+                requested_arch = None
+        else:
+            Logger.error('Cannot determine if "%s" is a valid architecture. '
+                         'Please install the arch-test package and retry.',
+                         args[0])
+            sys.exit(1)
     else:
         requested_arch = None
 
