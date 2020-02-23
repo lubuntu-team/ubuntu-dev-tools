@@ -1,3 +1,34 @@
+ubuntu-dev-tools (0.176) unstable; urgency=medium
+
+  [ Debian Janitor ]
+  * Fix day-of-week for changelog entry 0.66.
+
+  [ Mattia Rizzolo ]
+  * pbuilder-dist:
+    + Add support for riscv64.  LP: #1859277
+  * d/control: Bump Standards-Version to 4.5.0, no changes needed.
+
+  [ Colin Watson ]
+  * Use +sourcefiles URLs where possible.  LP: #1860456
+
+  [ Dan Streetman ]
+  * submittodebian:
+    + Open file in binary mode before writing utf-8 encoded bytes.  LP: #1863119
+  * ubuntu-upload-permission:
+    + Explicitly sort packagesets by name.  LP: #1862372
+  * pullpkg:
+    + For "-p list", show bpph arch for files built for 'all' arch.
+  * archive.py:
+    + If using local file, avoid error trying to copy file to itself.
+    + Allow pull_binaries() to accept arch=None.
+  * lpapicache:
+    + Remove SPPH _have_all_binaries flag, as there are cases where it yield
+      unexpected results.
+    + Remove fallback_arch from getBinaries.
+    + Allow getBinaries(arch=None) to get all archs.  LP: #1862286
+
+ -- Mattia Rizzolo <mattia@debian.org>  Sun, 23 Feb 2020 13:03:21 +0100
+
 ubuntu-dev-tools (0.175) unstable; urgency=medium
 
   [ Mattia Rizzolo ]
@@ -6,8 +37,6 @@ ubuntu-dev-tools (0.175) unstable; urgency=medium
   * requestbackport:
     + Error out nicely when a tracking project doesn't exist.  LP: #1852901
   * d/control: Bump Standards-Version to 4.4.1, no changes needed.
-  * pbuilder-dist:
-    + Add support for riscv64.  LP: #1859277
 
   [ Stefano Rivera ]
   * merge-changelog: rewrite the changelog handling to use python3-debian.
