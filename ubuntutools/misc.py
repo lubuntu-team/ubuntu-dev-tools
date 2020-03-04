@@ -45,6 +45,8 @@ POCKETS = DEFAULT_POCKETS + ('Backports',)
 DEFAULT_STATUSES = ('Pending', 'Published')
 STATUSES = DEFAULT_STATUSES + ('Superseded', 'Deleted', 'Obsolete')
 
+UPLOAD_QUEUE_STATUSES = ('New', 'Unapproved', 'Accepted', 'Done', 'Rejected')
+
 _system_distribution_chain = []
 
 
