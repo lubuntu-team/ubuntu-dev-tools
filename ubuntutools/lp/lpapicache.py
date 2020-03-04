@@ -29,6 +29,8 @@ import collections
 import os
 import re
 
+from copy import copy
+
 from debian.changelog import Changelog
 from httplib2 import Http, HttpLib2Error
 from launchpadlib.launchpad import Launchpad as LP
@@ -61,6 +63,7 @@ __all__ = [
     'DistroSeries',
     'DistroArchSeries',
     'Launchpad',
+    'PackageUpload',
     'PersonTeam',
     'SourcePackagePublishingHistory',
     ]
@@ -347,6 +350,78 @@ class DistroSeries(BaseWrapper):
                 message = "Architecture %s is unknown." % archtag
                 raise ArchSeriesNotFoundException(message)
         return self._architectures[archtag]
+
+    def getPackageUploads(self, name=None, pocket=None, version=None,
+                          status='Unapproved'):
+        '''Returns a list of PackageUploads for this series.'''
+        params = {'exact_match': True}
+        if name:
+            params['name'] = name
+        if pocket:
+            params['pocket'] = pocket
+        if version:
+            params['version'] = version
+        if status:
+            params['status'] = status
+        return [PackageUpload(p) for p in self._lpobject.getPackageUploads(**params)]
+
+
+class PackageUpload(BaseWrapper):
+    '''
+    Wrapper class around a LP package_upload object.
+    '''
+    resource_type = 'package_upload'
+
+    def __init__(self, *args):
+        self._custom_urls = None
+        self._source_urls = None
+        self._binary_urls = None
+        self._binary_properties = None
+        self._binary_prop_dict = None
+
+    def getArchive(self):
+        return Archive(self._lpobject.archive_link)
+
+    def getSourceArchive(self):
+        if self._lpobject.copy_source_archive_link:
+            return Archive(self._lpobject.copy_source_archive_link)
+        return None
+
+    def getDistroSeries(self):
+        return DistroSeries(self._lpobject.distroseries_link)
+
+    def changesFileUrl(self):
+        return self._lpobject.changes_file_url
+
+    def customFileUrls(self):
+        if not self._custom_urls:
+            self._custom_urls = self._lpobject.customFileUrls()
+        return copy(self._custom_urls)
+
+    def sourceFileUrls(self):
+        if not self._source_urls:
+            self._source_urls = self._lpobject.sourceFileUrls()
+        return copy(self._source_urls)
+
+    def binaryFileUrls(self):
+        if not self._binary_urls:
+            self._binary_urls = self._lpobject.binaryFileUrls()
+        return copy(self._binary_urls)
+
+    def getBinaryProperties(self):
+        if not self._binary_properties:
+            self._binary_properties = self._lpobject.getBinaryProperties()
+        return copy(self._binary_properties)
+
+    def binaryFileProperties(self, filename_or_url):
+        if not self._binary_prop_dict:
+            urls = self.binaryFileUrls()
+            props = self.getBinaryProperties()
+            self._binary_prop_dict = dict(zip(urls, props))
+            for (k, v) in copy(self._binary_prop_dict).items():
+                filename = os.path.basename(urlparse(k).path)
+                self._binary_prop_dict[filename] = v
+        return self._binary_prop_dict.get(filename_or_url, {})
 
 
 class Archive(BaseWrapper):
