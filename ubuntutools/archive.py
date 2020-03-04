@@ -50,7 +50,7 @@ from ubuntutools.lp.lpapicache import (Launchpad, Distribution, PersonTeam,
 from ubuntutools.lp.udtexceptions import (PackageNotFoundException,
                                           SeriesNotFoundException,
                                           InvalidDistroValueError)
-from ubuntutools.misc import verify_file_checksum
+from ubuntutools.misc import (download, verify_file_checksum)
 from ubuntutools.version import Version
 
 import logging
@@ -402,43 +402,6 @@ class SourcePackage(object):
         with open(self.dsc_pathname, 'wb') as f:
             f.write(self.dsc.raw_text)
 
-    def _download_file_helper(self, f, pathname, size):
-        "Perform the dowload."
-        BLOCKSIZE = 16 * 1024
-
-        with open(pathname, 'wb') as out:
-            if not (Logger.isEnabledFor(logging.INFO) and
-                    sys.stderr.isatty() and
-                    size):
-                shutil.copyfileobj(f, out, BLOCKSIZE)
-                return
-
-            XTRALEN = len('[] 99%')
-            downloaded = 0
-            bar_width = 60
-            term_width = os.get_terminal_size(sys.stderr.fileno())[0]
-            if term_width < bar_width + XTRALEN + 1:
-                bar_width = term_width - XTRALEN - 1
-
-            try:
-                while True:
-                    block = f.read(BLOCKSIZE)
-                    if not block:
-                        break
-                    out.write(block)
-                    downloaded += len(block)
-                    pct = float(downloaded) / size
-                    bar = ('=' * int(pct * bar_width))[:-1] + '>'
-                    fmt = '[{bar:<%d}]{pct:>3}%%\r' % bar_width
-                    sys.stderr.write(fmt.format(bar=bar, pct=int(pct * 100)))
-                    sys.stderr.flush()
-            finally:
-                sys.stderr.write(' ' * (bar_width + XTRALEN) + '\r')
-                if downloaded < size:
-                    Logger.error('Partial download: %0.3f MiB of %0.3f MiB' %
-                                 (downloaded / 1024.0 / 1024,
-                                  size / 1024.0 / 1024))
-
     def _verify_file(self, pathname, dscverify=False, sha1sum=False, sha256sum=False, size=0):
         if not os.path.exists(pathname):
             return False
@@ -468,26 +431,8 @@ class SourcePackage(object):
                 Logger.info("Copying %s from %s" % (filename, frompath))
                 shutil.copyfile(frompath, pathname)
         else:
-            try:
-                with closing(urlopen(url)) as f:
-                    Logger.debug("Using URL '%s'", f.geturl())
-                    if not size:
-                        try:
-                            size = int(f.info().get('Content-Length'))
-                        except (AttributeError, TypeError, ValueError):
-                            pass
+            download(url, pathname, size)
 
-                    Logger.info('Downloading %s from %s%s' %
-                                (filename, urlparse(url).hostname,
-                                 ' (%0.3f MiB)' % (size / 1024.0 / 1024)
-                                 if size else ''))
-
-                    self._download_file_helper(f, pathname, size)
-            except HTTPError as e:
-                # It's ok if the file isn't found; we try multiple places to download
-                if e.code == 404:
-                    return False
-                raise e
         return self._verify_file(pathname, dscverify, sha1sum, sha256sum, size)
 
     def pull(self):
@@ -500,6 +445,10 @@ class SourcePackage(object):
                     if self._download_file(url, name, int(entry['size']), dscverify=True):
                         break
                 except HTTPError as e:
+                    # It's ok if the file isn't found; we try multiple places to download
+                    if e.code == 404:
+                        Logger.info("File not found at %s" % url)
+                        continue
                     Logger.info('HTTP Error %i: %s', e.code, str(e))
                 except URLError as e:
                     Logger.info('URL Error: %s', e.reason)
@@ -536,6 +485,10 @@ class SourcePackage(object):
                         total += 1
                         break
                 except HTTPError as e:
+                    # It's ok if the file isn't found; we try multiple places to download
+                    if e.code == 404:
+                        Logger.info("File not found at %s" % url)
+                        continue
                     Logger.info('HTTP Error %i: %s', e.code, str(e))
                 except URLError as e:
                     Logger.info('URL Error: %s', e.reason)

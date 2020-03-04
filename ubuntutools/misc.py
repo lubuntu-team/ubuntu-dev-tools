@@ -22,14 +22,16 @@
 #
 # ##################################################################
 
-# Modules.
+import distro_info
 import hashlib
 import locale
 import os
+import shutil
 import sys
-from subprocess import check_output, CalledProcessError
 
-import distro_info
+from subprocess import check_output, CalledProcessError
+from urllib.parse import urlparse
+from urllib.request import urlopen
 
 from ubuntutools.lp.udtexceptions import PocketDoesNotExistError
 
@@ -219,3 +221,57 @@ def verify_file_checksum(pathname, alg, checksum, size=0):
         Logger.error('File %s checksum (%s) mismatch: got %s expected %s',
                      filename, alg, h.hexdigest(), checksum)
     return match
+
+
+def download(src, dst=None, size=0):
+    """ download/copy a file/url to local file """
+    filename = os.path.basename(urlparse(src).path)
+
+    if not dst:
+        dst = filename
+
+    with urlopen(src) as fsrc, open(dst, 'wb') as fdst:
+        url = fsrc.geturl()
+        Logger.debug(f"Using URL: {url}")
+
+        if not size:
+            try:
+                size = int(fsrc.info().get('Content-Length'))
+            except (AttributeError, TypeError, ValueError):
+                pass
+
+        hostname = urlparse(url).hostname
+        sizemb = ' (%0.3f MiB)' % (size / 1024.0 / 1024) if size else ''
+        Logger.info(f'Downloading {filename} from {hostname}{sizemb}')
+
+        if not all((Logger.isEnabledFor(logging.INFO),
+                    sys.stderr.isatty(), size)):
+            shutil.copyfileobj(fsrc, fdst)
+            return
+
+        blocksize = 4096
+        XTRALEN = len('[] 99%')
+        downloaded = 0
+        bar_width = 60
+        term_width = os.get_terminal_size(sys.stderr.fileno())[0]
+        if term_width < bar_width + XTRALEN + 1:
+            bar_width = term_width - XTRALEN - 1
+
+        try:
+            while True:
+                block = fsrc.read(blocksize)
+                if not block:
+                    break
+                fdst.write(block)
+                downloaded += len(block)
+                pct = float(downloaded) / size
+                bar = ('=' * int(pct * bar_width))[:-1] + '>'
+                fmt = '\r[{bar:<%d}]{pct:>3}%%\r' % bar_width
+                sys.stderr.write(fmt.format(bar=bar, pct=int(pct * 100)))
+                sys.stderr.flush()
+        finally:
+            sys.stderr.write('\r' + ' ' * (term_width - 1) + '\r')
+            if downloaded < size:
+                Logger.error('Partial download: %0.3f MiB of %0.3f MiB' %
+                             (downloaded / 1024.0 / 1024,
+                              size / 1024.0 / 1024))
