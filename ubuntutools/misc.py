@@ -57,7 +57,7 @@ def system_distribution_chain():
                                   encoding='utf-8').strip()
             _system_distribution_chain.append(vendor)
         except CalledProcessError:
-            print('Error: Could not determine what distribution you are running.')
+            Logger.error('Could not determine what distribution you are running.')
             return []
 
         while True:
@@ -97,8 +97,8 @@ def host_architecture():
         arch = None
 
     if not arch or 'not found' in arch:
-        print('Error: Not running on a Debian based system; '
-              'could not detect its architecture.')
+        Logger.error('Not running on a Debian based system; '
+                     'could not detect its architecture.')
         return None
 
     return arch
@@ -112,14 +112,14 @@ def readlist(filename, uniq=True):
     """
 
     if not os.path.isfile(filename):
-        print('File "%s" does not exist.' % filename)
+        Logger.error('File "%s" does not exist.' % filename)
         return False
 
     with open(filename) as f:
         content = f.read().replace('\n', ' ').replace(',', ' ')
 
     if not content.strip():
-        print('File "%s" is empty.' % filename)
+        Logger.error('File "%s" is empty.' % filename)
         return False
 
     items = [item for item in content.split() if item]
@@ -156,7 +156,7 @@ def split_release_pocket(release, default='Release'):
 def require_utf8():
     '''Can be called by programs that only function in UTF-8 locales'''
     if locale.getpreferredencoding() != 'UTF-8':
-        print("This program only functions in a UTF-8 locale. Aborting.", file=sys.stderr)
+        Logger.error("This program only functions in a UTF-8 locale. Aborting.")
         sys.exit(1)
 
 
