@@ -532,7 +532,6 @@ class SourcePackage(object):
             arch = None
 
         for bpph in self.lp_spph.getBinaries(arch=arch, name=name, ext=ext):
-            found = False
             fname = bpph.getFileName()
             fsha1 = bpph.binaryFileSha1(fname)
             fsha256 = bpph.binaryFileSha256(fname)
@@ -540,14 +539,12 @@ class SourcePackage(object):
             for url in self._binary_urls(fname, bpph):
                 try:
                     if self._download_file(url, fname, False, fsize):
-                        found = True
+                        total += 1
                         break
                 except HTTPError as e:
                     Logger.info('HTTP Error %i: %s', e.code, str(e))
                 except URLError as e:
                     Logger.info('URL Error: %s', e.reason)
-            if found:
-                total += 1
             else:
                 Logger.info("Could not download from any location: %s", fname)
         return total
