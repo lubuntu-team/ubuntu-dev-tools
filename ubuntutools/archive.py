@@ -51,6 +51,7 @@ from ubuntutools.lp.lpapicache import (Launchpad, Distribution, PersonTeam,
 from ubuntutools.lp.udtexceptions import (PackageNotFoundException,
                                           SeriesNotFoundException,
                                           InvalidDistroValueError)
+from ubuntutools.misc import verify_file_checksum
 from ubuntutools.version import Version
 
 import logging
@@ -456,7 +457,7 @@ class SourcePackage(object):
                                  (downloaded / 1024.0 / 1024,
                                   size / 1024.0 / 1024))
 
-    def _download_file(self, url, filename, dscverify=False, size=0):
+    def _download_file(self, url, filename, size, dscverify=False, sha1sum=None, sha256sum=None):
         "Download url to filename in workdir."
         pathname = os.path.join(self.workdir, filename)
         if dscverify and self.dsc.verify_file(pathname):
@@ -493,7 +494,10 @@ class SourcePackage(object):
                 raise e
 
         if dscverify and not self.dsc.verify_file(pathname):
-            Logger.error('Checksum for %s does not match.', filename)
+            return False
+        if sha1sum and not verify_file_checksum(pathname, 'SHA1', sha1sum, size):
+            return False
+        if sha256sum and not verify_file_checksum(pathname, 'SHA256', sha256sum, size):
             return False
         return True
 
@@ -504,7 +508,7 @@ class SourcePackage(object):
             name = entry['name']
             for url in self._source_urls(name):
                 try:
-                    if self._download_file(url, name, dscverify=True, size=int(entry['size'])):
+                    if self._download_file(url, name, int(entry['size']), dscverify=True):
                         break
                 except HTTPError as e:
                     Logger.info('HTTP Error %i: %s', e.code, str(e))
@@ -538,7 +542,8 @@ class SourcePackage(object):
             fsize = bpph.binaryFileSize(fname)
             for url in self._binary_urls(fname, bpph):
                 try:
-                    if self._download_file(url, fname, False, fsize):
+                    if self._download_file(url, fname, fsize,
+                                           sha1sum=fsha1, sha256sum=fsha256):
                         total += 1
                         break
                 except HTTPError as e:
