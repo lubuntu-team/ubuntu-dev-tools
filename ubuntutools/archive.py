@@ -440,6 +440,24 @@ class SourcePackage(object):
 
         return self._verify_file(pathname, dscverify, sha1sum, sha256sum, size)
 
+    def _download_file_from_urls(self, urls, filename, size, dscverify=False,
+                                 sha1sum=None, sha256sum=None):
+        "Try to download a file from a list of urls."
+        for url in urls:
+            try:
+                if self._download_file(url, filename, size, dscverify=dscverify,
+                                       sha1sum=sha1sum, sha256sum=sha256sum):
+                    return
+            except HTTPError as e:
+                if e.code == 404:
+                    # It's ok if the file isn't found, just try the next url
+                    Logger.debug("File not found at %s" % url)
+                else:
+                    Logger.error('HTTP Error %i: %s', e.code, str(e))
+            except URLError as e:
+                Logger.error('URL Error: %s', e.reason)
+        raise DownloadError('Failed to download %s' % filename)
+
     def pull(self):
         "Pull into workdir"
         self._write_dsc()
