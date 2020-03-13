@@ -425,7 +425,7 @@ class SourcePackage(object):
         pathname = os.path.join(self.workdir, filename)
 
         if self._verify_file(pathname, dscverify, sha1sum, sha256sum, size):
-            Logger.debug('Using existing file %s', filename)
+            Logger.info('Using existing file %s', filename)
             return True
 
         if urlparse(url).scheme in ["", "file"]:
@@ -452,11 +452,11 @@ class SourcePackage(object):
                 except HTTPError as e:
                     # It's ok if the file isn't found; we try multiple places to download
                     if e.code == 404:
-                        Logger.info("File not found at %s" % url)
+                        Logger.debug("File not found at %s" % url)
                         continue
-                    Logger.info('HTTP Error %i: %s', e.code, str(e))
+                    Logger.error('HTTP Error %i: %s', e.code, str(e))
                 except URLError as e:
-                    Logger.info('URL Error: %s', e.reason)
+                    Logger.error('URL Error: %s', e.reason)
             else:
                 raise DownloadError('File %s could not be found' % name)
 
@@ -492,13 +492,13 @@ class SourcePackage(object):
                 except HTTPError as e:
                     # It's ok if the file isn't found; we try multiple places to download
                     if e.code == 404:
-                        Logger.info("File not found at %s" % url)
+                        Logger.debug("File not found at %s" % url)
                         continue
-                    Logger.info('HTTP Error %i: %s', e.code, str(e))
+                    Logger.error('HTTP Error %i: %s', e.code, str(e))
                 except URLError as e:
-                    Logger.info('URL Error: %s', e.reason)
+                    Logger.error('URL Error: %s', e.reason)
             else:
-                Logger.info("Could not download from any location: %s", fname)
+                Logger.error("Could not download from any location: %s", fname)
         return total
 
     def verify(self):
