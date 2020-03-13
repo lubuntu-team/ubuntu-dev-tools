@@ -463,20 +463,8 @@ class SourcePackage(object):
         self._write_dsc()
         for entry in self.dsc['Files']:
             name = entry['name']
-            for url in self._source_urls(name):
-                try:
-                    if self._download_file(url, name, int(entry['size']), dscverify=True):
-                        break
-                except HTTPError as e:
-                    # It's ok if the file isn't found; we try multiple places to download
-                    if e.code == 404:
-                        Logger.debug("File not found at %s" % url)
-                        continue
-                    Logger.error('HTTP Error %i: %s', e.code, str(e))
-                except URLError as e:
-                    Logger.error('URL Error: %s', e.reason)
-            else:
-                raise DownloadError('File %s could not be found' % name)
+            urls = self._source_urls(name)
+            self._download_file_from_urls(urls, name, int(entry['size']), dscverify=True)
 
     def pull_binaries(self, arch=None, name=None, ext=None):
         """Pull binary debs into workdir.
@@ -489,34 +477,25 @@ class SourcePackage(object):
 
         Returns the number of files downloaded.
         """
-        total = 0
-
         Logger.debug("pull_binaries(arch=%s, name=%s, ext=%s)" % (arch, name, ext))
 
         if arch == 'all':
             arch = None
 
+        total = 0
         for bpph in self.lp_spph.getBinaries(arch=arch, name=name, ext=ext):
             fname = bpph.getFileName()
             fsha1 = bpph.binaryFileSha1(fname)
             fsha256 = bpph.binaryFileSha256(fname)
             fsize = bpph.binaryFileSize(fname)
-            for url in self._binary_urls(fname, bpph):
-                try:
-                    if self._download_file(url, fname, fsize,
-                                           sha1sum=fsha1, sha256sum=fsha256):
-                        total += 1
-                        break
-                except HTTPError as e:
-                    # It's ok if the file isn't found; we try multiple places to download
-                    if e.code == 404:
-                        Logger.debug("File not found at %s" % url)
-                        continue
-                    Logger.error('HTTP Error %i: %s', e.code, str(e))
-                except URLError as e:
-                    Logger.error('URL Error: %s', e.reason)
-            else:
-                Logger.error("Could not download from any location: %s", fname)
+            urls = self._binary_urls(fname, bpph)
+            try:
+                self._download_file_from_urls(urls, fname, fsize,
+                                              sha1sum=fsha1, sha256sum=fsha256)
+                total += 1
+            except DownloadError as e:
+                # log/print the error, but continue to get the rest of the files
+                Logger.error(e)
         return total
 
     def verify(self):
