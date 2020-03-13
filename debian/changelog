@@ -1,8 +1,9 @@
 ubuntu-dev-tools (0.177) UNRELEASED; urgency=medium
 
   * Verify checksums for downloaded binary files
+  * pullpkg: support pulling from Ubuntu upload queues
 
- -- Dan Streetman <ddstreet@canonical.com>  Fri, 13 Mar 2020 09:57:13 -0400
+ -- Dan Streetman <ddstreet@canonical.com>  Fri, 13 Mar 2020 10:02:36 -0400
 
 ubuntu-dev-tools (0.176) unstable; urgency=medium
 
