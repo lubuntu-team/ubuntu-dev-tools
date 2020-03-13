@@ -1,8 +1,8 @@
 ubuntu-dev-tools (0.177) UNRELEASED; urgency=medium
 
-  * wip.
+  * Verify checksums for downloaded binary files
 
- -- Mattia Rizzolo <mattia@debian.org>  Sun, 23 Feb 2020 13:09:55 +0100
+ -- Dan Streetman <ddstreet@canonical.com>  Fri, 13 Mar 2020 09:57:13 -0400
 
 ubuntu-dev-tools (0.176) unstable; urgency=medium
 
