@@ -622,26 +622,6 @@ class DebianSourcePackage(SourcePackage):
         if name in self.snapshot_files:
             yield self.snapshot_files[name]
 
-    def pull_dsc(self):
-        "Retrieve dscfile and parse"
-        try:
-            super(DebianSourcePackage, self).pull_dsc()
-            return
-        except DownloadError:
-            pass
-
-        # Not all Debian Source packages get imported to LP
-        # (or the importer could be lagging)
-        for url in self._source_urls(self.dsc_name):
-            try:
-                self._download_dsc(url)
-            except DownloadError:
-                continue
-            break
-        else:
-            raise DownloadError('dsc could not be found anywhere')
-        self._check_dsc()
-
     # Local methods:
     @property
     def snapshot_package(self):
