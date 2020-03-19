@@ -886,6 +886,8 @@ class SourcePackagePublishingHistory(BaseWrapper):
           size: the size of the source file
         Also, this function adds a 'filename' field:
           filename: the filename parsed from the url path
+        Note that while all the keys will be in the dict, their values
+        may be None.
         '''
         if not self._source_urls:
             urls = self._lpobject.sourceFileUrls(include_meta=True)
@@ -893,6 +895,10 @@ class SourcePackagePublishingHistory(BaseWrapper):
                 Logger.warning('SPPH %s_%s has no sourceFileUrls' %
                                (self.getPackageName(), self.getVersion()))
             for u in urls:
+                # make sure mandatory fields are present
+                for field in ['url', 'sha1', 'sha256', 'size']:
+                    if field not in u:
+                        u[field] = None
                 u['filename'] = os.path.basename(urlparse(u['url']).path)
             self._source_urls = urls
 
@@ -1141,6 +1147,8 @@ class BinaryPackagePublishingHistory(BaseWrapper):
           size: the size of the binary file
         Also, this function adds a 'filename' field:
           filename: the filename parsed from the url path
+        Note that while all the keys will be in the dict, their values
+        may be None.
         '''
         if not self._binary_urls:
             try:
@@ -1152,6 +1160,10 @@ class BinaryPackagePublishingHistory(BaseWrapper):
                 Logger.warning('BPPH %s_%s has no binaryFileUrls' %
                                (self.getPackageName(), self.getVersion()))
             for u in urls:
+                # make sure mandatory fields are present
+                for field in ['url', 'sha1', 'sha256', 'size']:
+                    if field not in u:
+                        u[field] = None
                 u['filename'] = os.path.basename(urlparse(u['url']).path)
             self._binary_urls = urls
 
