@@ -293,25 +293,28 @@ class SourcePackage(object):
         return os.path.join(mirror, 'pool', self.component, group,
                             self.source, filename)
 
+    def _archive_servers(self):
+        "Generator for mirror and master servers"
+        # Always provide the mirrors first
+        for server in self.mirrors:
+            yield server
+        # Don't repeat servers that are in both mirrors and masters
+        for server in set(self.masters) - set(self.mirrors):
+            yield server
+
     def _source_urls(self, name):
         "Generator of sources for name"
         if self._dsc_source:
             yield os.path.join(os.path.dirname(self._dsc_source), name)
-        for mirror in self.mirrors:
-            yield self._mirror_url(mirror, name)
-        for mirror in self.masters:
-            if mirror not in self.mirrors:
-                yield self._mirror_url(mirror, name)
+        for server in self._archive_servers():
+            yield self._mirror_url(server, name)
         if self.lp_spph.sourceFileUrl(name):
             yield self.lp_spph.sourceFileUrl(name)
 
     def _binary_urls(self, name, bpph):
         "Generator of URLs for name"
-        for mirror in self.mirrors:
-            yield self._mirror_url(mirror, name)
-        for mirror in self.masters:
-            if mirror not in self.mirrors:
-                yield self._mirror_url(mirror, name)
+        for server in self._archive_servers():
+            yield self._mirror_url(server, name)
         if bpph.binaryFileUrl(name):
             yield bpph.binaryFileUrl(name)
         if bpph.getUrl():
