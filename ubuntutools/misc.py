@@ -29,6 +29,7 @@ import os
 import shutil
 import sys
 
+from contextlib import suppress
 from subprocess import check_output, CalledProcessError
 from urllib.parse import urlparse
 from urllib.request import urlopen
@@ -225,22 +226,20 @@ def verify_file_checksum(pathname, alg, checksum, size=0):
     return match
 
 
-def download(src, dst=None, size=0):
+def download(src, dst, size=0):
     """ download/copy a file/url to local file """
     filename = os.path.basename(urlparse(src).path)
 
-    if not dst:
-        dst = filename
+    if os.path.isdir(dst):
+        dst = os.path.join(dst, filename)
 
     with urlopen(src) as fsrc, open(dst, 'wb') as fdst:
         url = fsrc.geturl()
         Logger.debug(f"Using URL: {url}")
 
         if not size:
-            try:
+            with suppress(AttributeError, TypeError, ValueError):
                 size = int(fsrc.info().get('Content-Length'))
-            except (AttributeError, TypeError, ValueError):
-                pass
 
         hostname = urlparse(url).hostname
         sizemb = ' (%0.3f MiB)' % (size / 1024.0 / 1024) if size else ''
