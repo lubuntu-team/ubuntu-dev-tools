@@ -34,7 +34,6 @@ import codecs
 import json
 import os.path
 import re
-import shutil
 import subprocess
 import sys
 
@@ -377,15 +376,7 @@ class SourcePackage(object):
             Logger.info('Using existing file %s', filename)
             return True
 
-        if urlparse(url).scheme in ["", "file"]:
-            frompath = os.path.abspath(urlparse(url).path)
-            if frompath == pathname:
-                Logger.info("Using %s" % pathname)
-            else:
-                Logger.info("Copying %s from %s" % (filename, frompath))
-                shutil.copyfile(frompath, pathname)
-        else:
-            download(url, pathname, size)
+        download(url, pathname, size)
 
         return self._verify_file(pathname, dscverify, sha1sum, sha256sum, size)
 

@@ -228,10 +228,21 @@ def verify_file_checksum(pathname, alg, checksum, size=0):
 
 def download(src, dst, size=0):
     """ download/copy a file/url to local file """
+    if not urlparse(src).scheme:
+        src = 'file://%s' % os.path.abspath(os.path.expanduser(src))
+    dst = os.path.abspath(os.path.expanduser(dst))
+
     filename = os.path.basename(urlparse(src).path)
 
     if os.path.isdir(dst):
         dst = os.path.join(dst, filename)
+
+    if urlparse(src).scheme == 'file':
+        srcfile = urlparse(src).path
+        if os.path.exists(srcfile) and os.path.exists(dst):
+            if os.path.samefile(srcfile, dst):
+                Logger.info(f"Using existing file {dst}")
+                return
 
     with urlopen(src) as fsrc, open(dst, 'wb') as fdst:
         url = fsrc.geturl()
