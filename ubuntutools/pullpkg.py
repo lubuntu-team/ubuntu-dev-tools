@@ -557,7 +557,7 @@ class PullPkg(object):
             if not urls:
                 Logger.error("No source files to download")
             for url in urls:
-                download(url)
+                download(url, os.getcwd())
         else:
             name = '.*'
             if pull == PULL_DEBS:
@@ -575,4 +575,4 @@ class PullPkg(object):
             for url in urls:
                 filename = os.path.basename(urlparse(url).path)
                 if re.match(name, filename):
-                    download(url)
+                    download(url, os.getcwd())
