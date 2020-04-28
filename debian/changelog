@@ -1,7 +1,12 @@
 ubuntu-dev-tools (0.177) UNRELEASED; urgency=medium
 
+  [ Dan Streetman ]
   * Verify checksums for downloaded binary files
   * pullpkg: support pulling from Ubuntu upload queues
+
+  [ Mattia Rizzolo ]
+  * ubuntu-build:
+    + Add support for riscv64.
 
  -- Dan Streetman <ddstreet@canonical.com>  Fri, 13 Mar 2020 10:02:36 -0400
 
