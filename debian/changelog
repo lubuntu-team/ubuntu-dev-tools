@@ -3252,10 +3252,10 @@ ubuntu-dev-tools (0.25) hardy; urgency=low
       didn't work  (LP: #175183)
     - added support for --http-proxy, honours now $http_proxy or $HTTP_PROXY
     - removed $COMPONENTS_LINE from pbuilder call, data is crippled in the
-      pbuilder chroot.
-      Instead of this behaviour add $BASE_DIR/etc/$DISTRIBUTION/apt.conf/
-      directory and install a sane sources.list, depending on the releases of Ubuntu
-      and add --aptconfdir to pbuilder call (LP: #175183)
+      pbuilder chroot. Instead of this behaviour add
+      $BASE_DIR/etc/$DISTRIBUTION/apt.conf/ directory and install a sane
+      sources.list, depending on the releases of Ubuntu and add --aptconfdir to
+      pbuilder call (LP: #175183)
     - add support for gksudo|kdesudo|sudo depending on $DESKTOP_SESSION.
       or if $PBUILDAUTH is set to something else, it will be used instead of
       sudo|gksudo|kdesudo (LP: #172943)
@@ -3503,7 +3503,8 @@ ubuntu-dev-tools (0.11) gutsy; urgency=low
 
   [ Siegfried-Angel Gevatter Pujals (RainCT) ]
   * Added a manpage for suspicious-source.
-  * Fixed a bug in pbuilder-dist (it needed ftp.debian.org in sources.list to work with Debian).
+  * Fixed a bug in pbuilder-dist (it needed ftp.debian.org in sources.list to
+    work with Debian).
 
  -- Daniel Holbach <daniel.holbach@ubuntu.com>  Mon, 24 Sep 2007 09:39:24 +0200
 
