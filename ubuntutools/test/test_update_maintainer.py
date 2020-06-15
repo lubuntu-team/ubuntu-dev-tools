@@ -18,10 +18,11 @@
 
 import os
 # import sys
+import unittest
+
 from io import StringIO
 from unittest import mock
 
-from ubuntutools.test import unittest
 from ubuntutools.update_maintainer import update_maintainer
 
 _LUCID_CHANGELOG = """\

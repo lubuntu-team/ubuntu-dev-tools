@@ -18,11 +18,11 @@
 import os.path
 import shutil
 import tempfile
+import unittest
+
 from io import BytesIO
 from unittest import mock
-
 import ubuntutools.archive
-from ubuntutools.test import unittest
 
 from ubuntutools.test.example_package import ExamplePackage
 

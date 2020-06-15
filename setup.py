@@ -80,5 +80,5 @@ if __name__ == '__main__':
             'ubuntutools/test',
         ],
         data_files=data_files,
-        test_suite='ubuntutools.test.discover',
+        test_suite='ubuntutools.test',
     )

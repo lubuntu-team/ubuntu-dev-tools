@@ -18,11 +18,12 @@
 import locale
 import os
 # import sys
+import unittest
+
 from io import StringIO
 from unittest import mock
 
 from ubuntutools.config import UDTConfig, ubu_email
-from ubuntutools.test import unittest
 
 
 class ConfigTestCase(unittest.TestCase):
