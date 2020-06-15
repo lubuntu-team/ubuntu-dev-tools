@@ -48,7 +48,6 @@ scripts = [
     'pull-uca-udebs',
     'requestbackport',
     'requestsync',
-    'reverse-build-depends',
     'reverse-depends',
     'seeded-in-ubuntu',
     'setup-packaging-environment',
