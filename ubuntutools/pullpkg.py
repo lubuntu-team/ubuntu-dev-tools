@@ -38,7 +38,8 @@ from ubuntutools.archive import (UbuntuSourcePackage, DebianSourcePackage,
                                  PersonalPackageArchiveSourcePackage)
 from ubuntutools.config import UDTConfig
 from ubuntutools.lp.lpapicache import (Distribution, Launchpad)
-from ubuntutools.lp.udtexceptions import (SeriesNotFoundException,
+from ubuntutools.lp.udtexceptions import (AlreadyLoggedInError,
+                                          SeriesNotFoundException,
                                           PackageNotFoundException,
                                           PocketDoesNotExistError,
                                           InvalidDistroValueError)
@@ -130,6 +131,8 @@ class PullPkg(object):
         # use add_help=False because we do parse_known_args() below, and if
         # that sees --help then it exits immediately
         parser = ArgumentParser(add_help=False)
+        parser.add_argument('-L', '--login', action='store_true',
+                            help="Login to Launchpad")
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help="Increase verbosity/debug")
         parser.add_argument('-d', '--download-only', action='store_true',
@@ -387,11 +390,17 @@ class PullPkg(object):
 
         Logger.debug("pullpkg options: %s", options)
 
-        # Login anonymously to LP
-        Launchpad.login_anonymously()
-
         pull = options['pull']
         distro = options['distro']
+
+        if options['login']:
+            Logger.debug("Logging in to Launchpad:")
+            try:
+                Launchpad.login()
+            except AlreadyLoggedInError:
+                Logger.error("Launchpad singleton has already performed a login, "
+                             "and its design prevents another login")
+                Logger.warning("Continuing anyway, with existing Launchpad instance")
 
         params = self._get_params(options)
         package = params['package']
