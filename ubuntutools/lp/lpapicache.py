@@ -103,7 +103,7 @@ class _Launchpad(object):
 
     def __getattr__(self, attr):
         if not self.logged_in:
-            self.login()
+            self.login_anonymously()
         return getattr(self.__lp, attr)
 
     def __call__(self):
