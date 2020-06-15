@@ -108,4 +108,3 @@ class TestCommand(unittest.TestCase):
             self.fail("Did not crash as expected")
         except Exception as e:
             self.assertIn('unexpected', e.args)
-
