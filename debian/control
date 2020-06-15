@@ -19,7 +19,6 @@ Build-Depends:
  python3-debian,
  python3-debianbts,
  python3-distro-info,
- python3-flake8,
  python3-httplib2,
  python3-launchpadlib,
  python3-requests <!nocheck>,
