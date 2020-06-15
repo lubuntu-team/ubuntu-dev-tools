@@ -43,7 +43,7 @@ SCHROOT_PROFILE="sbuild"
 
 function usage()
 {
-    echo "Usage: $0 [OPTIONS] Release" >&2
+    echo "Usage: $0 [OPTIONS] Release"
     echo "Options:"
     echo "  --arch=ARCH                What architecture to select"
     echo "  --name=NAME                Base name for the schroot (arch is appended)"
