@@ -127,7 +127,6 @@ class SourcePackage(object):
         latest version from the development series.
         """
         dscfile = kwargs.get('dscfile')
-        lp = kwargs.get('lp')
         mirrors = kwargs.get('mirrors', ())
         workdir = kwargs.get('workdir', '.')
         series = kwargs.get('series')
@@ -138,8 +137,14 @@ class SourcePackage(object):
 
         assert (package is not None or dscfile is not None)
 
+        if 'lp' in kwargs:
+            # deprecated - please don't use this; if you want to use an
+            # existing lp object, just call login_existing() directly
+            Logger.warning("Deprecation warning: please don't pass 'lp' to SourcePackage")
+            if not Launchpad.logged_in:
+                Launchpad.login_existing(kwargs['lp'])
+
         self.source = package
-        self._lp = lp
         self.binary = None
         self.try_binary = try_binary
         self.workdir = workdir
@@ -184,12 +189,6 @@ class SourcePackage(object):
         "Return the LP Source Package Publishing History entry"
         if self._spph:
             return self._spph
-
-        if not Launchpad.logged_in:
-            if self._lp:
-                Launchpad.login_existing(self._lp)
-            else:
-                Launchpad.login_anonymously()
 
         archive = self.getArchive()
         params = {}
