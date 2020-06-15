@@ -14,70 +14,23 @@
 # OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 # PERFORMANCE OF THIS SOFTWARE.
 
-import fcntl
-import os
-import select
-import signal
 import subprocess
-import time
 import unittest
 
-import setup
+from setup import scripts
+
 
 TIMEOUT = 10
 
 
-def load_tests(loader, tests, pattern):
-    "Give HelpTestCase a chance to populate before loading its test cases"
-    suite = unittest.TestSuite()
-    HelpTestCase.populate()
-    suite.addTests(loader.loadTestsFromTestCase(HelpTestCase))
-    return suite
-
-
 class HelpTestCase(unittest.TestCase):
-    @classmethod
-    def populate(cls):
-        for script in setup.scripts:
-            setattr(cls, 'test_' + script, cls.make_help_tester(script))
-
-    @classmethod
-    def make_help_tester(cls, script):
-        def tester(self):
-            null = open('/dev/null', 'r')
-            process = subprocess.Popen(['./' + script, '--help'],
-                                       encoding='utf-8', stdin=null,
-                                       universal_newlines=True,
-                                       stdout=subprocess.PIPE,
-                                       stderr=subprocess.PIPE)
-            started = time.time()
-            out = []
-
-            fds = [process.stdout.fileno(), process.stderr.fileno()]
-            for fd in fds:
-                fcntl.fcntl(fd, fcntl.F_SETFL,
-                            fcntl.fcntl(fd, fcntl.F_GETFL) | os.O_NONBLOCK)
-
-            while time.time() - started < TIMEOUT:
-                for fd in select.select(fds, [], fds, TIMEOUT)[0]:
-                    output = os.read(fd, 1024)
-                    if not isinstance(output, str):
-                        output = output.decode('utf-8')
-                    out.append(output)
-                if process.poll() is not None:
-                    break
-
-            if process.poll() is None:
-                os.kill(process.pid, signal.SIGTERM)
-                time.sleep(1)
-                if process.poll() is None:
-                    os.kill(process.pid, signal.SIGKILL)
-            null.close()
-            process.stdout.close()
-            process.stderr.close()
-
-            self.assertEqual(process.poll(), 0,
-                             "%s failed to return usage within %i seconds.\n"
-                             "Output:\n%s"
-                             % (script, TIMEOUT, ''.join(out)))
-        return tester
+    def test_script(self):
+        for script in scripts:
+            with self.subTest(script=script):
+                result = subprocess.run([f'./{script}', '--help'],
+                                        encoding='UTF-8',
+                                        timeout=10,
+                                        check=True,
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE)
+                self.assertFalse(result.stderr.strip())
