@@ -15,11 +15,11 @@
 # PERFORMANCE OF THIS SOFTWARE.
 
 
-import mock
 import os.path
 import shutil
 import tempfile
 from io import BytesIO
+from unittest import mock
 
 import ubuntutools.archive
 from ubuntutools.test import unittest

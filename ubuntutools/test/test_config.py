@@ -16,10 +16,10 @@
 # PERFORMANCE OF THIS SOFTWARE.
 
 import locale
-import mock
 import os
 # import sys
 from io import StringIO
+from unittest import mock
 
 from ubuntutools.config import UDTConfig, ubu_email
 from ubuntutools.test import unittest

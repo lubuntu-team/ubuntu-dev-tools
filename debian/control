@@ -23,7 +23,6 @@ Build-Depends:
  python3-flake8,
  python3-httplib2,
  python3-launchpadlib,
- python3-mock,
  python3-requests <!nocheck>,
  python3-setuptools,
  python3-termcolor <!nocheck>,
