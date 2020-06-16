@@ -12,7 +12,6 @@ Build-Depends:
  devscripts (>= 2.11.0~),
  dh-python,
  distro-info (>= 0.2~),
- libwww-perl,
  lsb-release,
  python3-all,
  python3-apt,
@@ -66,7 +65,6 @@ Recommends:
  debootstrap,
  dput,
  genisoimage,
- libwww-perl,
  lintian,
  patch,
  pbuilder | cowbuilder | sbuild,
@@ -112,7 +110,6 @@ Description: useful tools for Ubuntu developers
   - pull-debian-* - same as pull-lp-* but for Debian packages.
   - pull-uca-* - same as pull-lp-* but for Ubuntu Cloud Archive packages.
   - pull-pkg - common script that provides above pull-* functionality.
-  - pull-revu-source - downloads the latest source package from REVU
   - requestbackport - file a backporting request.
   - requestsync - files a sync request with Debian changelog and rationale.
   - reverse-depends - find the reverse dependencies (or build dependencies) of

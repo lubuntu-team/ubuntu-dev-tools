@@ -105,11 +105,9 @@ Files: dch-repeat
        doc/dch-repeat.1
        doc/grep-merges.1
        doc/mk-sbuild.1
-       doc/pull-revu-source.1
        doc/ubuntu-build.1
        grep-merges
        mk-sbuild
-       pull-revu-source
        ubuntu-build
        ubuntutools/lp/libsupport.py
        ubuntutools/lp/lpapicache.py

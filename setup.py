@@ -41,7 +41,6 @@ scripts = [
     'pull-ppa-debs',
     'pull-ppa-ddebs',
     'pull-ppa-udebs',
-    'pull-revu-source',
     'pull-uca-source',
     'pull-uca-debs',
     'pull-uca-ddebs',
