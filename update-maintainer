@@ -22,6 +22,7 @@ from ubuntutools.update_maintainer import (update_maintainer,
                                            restore_maintainer,
                                            MaintainerUpdateException)
 
+
 def find_debian_dir(depth=6):
     """Scans up the directory hierarchy looking for a ./debian dir
 
@@ -29,12 +30,13 @@ def find_debian_dir(depth=6):
     :rtype: str
     :returns: a path to an existing debian/ directory, or None
     """
-    for path in ['../'*n or './' for n in list(range(0,depth+1))]:
+    for path in ['../'*n or './' for n in list(range(0, depth+1))]:
         debian_path = '{}debian'.format(path)
         if os.path.exists(os.path.join(debian_path, 'control')) \
-            and os.path.exists(os.path.join(debian_path, 'changelog')):
+                and os.path.exists(os.path.join(debian_path, 'changelog')):
             return debian_path
     return None
+
 
 def main():
     script_name = os.path.basename(sys.argv[0])
