@@ -31,7 +31,8 @@ def find_debian_dir(depth=6):
     """
     for path in ['../'*n or './' for n in list(range(0,depth+1))]:
         debian_path = '{}debian'.format(path)
-        if os.path.exists(debian_path):
+        if os.path.exists(os.path.join(debian_path, 'control')) \
+            and os.path.exists(os.path.join(debian_path, 'changelog')):
             return debian_path
     return None
 
