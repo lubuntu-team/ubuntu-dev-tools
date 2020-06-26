@@ -22,6 +22,18 @@ from ubuntutools.update_maintainer import (update_maintainer,
                                            restore_maintainer,
                                            MaintainerUpdateException)
 
+def find_debian_dir(depth=6):
+    """Scans up the directory hierarchy looking for a ./debian dir
+
+    :param int depth: Levels to scan up the directory tree.
+    :rtype: str
+    :returns: a path to an existing debian/ directory, or None
+    """
+    for path in ['../'*n or './' for n in list(range(0,depth+1))]:
+        debian_path = '{}debian'.format(path)
+        if os.path.exists(debian_path):
+            return debian_path
+    return None
 
 def main():
     script_name = os.path.basename(sys.argv[0])
@@ -30,7 +42,8 @@ def main():
     parser = optparse.OptionParser(usage=usage, epilog=epilog)
     parser.add_option("-d", "--debian-directory", dest="debian_directory",
                       help="location of the 'debian' directory (default: "
-                           "%default).", metavar="PATH", default="./debian")
+                           "%default).", metavar="PATH",
+                      default=find_debian_dir() or './debian')
     parser.add_option("-r", "--restore",
                       help="Restore the original maintainer",
                       action='store_true', default=False)
