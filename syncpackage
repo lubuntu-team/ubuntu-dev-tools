@@ -76,7 +76,7 @@ def add_fixed_bugs(changes, bugs):
     '''Add additional Launchpad bugs to the list of fixed bugs in changes
        file.'''
 
-    changes = [l for l in changes.split("\n") if l.strip() != ""]
+    changes = [line for line in changes.split("\n") if line.strip() != ""]
     # Remove duplicates
     bugs = set(str(bug) for bug in bugs)
 

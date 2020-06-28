@@ -7,6 +7,8 @@ ubuntu-dev-tools (0.177) UNRELEASED; urgency=medium
   [ Mattia Rizzolo ]
   * ubuntu-build:
     + Add support for riscv64.
+  * syncpackge:
+    + Fix the new flake8 E741.  Closes: #963310
 
   [ Bryce Harrington ]
   * update-maintainer:
