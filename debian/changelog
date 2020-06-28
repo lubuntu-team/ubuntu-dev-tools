@@ -1,4 +1,4 @@
-ubuntu-dev-tools (0.177) UNRELEASED; urgency=medium
+ubuntu-dev-tools (0.177) unstable; urgency=medium
 
   [ Dan Streetman ]
   * Verify checksums for downloaded binary files
@@ -14,7 +14,7 @@ ubuntu-dev-tools (0.177) UNRELEASED; urgency=medium
   * update-maintainer:
     + Try to recurse upwards to find a valid debian directory.  LP: #1885233
 
- -- Dan Streetman <ddstreet@canonical.com>  Fri, 13 Mar 2020 10:02:36 -0400
+ -- Mattia Rizzolo <mattia@debian.org>  Sun, 28 Jun 2020 15:52:27 +0200
 
 ubuntu-dev-tools (0.176) unstable; urgency=medium
 
