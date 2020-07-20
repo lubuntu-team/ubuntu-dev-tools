@@ -28,6 +28,7 @@ import locale
 import os
 import shutil
 import sys
+import tempfile
 
 from contextlib import suppress
 from subprocess import check_output, CalledProcessError
@@ -227,7 +228,18 @@ def verify_file_checksum(pathname, alg, checksum, size=0):
 
 
 def download(src, dst, size=0):
-    """ download/copy a file/url to local file """
+    """ download/copy a file/url to local file
+
+    src: str
+        Source to copy from (file path or url)
+    dst: str
+        Destination dir or filename
+    size: int
+        Size of source, if known
+
+    This calls urllib.request.urlopen() so it may raise the same
+    exceptions as that method (URLError or HTTPError)
+    """
     if not urlparse(src).scheme:
         src = 'file://%s' % os.path.abspath(os.path.expanduser(src))
     dst = os.path.abspath(os.path.expanduser(dst))
@@ -287,3 +299,20 @@ def download(src, dst, size=0):
                 Logger.error('Partial download: %0.3f MiB of %0.3f MiB' %
                              (downloaded / 1024.0 / 1024,
                               size / 1024.0 / 1024))
+
+
+def download_text(src):
+    """ return the text content of a downloaded file
+
+    src: str
+        Source to copy from (file path or url)
+
+    Raises the same exceptions as download()
+
+    Returns text content of downloaded file
+    """
+    with tempfile.TemporaryDirectory() as d:
+        dst = os.path.join(d, 'dst')
+        download(src, dst)
+        with open(dst) as f:
+            return f.read()
