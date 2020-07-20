@@ -21,10 +21,6 @@
 #
 #   Based on code written by Jonathan Davies <jpds@ubuntu.com>
 
-# Uncomment for tracing LP API calls
-# import httplib2
-# httplib2.debuglevel = 1
-
 import collections
 import os
 import re
@@ -32,15 +28,16 @@ import re
 from copy import copy
 
 from debian.changelog import Changelog
-from httplib2 import Http, HttpLib2Error
 from launchpadlib.launchpad import Launchpad as LP
 from launchpadlib.errors import HTTPError
 from lazr.restfulclient.resource import Entry
+from urllib.error import URLError
 from urllib.parse import urlparse
 
 from ubuntutools.version import Version
 from ubuntutools.lp import (service, api_version)
-from ubuntutools.misc import (host_architecture,
+from ubuntutools.misc import (download_text,
+                              host_architecture,
                               DEFAULT_POCKETS, POCKETS,
                               DEFAULT_STATUSES, STATUSES)
 from ubuntutools.lp.udtexceptions import (AlreadyLoggedInError,
@@ -850,14 +847,10 @@ class SourcePackagePublishingHistory(BaseWrapper):
                 return None
 
             try:
-                response, changelog = Http().request(url)
-            except HttpLib2Error as e:
-                Logger.error(str(e))
+                self._changelog = download_text(url)
+            except URLError as e:
+                Logger.error(f"Exception while downloading '{url}': {e}")
                 return None
-            if response.status != 200:
-                Logger.error('%s: %s %s' % (url, response.status, response.reason))
-                return None
-            self._changelog = changelog
 
         if since_version is None:
             return self._changelog
