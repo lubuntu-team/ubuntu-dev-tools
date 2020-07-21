@@ -48,7 +48,7 @@ from ubuntutools.lp.lpapicache import (Launchpad, Distribution, PersonTeam,
 from ubuntutools.lp.udtexceptions import (PackageNotFoundException,
                                           SeriesNotFoundException,
                                           InvalidDistroValueError)
-from ubuntutools.misc import (download, verify_file_checksum)
+from ubuntutools.misc import (download, verify_file_checksum, verify_file_checksums)
 from ubuntutools.version import Version
 
 import logging
@@ -355,16 +355,17 @@ class SourcePackage(object):
         else:
             Logger.warning('Signature on %s could not be verified' % self.dsc_name)
 
-    def _verify_file(self, pathname, dscverify=False, sha1sum=False, sha256sum=False, size=0):
+    def _verify_file(self, pathname, dscverify=False, sha1sum=None, sha256sum=None, size=0):
         if not os.path.exists(pathname):
-            return False
-        if size and size != os.path.getsize(pathname):
             return False
         if dscverify and not self.dsc.verify_file(pathname):
             return False
-        if sha1sum and not verify_file_checksum(pathname, 'SHA1', sha1sum, size):
-            return False
-        if sha256sum and not verify_file_checksum(pathname, 'SHA256', sha256sum, size):
+        checksums = {}
+        if sha1sum:
+            checksums['SHA1'] = sha1sum
+        if sha256sum:
+            checksums['SHA256'] = sha256sum
+        if not verify_file_checksums(pathname, checksums, size):
             return False
         return True
 
