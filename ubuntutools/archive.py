@@ -31,6 +31,7 @@ from urllib.error import (URLError, HTTPError)
 from urllib.parse import urlparse
 from urllib.request import urlopen
 import codecs
+import functools
 import json
 import os.path
 import re
@@ -612,24 +613,22 @@ class PersonalPackageArchiveSourcePackage(UbuntuSourcePackage):
         if len(ppa) != 2:
             raise ValueError('Invalid PPA value "%s",'
                              'must be "<USER>/<PPA>"' % kwargs['ppa'])
-        self._set_ppa(ppa[0], ppa[1])
+        self._teamname = ppa[0]
+        self._ppaname = ppa[1]
         self.masters = []
 
-    def getArchive(self):
-        if not self._ppa:
-            try:
-                self._team = PersonTeam.fetch(self._ppateam)
-            except KeyError:
-                raise ValueError('No user/team "%s" found on Launchpad' % self._ppateam)
-            self._ppa = self._team.getPPAByName(self._ppaname)
-            Logger.debug('Using PPA %s' % self._ppa.web_link)
-        return self._ppa
+    @functools.cached_property
+    def team(self):
+        try:
+            return PersonTeam.fetch(self._teamname)
+        except KeyError:
+            raise ValueError(f"No user/team '{self._teamname}' found on Launchpad")
 
-    def _set_ppa(self, team, name):
-        self._ppateam = team
-        self._ppaname = name
-        self._team = None
-        self._ppa = None
+    @functools.lru_cache
+    def getArchive(self):
+        ppa = self.team.getPPAByName(self._ppaname)
+        Logger.debug(f"Using PPA '{ppa.web_link}'")
+        return ppa
 
 
 class UbuntuCloudArchiveSourcePackage(PersonalPackageArchiveSourcePackage):
