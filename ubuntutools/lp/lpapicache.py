@@ -62,6 +62,8 @@ __all__ = [
     'Launchpad',
     'PackageUpload',
     'PersonTeam',
+    'Project',
+    'ProjectSeries',
     'SourcePackagePublishingHistory',
     ]
 
@@ -1398,6 +1400,44 @@ class PersonTeam(BaseWrapper, metaclass=MetaPersonTeam):
 
     def getPPAByName(self, name):
         return Archive(self._lpobject.getPPAByName(name=name))
+
+
+class Project(BaseWrapper):
+    '''
+    Wrapper class around a LP project object.
+    '''
+    resource_type = ('project')
+
+    def __init__(self, *args):
+        self._series = None
+
+    @property
+    def series(self):
+        """Get a list of all ProjectSeries
+
+        The list will be sorted by date_created, in descending order.
+        """
+        if not self._series:
+            series = [ProjectSeries(s['self_link']) for s in
+                      Launchpad.load(self._lpobject.series_collection_link).entries]
+            self._series = sorted(series, key=lambda s: s.date_created, reverse=True)
+        return self._series.copy()
+
+    @classmethod
+    def fetch(cls, project):
+        '''
+        Fetch the project object identified by 'project' from LP.
+        '''
+        if not isinstance(project, str):
+            raise TypeError("Don't know what do with '%r'" % project)
+        return Project(Launchpad.projects(project))
+
+
+class ProjectSeries(BaseWrapper):
+    '''
+    Wrapper class around a LP project_series object.
+    '''
+    resource_type = ('project_series')
 
 
 class Build(BaseWrapper):
