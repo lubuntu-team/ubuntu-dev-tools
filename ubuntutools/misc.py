@@ -201,7 +201,20 @@ def codename_to_distribution(codename):
             return distro
 
 
-def verify_file_checksum(pathname, alg, checksum, size=0):
+def verify_file_checksums(pathname, checksums={}, size=0):
+    """ verify checksums of file
+
+    Any failure will log an error.
+
+    pathname: str
+        full path to file
+    checksums: dict
+        keys are alg name, values are expected checksum
+    size: int
+        size of file, if known
+
+    Returns True if all checks pass, False otherwise
+    """
     if not os.path.isfile(pathname):
         Logger.error('File not found: %s', pathname)
         return False
@@ -210,21 +223,41 @@ def verify_file_checksum(pathname, alg, checksum, size=0):
         Logger.error('File %s incorrect size, got %s expected %s',
                      filename, os.path.getsize(pathname), size)
         return False
-    h = hashlib.new(alg)
-    with open(pathname, 'rb') as f:
-        while True:
-            block = f.read(h.block_size)
-            if len(block) == 0:
-                break
-            h.update(block)
-    match = h.hexdigest() == checksum
-    if match:
-        Logger.debug('File %s checksum (%s) verified: %s',
-                     filename, alg, checksum)
-    else:
-        Logger.error('File %s checksum (%s) mismatch: got %s expected %s',
-                     filename, alg, h.hexdigest(), checksum)
-    return match
+
+    for (alg, checksum) in checksums.items():
+        h = hashlib.new(alg)
+        with open(pathname, 'rb') as f:
+            while True:
+                block = f.read(h.block_size)
+                if len(block) == 0:
+                    break
+                h.update(block)
+        match = h.hexdigest() == checksum
+        if match:
+            Logger.debug('File %s checksum (%s) verified: %s',
+                         filename, alg, checksum)
+        else:
+            Logger.error('File %s checksum (%s) mismatch: got %s expected %s',
+                         filename, alg, h.hexdigest(), checksum)
+            return False
+    return True
+
+
+def verify_file_checksum(pathname, alg, checksum, size=0):
+    """ verify checksum of file
+
+    pathname: str
+        full path to file
+    alg: str
+        name of checksum alg
+    checksum: str
+        expected checksum
+    size: int
+        size of file, if known
+
+    Returns True if all checks pass, False otherwise
+    """
+    return verify_file_checksums(pathname, {alg: checksum}, size)
 
 
 def download(src, dst, size=0):
