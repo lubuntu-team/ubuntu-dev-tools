@@ -48,6 +48,7 @@ from ubuntutools.lp.lpapicache import (Launchpad, Distribution, PersonTeam, Proj
                                        SourcePackagePublishingHistory)
 from ubuntutools.lp.udtexceptions import (PackageNotFoundException,
                                           SeriesNotFoundException,
+                                          PocketDoesNotExistError,
                                           InvalidDistroValueError)
 from ubuntutools.misc import (download, verify_file_checksum, verify_file_checksums)
 from ubuntutools.version import Version
@@ -638,15 +639,13 @@ class UbuntuCloudArchiveSourcePackage(PersonalPackageArchiveSourcePackage):
     VALID_POCKETS = ['updates', 'proposed', 'staging']
 
     def __init__(self, *args, **kwargs):
-        series = kwargs.pop('series', None)
-        check_all_series = series is None
-        if not series:
-            series = UbuntuCloudArchiveSourcePackage.getDevelSeries()
-        kwargs['ppa'] = ('%s/%s-staging' %
-                         (UbuntuCloudArchiveSourcePackage._ppateam, series))
+        # Need to determine actual series/pocket ppa now, as it affects getArchive()
+        (series, pocket) = self._findReleaseAndPocketForPackage(kwargs.pop('series', None),
+                                                                kwargs.pop('pocket', None),
+                                                                kwargs.get('package'),
+                                                                kwargs.get('version'))
+        kwargs['ppa'] = f"{self.TEAM}/{series}-{pocket}"
         super(UbuntuCloudArchiveSourcePackage, self).__init__(*args, **kwargs)
-        self._uca_release = series
-        self._check_all_series = check_all_series
         self.masters = ["http://ubuntu-cloud.archive.canonical.com/ubuntu/"]
 
     @classmethod
@@ -714,32 +713,81 @@ class UbuntuCloudArchiveSourcePackage(PersonalPackageArchiveSourcePackage):
             raise SeriesNotFoundException(f"UCA release '{rname}-{pname}' not found")
         return ppas
 
-    @property
-    def lp_spph(self):
-        "Return the LP Source Package Publishing History entry"
-        while True:
-            try:
-                return super(UbuntuCloudArchiveSourcePackage, self).lp_spph
-            except PackageNotFoundException as pnfe:
-                if self._check_all_series and self._set_next_release():
+    @classmethod
+    def parseReleaseAndPocket(cls, release):
+        """Parse the UCA release and pocket for the given string.
+
+        We allow 'release' to be specified as:
+           1. UCARELEASE
+           2. UCARELEASE-POCKET
+           3. UBUNTURELEASE-UCARELEASE
+           4. UBUNTURELEASE-UCARELEASE-POCKET
+           5. UBUNTURELEASE-POCKET/UCARELEASE
+        The UBUNTURELEASE is a standard Ubuntu release name, e.g. 'focal',
+        however it is NOT checked for validity.
+        The UCARELEASE is a standard Ubuntu Cloud Archive release name, e.g. 'train'.
+        The POCKET is limited to the standard pockets 'release', 'updates', or 'proposed',
+        or the special pocket 'staging'. The 'release' and 'updates' pockets are
+        equivalent (UCA has no 'release' pocket).
+
+        This will return a tuple of (release, pocket), or (release, None) if no
+        pocket was specified.
+
+        This will raise SeriesNotFoundException if the release and/or pocket were
+        not found.
+        """
+        release = release.lower().strip()
+
+        # Cases 1 and 2
+        PATTERN1 = r'^(?P<ucarelease>[a-z]+)(?:-(?P<pocket>[a-z]+))?$'
+        # Cases 3 and 4
+        PATTERN2 = r'^(?P<ubunturelease>[a-z]+)-(?P<ucarelease>[a-z]+)(?:-(?P<pocket>[a-z]+))?$'
+        # Case 5
+        PATTERN3 = r'^(?P<ubunturelease>[a-z]+)-(?P<pocket>[a-z]+)/(?P<ucarelease>[a-z]+)$'
+
+        for pattern in [PATTERN1, PATTERN2, PATTERN3]:
+            match = re.match(pattern, release)
+            if match:
+                r = match.group('ucarelease')
+                p = match.group('pocket')
+                # For UCA, there is no 'release' pocket, the default is 'updates'
+                if p and p == 'release':
+                    Logger.warning("Ubuntu Cloud Archive does not use 'release' pocket,"
+                                   " using 'updates' instead")
+                    p = 'updates'
+                if (cls.isValidRelease(r) and (not p or p in cls.VALID_POCKETS)):
+                    Logger.debug(f"Using Ubuntu Cloud Archive release '{r}'")
+                    return (r, p)
+        raise SeriesNotFoundException(f"Ubuntu Cloud Archive release '{release}' not found")
+
+    @classmethod
+    def _findReleaseAndPocketForPackage(cls, release, pocket, package, version):
+        if release and release not in cls.getUbuntuCloudArchiveReleaseNames():
+            raise SeriesNotFoundException(f"Ubuntu Cloud Archive release '{release}' not found")
+        if pocket and pocket not in cls.VALID_POCKETS:
+            raise PocketDoesNotExistError(f"Ubuntu Cloud Archive pocket '{pocket}' is invalid")
+        DEFAULT = tuple(cls.getUbuntuCloudArchivePPAs(release=release or cls.getDevelSeries())[0]
+                        .name.split('-', maxsplit=1))
+        if not package:
+            # not much we can do without a package name
+            return DEFAULT
+        checked_pocket = False
+        for ppa in cls.getUbuntuCloudArchivePPAs(release=release):
+            if pocket and pocket != ppa.name.partition('-')[2]:
+                # If pocket is specified, only look at the requested pocket, or 'later'
+                # This allows using the 'staging' pocket for old releases that do not
+                # provide any 'updates' or 'proposed' pockets
+                if not checked_pocket:
                     continue
-                raise pnfe
-
-    def _set_next_release(self):
-        ppas = UbuntuCloudArchiveSourcePackage.ppas()
-        try:
-            r = ppas[ppas.index(self._uca_release) + 1]
-        except IndexError:
-            return False
-        self._uca_release = r
-        self._set_ppa(UbuntuCloudArchiveSourcePackage._ppateam, '%s-staging' % r)
-        return True
-
-    def getArchive(self):
-        try:
-            return super(UbuntuCloudArchiveSourcePackage, self).getArchive()
-        except ValueError:
-            raise SeriesNotFoundException('UCA release {} not found.'.format(self._uca_release))
+            checked_pocket = True
+            params = {'exact_match': True, 'source_name': package}
+            if version:
+                params['version'] = version
+            if ppa.getPublishedSources(**params):
+                (r, _, p) = ppa.name.partition('-')
+                return (r, p)
+        # package/version not found in any ppa
+        return DEFAULT
 
 
 class _WebJSON(object):

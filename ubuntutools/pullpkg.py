@@ -230,15 +230,7 @@ class PullPkg(object):
 
     def parse_release(self, distro, release):
         if distro == DISTRO_UCA:
-            # UCA is special; it is specified UBUNTURELEASE-UCARELEASE or just
-            # UCARELEASE.  The user could also specify UCARELEASE-POCKET.  But UCA
-            # archives always correspond to only one UBUNTURELEASE, and UCA archives
-            # have only the Release pocket, so only UCARELEASE matters to us.
-            for r in release.split('-'):
-                if UbuntuCloudArchiveSourcePackage.isValidRelease(r):
-                    Logger.debug("Using UCA release '%s'", r)
-                    return (r, None)
-            raise SeriesNotFoundException('UCA release {} not found.'.format(release))
+            return UbuntuCloudArchiveSourcePackage.parseReleaseAndPocket(release)
 
         # Check if release[-pocket] is specified
         (release, pocket) = split_release_pocket(release, default=None)
