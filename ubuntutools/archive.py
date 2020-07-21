@@ -640,13 +640,33 @@ class UbuntuCloudArchiveSourcePackage(PersonalPackageArchiveSourcePackage):
 
     def __init__(self, *args, **kwargs):
         # Need to determine actual series/pocket ppa now, as it affects getArchive()
-        (series, pocket) = self._findReleaseAndPocketForPackage(kwargs.pop('series', None),
-                                                                kwargs.pop('pocket', None),
+        (series, pocket) = self._findReleaseAndPocketForPackage(kwargs.get('series'),
+                                                                kwargs.get('pocket'),
                                                                 kwargs.get('package'),
                                                                 kwargs.get('version'))
+        # Drop series/pocket from kwargs, as UCA handles them completely different and we
+        # don't want to pass them up to the superclass
+        kwargs.pop('series', None)
+        orig_pocket = kwargs.pop('pocket', None)
+        if orig_pocket and orig_pocket != pocket and pocket == 'staging':
+            Logger.info(f"Ubuntu Cloud Archive release '{series}' pocket '{orig_pocket}'"
+                        " PPA is not public, using 'staging' pocket instead")
+
         kwargs['ppa'] = f"{self.TEAM}/{series}-{pocket}"
         super(UbuntuCloudArchiveSourcePackage, self).__init__(*args, **kwargs)
         self.masters = ["http://ubuntu-cloud.archive.canonical.com/ubuntu/"]
+
+    def pull_binaries(self, arch=None, name=None, ext=None):
+        """Pull binary debs into workdir.
+
+        This is only a wrapper around the superclass method, to log warning if
+        pulling binaries when using a 'staging' ppa, since the published binaries
+        will not match the 'staging' binaries.
+        """
+        if self._ppaname.endswith('-staging'):
+            Logger.warning("Binaries from 'staging' pocket will not match published binaries; "
+                           "see https://bugs.launchpad.net/cloud-archive/+bug/1649979")
+        return super(UbuntuCloudArchiveSourcePackage, self).pull_binaries(arch, name, ext)
 
     @classmethod
     @functools.lru_cache
