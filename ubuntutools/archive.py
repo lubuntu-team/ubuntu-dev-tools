@@ -654,7 +654,13 @@ class UbuntuCloudArchiveSourcePackage(PersonalPackageArchiveSourcePackage):
 
         kwargs['ppa'] = f"{self.TEAM}/{series}-{pocket}"
         super(UbuntuCloudArchiveSourcePackage, self).__init__(*args, **kwargs)
-        self.masters = ["http://ubuntu-cloud.archive.canonical.com/ubuntu/"]
+
+        if pocket == 'staging':
+            # Don't bother with the archive; just get directly from the staging ppa, since
+            # none of the binaries from the archive will match the staging checksums
+            self.masters = []
+        else:
+            self.masters = ["http://ubuntu-cloud.archive.canonical.com/ubuntu/"]
 
     def pull_binaries(self, arch=None, name=None, ext=None):
         """Pull binary debs into workdir.
