@@ -44,7 +44,7 @@ import debian.deb822
 from contextlib import closing
 
 from ubuntutools.config import UDTConfig
-from ubuntutools.lp.lpapicache import (Launchpad, Distribution, PersonTeam,
+from ubuntutools.lp.lpapicache import (Launchpad, Distribution, PersonTeam, Project,
                                        SourcePackagePublishingHistory)
 from ubuntutools.lp.udtexceptions import (PackageNotFoundException,
                                           SeriesNotFoundException,
@@ -633,8 +633,9 @@ class PersonalPackageArchiveSourcePackage(UbuntuSourcePackage):
 
 class UbuntuCloudArchiveSourcePackage(PersonalPackageArchiveSourcePackage):
     "Download / unpack an Ubuntu Cloud Archive source package"
-    _ppateam = 'ubuntu-cloud-archive'
-    _ppas = None
+    TEAM = 'ubuntu-cloud-archive'
+    PROJECT = 'cloud-archive'
+    VALID_POCKETS = ['updates', 'proposed', 'staging']
 
     def __init__(self, *args, **kwargs):
         series = kwargs.pop('series', None)
@@ -649,24 +650,69 @@ class UbuntuCloudArchiveSourcePackage(PersonalPackageArchiveSourcePackage):
         self.masters = ["http://ubuntu-cloud.archive.canonical.com/ubuntu/"]
 
     @classmethod
-    def getDevelSeries(cls):
-        return cls.ppas()[0]
+    @functools.lru_cache
+    def getUbuntuCloudArchiveProject(cls):
+        return Project(cls.PROJECT)
+
+    @classmethod
+    def getUbuntuCloudArchiveReleaseNames(cls):
+        """Get list of the main UCA release names
+
+        The list will be sorted in descending chronological order.
+        """
+        return [s.name for s in cls.getUbuntuCloudArchiveProject().series]
 
     @classmethod
     def ppas(cls):
-        if not cls._ppas:
-            ppas = PersonTeam.fetch(cls._ppateam).getPPAs().keys()
-            ppas = filter(lambda p: p.endswith('-staging'), ppas)
-            ppas = map(lambda p: p.rsplit('-', 1)[0], ppas)
-            ppas = sorted(ppas, reverse=True)
-            if not ppas:
-                raise SeriesNotFoundException('Internal Error: No UCA series found...?')
-            cls._ppas = ppas
-        return list(cls._ppas)
+        """DEPRECATED: use getUbuntuCloudArchiveReleaseNames()"""
+        return cls.getUbuntuCloudArchiveReleaseNames()
 
     @classmethod
     def isValidRelease(cls, release):
-        return release in cls.ppas()
+        return release in cls.getUbuntuCloudArchiveReleaseNames()
+
+    @classmethod
+    def getDevelSeries(cls):
+        """Get the current UCA devel release name"""
+        return cls.getUbuntuCloudArchiveReleaseNames()[0]
+
+    @classmethod
+    @functools.lru_cache
+    def getUbuntuCloudArchiveTeam(cls):
+        return PersonTeam.fetch(cls.TEAM)
+
+    @classmethod
+    @functools.lru_cache
+    def getUbuntuCloudArchivePPAs(cls, release=None, pocket=None):
+        """ Get sorted list of UCA ppa Archive objects
+
+        If release and/or pocket are specified, the list will be
+        filtered to return only matching ppa(s).
+
+        This list will only contain ppas relevant to UCA releases;
+        it will not contain 'other' ppas, e.g. 'cloud-tools-next'.
+        """
+        if not any((release, pocket)):
+            all_ppas = cls.getUbuntuCloudArchiveTeam().getPPAs()
+            ppas = []
+            for r in cls.getUbuntuCloudArchiveReleaseNames():
+                for p in cls.VALID_POCKETS:
+                    name = f"{r}-{p}"
+                    if name in all_ppas:
+                        ppas.append(all_ppas[name])
+            return ppas
+
+        # Use recursive call without params to get the lru-cached list of ppas returned above
+        ppas = cls.getUbuntuCloudArchivePPAs()
+        if release:
+            ppas = list(filter(lambda p: p.name.partition('-')[0] == release, ppas))
+        if pocket:
+            ppas = list(filter(lambda p: p.name.partition('-')[2] == pocket, ppas))
+        if not ppas:
+            rname = release or '*'
+            pname = pocket or '*'
+            raise SeriesNotFoundException(f"UCA release '{rname}-{pname}' not found")
+        return ppas
 
     @property
     def lp_spph(self):
