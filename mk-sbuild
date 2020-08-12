@@ -1053,7 +1053,7 @@ echo ""
 echo " To CHANGE the golden image: sudo schroot -c source:${CHROOT_NAME} -u root"
 echo " To ENTER an image snapshot: schroot -c ${CHROOT_NAME}"
 echo " To BUILD within a snapshot: sbuild -A -d ${CHROOT_NAME} PACKAGE*.dsc"
-if [ "$CHROOT_ARCH" != "$TARGET_ARCH" ] ; then
+if [ -n "$TARGET_ARCH" ] && [ "$CHROOT_ARCH" != "$TARGET_ARCH" ] ; then
     echo " To BUILD for ${TARGET_ARCH}: sbuild -A -d ${CHROOT_NAME} --host ${TARGET_ARCH} PACKAGE*.dsc"
 fi
 echo ""

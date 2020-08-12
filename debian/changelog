@@ -4,6 +4,11 @@ ubuntu-dev-tools (0.187) UNRELEASED; urgency=medium
   * mk-sbuild:
     + Add support for zfs-snapshot schroots.  LP: #1945349
 
+  [ Mattia Rizzolo ]
+  * mk-sbuild:
+    + Apply patch from Peter Pentchev to avoid a broken log message.
+      Closes: #968316
+
  -- Mattia Rizzolo <mattia@debian.org>  Sun, 31 Oct 2021 16:24:56 +0100
 
 ubuntu-dev-tools (0.186) unstable; urgency=medium
