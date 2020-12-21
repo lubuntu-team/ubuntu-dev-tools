@@ -105,7 +105,8 @@ class PullPkg(object):
         except KeyboardInterrupt:
             Logger.info('User abort.')
         except (PackageNotFoundException, SeriesNotFoundException,
-                PocketDoesNotExistError, InvalidDistroValueError) as e:
+                PocketDoesNotExistError, InvalidDistroValueError,
+                InvalidPullValueError) as e:
             Logger.error(str(e))
             sys.exit(errno.ENOENT)
 
