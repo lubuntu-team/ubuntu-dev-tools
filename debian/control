@@ -55,6 +55,7 @@ Depends:
  python3-ubuntutools (= ${binary:Version}),
  sensible-utils,
  sudo,
+ tzdata,
  ${misc:Depends},
  ${perl:Depends},
 Recommends:
