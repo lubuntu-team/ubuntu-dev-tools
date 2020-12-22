@@ -3,6 +3,9 @@ ubuntu-dev-tools (0.178) UNRELEASED; urgency=medium
   [ Dan Streetman ]
   * pullpkg: also catch and deal with InvalidPullValueError.  LP: #1908770
 
+  [ Mattia Rizzolo ]
+  * d/control: Bump Standards-Version to 4.5.1, no changes needed.
+
  -- Mattia Rizzolo <mattia@debian.org>  Tue, 22 Dec 2020 17:50:52 +0100
 
 ubuntu-dev-tools (0.177) unstable; urgency=medium
