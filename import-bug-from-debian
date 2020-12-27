@@ -117,6 +117,8 @@ def main():
 
         description = ('Imported from Debian bug http://bugs.debian.org/%d:\n\n%s' %
                        (bug_num, summary))
+        # LP limits descriptions to 50K chars
+        description = (description[:49994] + ' [...]') if len(description) > 50000 else description
 
         Logger.debug('Target: %s' % target)
         Logger.debug('Subject: %s' % subject)
