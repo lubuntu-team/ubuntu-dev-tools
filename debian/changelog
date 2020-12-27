@@ -5,6 +5,7 @@ ubuntu-dev-tools (0.178) UNRELEASED; urgency=medium
 
   [ Mattia Rizzolo ]
   * d/control: Bump Standards-Version to 4.5.1, no changes needed.
+  * ubuntu-archive-assistant/mir: Fix a SyntaxWarning.
 
   [ You-Sheng Yang ]
   * Add a dependency on tzdata, used by mk-sbuild.

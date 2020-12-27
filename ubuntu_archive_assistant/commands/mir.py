@@ -147,7 +147,7 @@ class MIRReview(AssistantCommand):
         if not source_pkg:
             print("\n%s does not exist in Ubuntu")
             sys.exit(1)
-        if latest.pocket is "Proposed":
+        if latest.pocket == "Proposed":
             print("\nThere is a version of %s in -proposed: %s" % (source, latest.source_package_version))
 
         if task:
