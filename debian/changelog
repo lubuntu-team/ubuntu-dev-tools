@@ -6,6 +6,10 @@ ubuntu-dev-tools (0.178) UNRELEASED; urgency=medium
   [ Mattia Rizzolo ]
   * d/control: Bump Standards-Version to 4.5.1, no changes needed.
   * ubuntu-archive-assistant/mir: Fix a SyntaxWarning.
+  * backportpackage:
+    + Add a -e/--message option to change the default "No-change"
+      in "No-change backport to DIST".
+      Thanks to Unit 193 for the initial patch.
 
   [ You-Sheng Yang ]
   * Add a dependency on tzdata, used by mk-sbuild.

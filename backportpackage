@@ -86,6 +86,11 @@ def parse(args):
                       metavar='SUFFIX',
                       help='Suffix to append to version number '
                            '(default: ~ppa1 when uploading to a PPA)')
+    parser.add_option('-e', '--message',
+                      metavar='MESSAGE',
+                      default="No-change",
+                      help='Changelog message to use instead of "No-change" '
+                           '(default: No-change backport to DEST)')
     parser.add_option('-b', '--build',
                       default=False,
                       action='store_true',
@@ -312,8 +317,8 @@ def orig_needed(upload, workdir, pkg):
     return False
 
 
-def do_backport(workdir, pkg, suffix, close, release, release_pocket, build,
-                builder, update, upload, keyid, prompt):
+def do_backport(workdir, pkg, suffix, message, close, release, release_pocket,
+                build, builder, update, upload, keyid, prompt):
     dirname = '%s-%s' % (pkg.source, release)
     srcdir = os.path.join(workdir, dirname)
 
@@ -330,7 +335,7 @@ def do_backport(workdir, pkg, suffix, close, release, release_pocket, build,
     old_version = get_old_version(pkg.source, release)
     bp_dist = get_backport_dist(release, release_pocket)
 
-    changelog = 'No-change backport to %s' % (release,)
+    changelog = '%s backport to %s' % (message, release,)
     if close:
         changelog += ' (LP: #%s)' % (close,)
     check_call(['dch',
@@ -410,6 +415,7 @@ def main(args):
             do_backport(workdir,
                         pkg,
                         opts.suffix,
+                        opts.message,
                         opts.close,
                         release,
                         opts.release_pocket,
