@@ -19,6 +19,9 @@ ubuntu-dev-tools (0.178) UNRELEASED; urgency=medium
     + Limit bug description length to 50k chars to support Launchpad's limits.
       LP: #1193941
 
+  [ Dimitri John Ledkov ]
+  * pullpkg.py: fix --mirror option parsing.
+
  -- Mattia Rizzolo <mattia@debian.org>  Tue, 22 Dec 2020 17:50:52 +0100
 
 ubuntu-dev-tools (0.177) unstable; urgency=medium
