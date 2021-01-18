@@ -43,6 +43,7 @@ class UDTConfig(object):
         'MIRROR_FALLBACK': True,
         'UBUNTU_MIRROR': 'http://archive.ubuntu.com/ubuntu',
         'UBUNTU_PORTS_MIRROR': 'http://ports.ubuntu.com',
+        'UBUNTU_INTERNAL_MIRROR': 'http://ftpmaster.internal/ubuntu',
         'UBUNTU_DDEBS_MIRROR': 'http://ddebs.ubuntu.com',
         'UPDATE_BUILDER': False,
         'WORKDIR': None,

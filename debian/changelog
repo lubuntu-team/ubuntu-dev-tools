@@ -21,6 +21,8 @@ ubuntu-dev-tools (0.178) UNRELEASED; urgency=medium
 
   [ Dimitri John Ledkov ]
   * pullpkg.py: fix --mirror option parsing.
+  * config.py: add UBUNTU_INTERNAL_MIRROR option, for launchpad internal
+    mirror.
 
  -- Mattia Rizzolo <mattia@debian.org>  Tue, 22 Dec 2020 17:50:52 +0100
 
