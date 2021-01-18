@@ -23,6 +23,9 @@ ubuntu-dev-tools (0.178) UNRELEASED; urgency=medium
   * pullpkg.py: fix --mirror option parsing.
   * config.py: add UBUNTU_INTERNAL_MIRROR option, for launchpad internal
     mirror.
+  * archive.py: use Regular, Ports, and Internal mirrors by default. Thus
+    enabling pull-lp-debs to work with ports architectures, and inside
+    launchpad builds too.
 
  -- Mattia Rizzolo <mattia@debian.org>  Tue, 22 Dec 2020 17:50:52 +0100
 

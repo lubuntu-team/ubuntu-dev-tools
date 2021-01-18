@@ -161,8 +161,13 @@ class SourcePackage(object):
         # Mirrors
         self.mirrors = list(mirrors)
         if self.distribution:
-            self.masters = [UDTConfig.defaults['%s_MIRROR'
-                                               % self.distribution.upper()]]
+            masters = []
+            for suffix in ["MIRROR", "PORTS_MIRROR", "INTERNAL_MIRROR"]:
+                masters.append(
+                    UDTConfig.defaults.get('%s_%s' %
+                                           (self.distribution.upper(),
+                                            suffix)))
+                self.masters = filter(None, masters)
 
         # if a dsc was specified, pull it to get the source/version info
         if self._dsc_source:
