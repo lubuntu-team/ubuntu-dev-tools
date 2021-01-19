@@ -76,6 +76,7 @@ Recommends:
  quilt,
  reportbug (>= 3.39ubuntu1),
  ubuntu-keyring | ubuntu-archive-keyring,
+ arch-test
 Suggests:
  qemu-user-static,
 Description: useful tools for Ubuntu developers

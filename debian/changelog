@@ -27,6 +27,13 @@ ubuntu-dev-tools (0.178) UNRELEASED; urgency=medium
     enabling pull-lp-debs to work with ports architectures, and inside
     launchpad builds too.
 
+  [ Michael R. Crusoe ]
+  * pbuilder-dist:
+    + Use `arch-test` to determine whether the current system can run binaries
+      of the requested architecture, instead of hardcoding an ever-growing
+      list of whether something requires qemu or not.  Add the "arch-test"
+      package to Recommends to that effect.
+
  -- Mattia Rizzolo <mattia@debian.org>  Tue, 22 Dec 2020 17:50:52 +0100
 
 ubuntu-dev-tools (0.177) unstable; urgency=medium
