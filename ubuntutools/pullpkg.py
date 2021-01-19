@@ -344,7 +344,7 @@ class PullPkg(object):
 
         mirrors = []
         if options['mirror']:
-            mirrors.append(options['mirror'])
+            mirrors.extend(options['mirror'])
         if pull == PULL_DDEBS:
             config = UDTConfig(options['no_conf'])
             ddebs_mirror = config.get_value(distro.upper() + '_DDEBS_MIRROR')
