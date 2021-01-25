@@ -1,4 +1,4 @@
-ubuntu-dev-tools (0.178) UNRELEASED; urgency=medium
+ubuntu-dev-tools (0.178) unstable; urgency=medium
 
   [ Dan Streetman ]
   * pullpkg: also catch and deal with InvalidPullValueError.  LP: #1908770
@@ -34,7 +34,7 @@ ubuntu-dev-tools (0.178) UNRELEASED; urgency=medium
       list of whether something requires qemu or not.  Add the "arch-test"
       package to Recommends to that effect.
 
- -- Mattia Rizzolo <mattia@debian.org>  Tue, 22 Dec 2020 17:50:52 +0100
+ -- Dimitri John Ledkov <xnox@ubuntu.com>  Mon, 25 Jan 2021 23:28:24 +0000
 
 ubuntu-dev-tools (0.177) unstable; urgency=medium
 
