@@ -22,6 +22,7 @@
 # ##################################################################
 
 import argparse
+import debianbts
 import logging
 import re
 import sys
@@ -33,12 +34,6 @@ from ubuntutools.config import UDTConfig
 
 from ubuntutools import getLogger
 Logger = getLogger(__name__)
-
-try:
-    import debianbts
-except ImportError:
-    Logger.error("Please install 'python3-debianbts' in order to use this utility.")
-    sys.exit(1)
 
 
 def main():
