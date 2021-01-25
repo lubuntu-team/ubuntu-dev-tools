@@ -43,6 +43,7 @@ Depends:
  diffstat,
  distro-info (>= 0.2~),
  dpkg-dev,
+ dput,
  lsb-release,
  python3,
  python3-apt,
