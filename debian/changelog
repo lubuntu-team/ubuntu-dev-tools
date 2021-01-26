@@ -1,9 +1,18 @@
 ubuntu-dev-tools (0.179) UNRELEASED; urgency=medium
 
+  [ Stefano Rivera ]
   * archive.py: Evaluate the filter() fixing Debian source history queries
     (LP: #1913330)
 
- -- Stefano Rivera <stefanor@debian.org>  Fri, 29 Jan 2021 22:17:42 -0700
+  [ Dan Streetman ]
+  * allow running tests using tox
+  * add autopkgtests to run tests
+  * simplify/combine archive download functions
+  * add support for private ppa by logging into lp
+  * improve support for pull-uca-*
+  * fix logging/printing output to stdout/stderr
+
+ -- Dan Streetman <ddstreet@canonical.com>  Mon, 01 Feb 2021 11:59:03 -0500
 
 ubuntu-dev-tools (0.178) unstable; urgency=medium
 
