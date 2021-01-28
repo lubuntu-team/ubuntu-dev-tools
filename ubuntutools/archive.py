@@ -38,6 +38,8 @@ import re
 import subprocess
 import sys
 
+from abc import (ABC, abstractmethod)
+
 from debian.changelog import Changelog
 import debian.deb822
 
@@ -111,13 +113,20 @@ class Dsc(debian.deb822.Dsc):
         return True
 
 
-class SourcePackage(object):
+class SourcePackage(ABC):
     """Base class for source package downloading.
     Use DebianSourcePackage or UbuntuSourcePackage instead of using this
     directly.
     """
-    distribution = None
-    spph_class = SourcePackagePublishingHistory
+
+    @property
+    @abstractmethod
+    def distribution(self):
+        return None
+
+    @property
+    def spph_class(self):
+        return SourcePackagePublishingHistory
 
     def __init__(self, package=None, version=None, component=None,
                  *args, **kwargs):
@@ -165,14 +174,13 @@ class SourcePackage(object):
 
         # Mirrors
         self.mirrors = list(mirrors)
-        if self.distribution:
-            masters = []
-            for suffix in ["MIRROR", "PORTS_MIRROR", "INTERNAL_MIRROR"]:
-                masters.append(
-                    UDTConfig.defaults.get('%s_%s' %
-                                           (self.distribution.upper(),
-                                            suffix)))
-                self.masters = list(filter(None, masters))
+        masters = []
+        for suffix in ["MIRROR", "PORTS_MIRROR", "INTERNAL_MIRROR"]:
+            masters.append(
+                UDTConfig.defaults.get('%s_%s' %
+                                       (self.distribution.upper(),
+                                        suffix)))
+            self.masters = list(filter(None, masters))
 
         # If provided a dscfile, process it now to set our source and version
         if self._dsc_source:
@@ -513,8 +521,14 @@ class DebianSPPH(SourcePackagePublishingHistory):
 
 class DebianSourcePackage(SourcePackage):
     "Download / unpack a Debian source package"
-    distribution = 'debian'
-    spph_class = DebianSPPH
+
+    @property
+    def distribution(self):
+        return 'debian'
+
+    @property
+    def spph_class(self):
+        return DebianSPPH
 
     def __init__(self, *args, **kwargs):
         super(DebianSourcePackage, self).__init__(*args, **kwargs)
@@ -602,7 +616,10 @@ class DebianSourcePackage(SourcePackage):
 
 class UbuntuSourcePackage(SourcePackage):
     "Download / unpack an Ubuntu source package"
-    distribution = 'ubuntu'
+
+    @property
+    def distribution(self):
+        return 'ubuntu'
 
 
 class PersonalPackageArchiveSourcePackage(UbuntuSourcePackage):
