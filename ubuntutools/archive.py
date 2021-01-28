@@ -173,14 +173,10 @@ class SourcePackage(ABC):
         self._version = Version(version) if version else None
 
         # Mirrors
-        self.mirrors = list(mirrors)
-        masters = []
-        for suffix in ["MIRROR", "PORTS_MIRROR", "INTERNAL_MIRROR"]:
-            masters.append(
-                UDTConfig.defaults.get('%s_%s' %
-                                       (self.distribution.upper(),
-                                        suffix)))
-            self.masters = list(filter(None, masters))
+        self.mirrors = list(filter(None, mirrors))
+        self.masters = list(filter(None,
+                                   [UDTConfig.defaults.get(f'{self.distribution.upper()}_{suffix}')
+                                    for suffix in ["MIRROR", "PORTS_MIRROR", "INTERNAL_MIRROR"]]))
 
         # If provided a dscfile, process it now to set our source and version
         if self._dsc_source:
