@@ -167,7 +167,7 @@ class SourcePackage(object):
                     UDTConfig.defaults.get('%s_%s' %
                                            (self.distribution.upper(),
                                             suffix)))
-                self.masters = filter(None, masters)
+                self.masters = list(filter(None, masters))
 
         # if a dsc was specified, pull it to get the source/version info
         if self._dsc_source:
