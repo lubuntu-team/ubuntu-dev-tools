@@ -23,7 +23,7 @@ import sys
 from debian.changelog import Changelog
 
 from ubuntutools import getLogger
-Logger = getLogger(__name__)
+Logger = getLogger()
 
 
 def usage(exit_code=1):

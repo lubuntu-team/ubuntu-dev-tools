@@ -30,7 +30,7 @@ from launchpadlib.errors import HTTPError
 from ubuntutools.config import UDTConfig
 
 from ubuntutools import getLogger
-Logger = getLogger(__name__)
+Logger = getLogger()
 
 
 def error_out(msg):

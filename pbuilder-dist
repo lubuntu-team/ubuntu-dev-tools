@@ -44,7 +44,7 @@ from ubuntutools.config import UDTConfig
 from ubuntutools.question import YesNoQuestion
 
 from ubuntutools import getLogger
-Logger = getLogger(__name__)
+Logger = getLogger()
 
 
 class PbuilderDist(object):

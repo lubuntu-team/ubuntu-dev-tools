@@ -24,7 +24,7 @@ from ubuntutools.misc import (system_distribution, vendor_to_distroinfo,
 from ubuntutools.rdepends import query_rdepends, RDependsException
 
 from ubuntutools import getLogger
-Logger = getLogger(__name__)
+Logger = getLogger()
 
 DEFAULT_MAX_DEPTH = 10  # We want avoid any infinite loop...
 

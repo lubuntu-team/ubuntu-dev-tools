@@ -39,7 +39,7 @@ from ubuntutools.question import confirmation_prompt, EditBugReport
 from ubuntutools.version import Version
 
 from ubuntutools import getLogger
-Logger = getLogger(__name__)
+Logger = getLogger()
 
 #
 # entry point

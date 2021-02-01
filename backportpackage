@@ -42,7 +42,7 @@ from ubuntutools.misc import (system_distribution, vendor_to_distroinfo,
 from ubuntutools.question import YesNoQuestion
 
 from ubuntutools import getLogger
-Logger = getLogger(__name__)
+Logger = getLogger()
 
 
 def error(msg):

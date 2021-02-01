@@ -23,7 +23,7 @@ from ubuntutools.lp.lpapicache import (Launchpad, Distribution, PersonTeam,
 from ubuntutools.misc import split_release_pocket
 
 from ubuntutools import getLogger
-Logger = getLogger(__name__)
+Logger = getLogger()
 
 
 def parse_arguments():

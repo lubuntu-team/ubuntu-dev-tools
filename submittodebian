@@ -40,7 +40,7 @@ from ubuntutools.question import YesNoQuestion, EditFile
 from ubuntutools.update_maintainer import update_maintainer, restore_maintainer
 
 from ubuntutools import getLogger
-Logger = getLogger(__name__)
+Logger = getLogger()
 
 
 def get_most_recent_debian_version(changelog):

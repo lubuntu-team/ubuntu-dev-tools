@@ -33,7 +33,7 @@ from launchpadlib.launchpad import Launchpad
 from ubuntutools.config import UDTConfig
 
 from ubuntutools import getLogger
-Logger = getLogger(__name__)
+Logger = getLogger()
 
 
 def main():

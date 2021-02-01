@@ -27,7 +27,7 @@ from ubuntutools.config import UDTConfig
 from ubuntutools.version import Version
 
 from ubuntutools import getLogger
-Logger = getLogger(__name__)
+Logger = getLogger()
 
 
 def previous_version(package, version, distance):

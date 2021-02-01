@@ -30,7 +30,7 @@ from ubuntutools.question import (YesNoQuestion, EditBugReport,
 from ubuntutools.rdepends import query_rdepends, RDependsException
 
 from ubuntutools import getLogger
-Logger = getLogger(__name__)
+Logger = getLogger()
 
 
 class DestinationException(Exception):

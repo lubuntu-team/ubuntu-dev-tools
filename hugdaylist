@@ -37,7 +37,7 @@ from launchpadlib.launchpad import Launchpad
 from ubuntutools.lp.libsupport import translate_web_api
 
 from ubuntutools import getLogger
-Logger = getLogger(__name__)
+Logger = getLogger()
 
 
 def check_args():

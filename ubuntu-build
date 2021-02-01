@@ -33,7 +33,7 @@ from ubuntutools.lp.lpapicache import Distribution, PersonTeam
 from ubuntutools.misc import split_release_pocket
 
 from ubuntutools import getLogger
-Logger = getLogger(__name__)
+Logger = getLogger()
 
 
 def main():

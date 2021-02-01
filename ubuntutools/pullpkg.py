@@ -49,8 +49,10 @@ from ubuntutools.misc import (split_release_pocket,
                               UPLOAD_QUEUE_STATUSES,
                               STATUSES)
 
-from ubuntutools import _loggingBasicConfig
 
+# by default we use standard logging.getLogger() and only use
+# ubuntutools.getLogger() in PullPkg().main()
+from ubuntutools import getLogger as ubuntutools_getLogger
 import logging
 Logger = logging.getLogger(__name__)
 
@@ -98,7 +100,7 @@ class PullPkg(object):
         unexpected errors will flow up to the caller.
         On success, this simply returns.
         """
-        _loggingBasicConfig()
+        Logger = ubuntutools_getLogger()
 
         try:
             cls(*args, **kwargs).pull()
