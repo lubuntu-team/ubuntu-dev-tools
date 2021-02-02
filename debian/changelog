@@ -1,6 +1,7 @@
 ubuntu-dev-tools (0.179) UNRELEASED; urgency=medium
 
-  * archive.py: Evaluate the filter() fixing syncpackage.
+  * archive.py: Evaluate the filter() fixing Debian source history queries
+    (LP: #1913330)
 
  -- Stefano Rivera <stefanor@debian.org>  Fri, 29 Jan 2021 22:17:42 -0700
 
