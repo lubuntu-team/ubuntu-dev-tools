@@ -1,4 +1,4 @@
-ubuntu-dev-tools (0.179) UNRELEASED; urgency=medium
+ubuntu-dev-tools (0.179) unstable; urgency=medium
 
   [ Stefano Rivera ]
   * archive.py: Evaluate the filter() fixing Debian source history queries
