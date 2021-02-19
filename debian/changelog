@@ -1,3 +1,9 @@
+ubuntu-dev-tools (0.180) unstable; urgency=medium
+
+  * Drop coverage in the autopkgtest, as python3-nose-cov is not in Debian.
+
+ -- Mattia Rizzolo <mattia@debian.org>  Fri, 19 Feb 2021 12:12:33 +0100
+
 ubuntu-dev-tools (0.179) unstable; urgency=medium
 
   [ Stefano Rivera ]
