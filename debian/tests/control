@@ -1,7 +1,11 @@
 Test-Command: flake8 -v --max-line-length=99 --extend-exclude=ubuntu-archive-assistant,ubuntu_archive_assistant
-Depends: flake8
+Depends:
+ flake8,
 Restrictions: allow-stderr
 
-Test-Command: nosetests3 -v ubuntutools --with-coverage --cover-package=ubuntutools ubuntutools
-Depends: python3-nose, python3-nose-cov, python3-setuptools, @
+Test-Command: nosetests3 -v ubuntutools
+Depends:
+ python3-nose,
+ python3-setuptools,
+ @,
 Restrictions: allow-stderr
