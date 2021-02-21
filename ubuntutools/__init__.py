@@ -46,7 +46,7 @@ def getLogger():
     logger.addHandler(stdout_handler)
 
     stderr_handler = logging.StreamHandler(stream=sys.stderr)
-    stdout_handler.setFormatter(fmt)
+    stderr_handler.setFormatter(fmt)
     stderr_handler.setLevel(logging.INFO+1)
     logger.addHandler(stderr_handler)
 
