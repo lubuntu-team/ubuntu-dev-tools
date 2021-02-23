@@ -82,7 +82,7 @@ def input_number(question, min_number, max_number, default=None):
     else:
         question += "? "
     selected = None
-    while selected < min_number or selected > max_number:
+    while not selected or selected < min_number or selected > max_number:
         try:
             selected = input(question).strip()
         except (EOFError, KeyboardInterrupt):
