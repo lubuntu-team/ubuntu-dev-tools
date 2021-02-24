@@ -68,7 +68,7 @@ class Patch(object):
     def download(self):
         """Downloads the patch from Launchpad."""
         Logger.debug("Downloading %s." % (self._patch_file))
-        patch_f = open(self._patch_file, "w")
+        patch_f = open(self._patch_file, "wb")
         patch_f.write(self._patch.data.open().read())
         patch_f.close()
 

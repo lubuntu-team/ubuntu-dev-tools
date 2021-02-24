@@ -2,6 +2,9 @@ ubuntu-dev-tools (0.181) UNRELEASED; urgency=medium
 
   * WIP.
 
+  [ Logan Rosen ]
+  * fix a couple of remaining issues from the py2→py3 move.
+
  -- Mattia Rizzolo <mattia@debian.org>  Wed, 24 Feb 2021 14:23:29 +0100
 
 ubuntu-dev-tools (0.180) unstable; urgency=medium

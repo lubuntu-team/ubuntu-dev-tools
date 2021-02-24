@@ -74,7 +74,7 @@ class BugTask(object):
             if url.endswith(".dsc"):
                 response, data = httplib2.Http().request(url)
                 assert response.status == 200
-                with open(filename, 'w') as f:
+                with open(filename, 'wb') as f:
                     f.write(data)
 
                 dsc_file = os.path.join(os.getcwd(), filename)
