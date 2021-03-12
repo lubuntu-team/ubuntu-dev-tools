@@ -36,6 +36,7 @@ import subprocess
 import sys
 
 import debian.deb822
+from contextlib import suppress
 from distro_info import DebianDistroInfo, UbuntuDistroInfo, DistroDataOutdated
 
 import ubuntutools.misc
