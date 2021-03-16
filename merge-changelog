@@ -54,7 +54,10 @@ def merge_changelog(left_changelog, right_changelog):
     left_blocks = iter(left_cl)
     right_blocks = iter(right_cl)
 
-    for version in sorted(left_versions | right_versions, reverse=True):
+    clist = sorted(left_versions | right_versions, reverse=True)
+    ci = len(clist)
+    for version in clist:
+        ci -= 1
         if version in left_versions:
             block = next(left_blocks)
             if version in right_versions:
@@ -64,7 +67,7 @@ def merge_changelog(left_changelog, right_changelog):
 
         assert block.version == version
 
-        Logger.info(str(block).strip() + '\n\n')
+        Logger.info(str(block).strip() + ('\n' if ci else ''))
 
 
 def main():
