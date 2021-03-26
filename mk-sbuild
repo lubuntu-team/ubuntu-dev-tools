@@ -681,6 +681,13 @@ sudo mkdir -p -m 0700 "$MNT"/root/.gnupg
 # debootstrap the chroot
 sudo ${proxy:+"http_proxy=${proxy}"} "$DEBOOTSTRAP_COMMAND" --arch="$CHROOT_ARCH" $variant_opt $debootstrap_opts "$RELEASE" "$MNT" "${DEBOOTSTRAP_MIRROR:-http://archive.ubuntu.com/ubuntu}"
 
+if [ $EATMYDATA -eq 1 ]; then
+    sudo mkdir -p "${MNT}/usr/local/libexec/mk-sbuild"
+    sudo ln -s /usr/bin/eatmydata "${MNT}/usr/local/libexec/mk-sbuild/dpkg"
+    echo 'Dir::Bin::dpkg "/usr/local/libexec/mk-sbuild/dpkg";' \
+        | sudo tee "${MNT}/etc/apt/apt.conf.d/00mk-sbuild-eatmydata" > /dev/null
+fi
+
 # Update the package sources
 TEMP_SOURCES=`mktemp -t sources-XXXXXX`
 if [ -z "$TEMPLATE_SOURCES" ]; then
@@ -778,11 +785,6 @@ root-groups=$ADMIN_GROUPS
 type=SCHROOT_TYPE
 profile=$SCHROOT_PROFILE
 EOM
-    if [ $EATMYDATA -eq 1 ]; then
-    cat >> "$TEMP_SCHROOTCONF" <<EOM
-command-prefix=eatmydata
-EOM
-    fi
     case "$SCHROOT_TYPE" in
     "lvm-snapshot")
         cat >> "$TEMP_SCHROOTCONF" <<EOM
