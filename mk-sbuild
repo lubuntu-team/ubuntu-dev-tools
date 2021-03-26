@@ -62,7 +62,8 @@ function usage()
     echo "  --debootstrap-keyring=KEYRING"
     echo "                             Use KEYRING to check signatures of retrieved Release files"
     echo "  --debootstrap-no-check-gpg Disables checking gpg signatures of retrieved Release files"
-    echo "  --eatmydata                Install and use eatmydata"
+    echo "  --skip-eatmydata           Don't install and use eatmydata"
+    echo "  --eatmydata                Install and use eatmydata (default)"
     echo "  --distro=DISTRO            Install specific distro:"
     echo "                                 'ubuntu' or 'debian' "
     echo "                                 (defaults to determining from release name)"
@@ -89,7 +90,7 @@ function usage()
     echo "  DEBOOTSTRAP_PROXY          Apt proxy (same as --debootstrap-proxy)"
     echo "  DEBOOTSTRAP_KEYRING        GPG keyring (same as --debootstrap-keyring)"
     echo "  DEBOOTSTRAP_NO_CHECK_GPG   Disable GPG verification (same as --debootstrap-no-check-gpg)"
-    echo "  EATMYDATA                  Enable --eatmydata"
+    echo "  EATMYDATA                  Enable or disable eatmydata usage, see --eatmydata and --skip-eatmydata"
     echo "  TEMPLATE_SOURCES           A template for sources.list"
     echo "  TEMPLATE_SCHROOTCONF       A template for schroot.conf stanza"
     if [ -z "$1" ]; then
@@ -102,7 +103,7 @@ function usage()
 if [ -z "$1" ]; then
     usage
 fi
-OPTS=`getopt -o 'h' --long "help,debug,skip-updates,skip-security,skip-proposed,eatmydata,arch:,name:,source-template:,debootstrap-mirror:,debootstrap-include:,debootstrap-exclude:,debootstrap-opts:,debootstrap-proxy:,debootstrap-no-check-gpg,debootstrap-keyring:,personality:,distro:,vg:,type:,target:" -- "$@"`
+OPTS=`getopt -o 'h' --long "help,debug,skip-updates,skip-security,skip-proposed,skip-eatmydata,arch:,name:,source-template:,debootstrap-mirror:,debootstrap-include:,debootstrap-exclude:,debootstrap-opts:,debootstrap-proxy:,debootstrap-no-check-gpg,debootstrap-keyring:,personality:,distro:,vg:,type:,target:" -- "$@"`
 eval set -- "$OPTS"
 
 VG=""
@@ -110,7 +111,7 @@ DISTRO=""
 name=""
 proxy="_unset_"
 DEBOOTSTRAP_NO_CHECK_GPG=0
-EATMYDATA=0
+EATMYDATA=1
 
 while :; do
     case "$1" in
@@ -186,8 +187,8 @@ while :; do
             DEBOOTSTRAP_NO_CHECK_GPG=1
             shift
             ;;
-        --eatmydata)
-            EATMYDATA=1
+        --skip-eatmydata)
+            EATMYDATA=0
             shift
             ;;
         --distro)
