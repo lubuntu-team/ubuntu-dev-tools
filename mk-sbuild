@@ -103,7 +103,30 @@ function usage()
 if [ -z "$1" ]; then
     usage
 fi
-OPTS=`getopt -o 'h' --long "help,debug,skip-updates,skip-security,skip-proposed,skip-eatmydata,arch:,name:,source-template:,debootstrap-mirror:,debootstrap-include:,debootstrap-exclude:,debootstrap-opts:,debootstrap-proxy:,debootstrap-no-check-gpg,debootstrap-keyring:,personality:,distro:,vg:,type:,target:" -- "$@"`
+supported_options=(
+    help
+    debug
+    skip-updates
+    skip-security
+    skip-proposed
+    skip-eatmydata
+    arch:
+    name:
+    source-template:
+    debootstrap-mirror:
+    debootstrap-include:
+    debootstrap-exclude:
+    debootstrap-opts:
+    debootstrap-proxy:
+    debootstrap-no-check-gpg
+    debootstrap-keyring:
+    personality:
+    distro:
+    vg:
+    type:
+    target:
+)
+OPTS=$(getopt -o 'h' --long "$(IFS=, && echo "${supported_options[*]}")" -- "$@")
 eval set -- "$OPTS"
 
 VG=""
