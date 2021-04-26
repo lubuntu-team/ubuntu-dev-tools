@@ -87,6 +87,21 @@ aufs) mounts.
 Specify a \fBSCHROOT_TYPE\fR.  Supported values are "\fBdirectory\fR"
 (default if \fB\-\-vg\fR not specified), "\fBlvm-snapshot\fR" (default
 if \fB\-\-vg\fR specified), "\fBbtrfs-snapshot\fR", and "\fBfile\fR".
+.TP
+.B \-\-ccache
+Enable usage of \fBccache\fR by default. See \fBccache\fR (1) for
+more details.
+.TP
+.B \-\-ccache-dir=\fIPATH
+Use \fBPATH\fR as schroot ccache directory. This directory can be
+safely shared by multiple schroots, but they will all use the same
+\fBCCACHE_MAXSIZE\fR.
+Defaults to /var/cache/ccache-sbuild.
+See \fBccache\fR (1) for more details.
+.TP
+.B \-\-ccache-size=\fISIZE
+Sets \fBSIZE\fR as the schroot \fBCCACHE_DIR\fR max-size used by ccache.
+See \fBccache\fR (1) for more details.
 
 .SH ENVIRONMENT VARIABLES
 .TP
@@ -148,6 +163,18 @@ Use \fBSOURCE_CHROOTS_TGZ\fR as home of schroot source tarballs.
 .B CHROOT_SNAPSHOT_DIR
 Use \fBCHROOT_SNAPSHOT_DIR\fR as home of mounted btrfs snapshots.
 (default \fB/var/lib/schroot/snapshots\fR)
+.TP
+.B CCACHE
+Enable \fBccache\fR (1) by default.
+(defaults to \fB0\fR)
+.TP
+.B CCACHE_DIR
+Use \fBCCACHE_DIR\fR as the \fBccache\fR (1) directory.
+(default \fB/var/cache/ccache-sbuild\fR)
+.TP
+.B CCACHE_SIZE
+Use \fBCCACHE_SIZE\fR as the \fBccache\fR (1) max-size.
+(defaults to \fB4G\fR)
 
 
 .SH FILES

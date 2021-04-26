@@ -40,6 +40,8 @@ SOURCE_CHROOTS_DIR="/var/lib/schroot/chroots"
 SOURCE_CHROOTS_TGZ="/var/lib/schroot/tarballs"
 CHROOT_SNAPSHOT_DIR="/var/lib/schroot/snapshots"
 SCHROOT_PROFILE="sbuild"
+CCACHE_DIR="/var/cache/ccache-sbuild"
+CCACHE_SIZE="4G"
 
 function usage()
 {
@@ -64,6 +66,11 @@ function usage()
     echo "  --debootstrap-no-check-gpg Disables checking gpg signatures of retrieved Release files"
     echo "  --skip-eatmydata           Don't install and use eatmydata"
     echo "  --eatmydata                Install and use eatmydata (default)"
+    echo "  --ccache                   Install configure and use ccache as default"
+    echo "  --ccache-dir=PATH          Sets the CCACHE_DIR to PATH"
+    echo "                                 (can be shared between all schroots, defaults to ${CCACHE_DIR})"
+    echo "  --ccache-size=SIZE         Sets the ccache max-size to SIZE"
+    echo "                                 (shared by each CCACHE_DIR, defaults to ${CCACHE_SIZE})"
     echo "  --distro=DISTRO            Install specific distro:"
     echo "                                 'ubuntu' or 'debian' "
     echo "                                 (defaults to determining from release name)"
@@ -91,6 +98,11 @@ function usage()
     echo "  DEBOOTSTRAP_KEYRING        GPG keyring (same as --debootstrap-keyring)"
     echo "  DEBOOTSTRAP_NO_CHECK_GPG   Disable GPG verification (same as --debootstrap-no-check-gpg)"
     echo "  EATMYDATA                  Enable or disable eatmydata usage, see --eatmydata and --skip-eatmydata"
+    echo "  CCACHE                     Enable --ccache"
+    echo "  CCACHE_DIR                 Path for ccache (can be shared between all schroots, "
+    echo "                                 same as --ccache-dir, default ${CCACHE_DIR})"
+    echo "  CCACHE_SIZE                Sets the ccache max-size (shared by each CCACHE_DIR, "
+    echo "                                 same as --ccache-size, default ${CCACHE_SIZE})"
     echo "  TEMPLATE_SOURCES           A template for sources.list"
     echo "  TEMPLATE_SCHROOTCONF       A template for schroot.conf stanza"
     if [ -z "$1" ]; then
@@ -110,6 +122,7 @@ supported_options=(
     skip-security
     skip-proposed
     skip-eatmydata
+    ccache
     arch:
     name:
     source-template:
@@ -125,16 +138,20 @@ supported_options=(
     vg:
     type:
     target:
+    ccache-dir:
+    ccache-size:
 )
 OPTS=$(getopt -o 'h' --long "$(IFS=, && echo "${supported_options[*]}")" -- "$@")
 eval set -- "$OPTS"
 
 VG=""
 DISTRO=""
+COMMAND_PREFIX=""
 name=""
 proxy="_unset_"
 DEBOOTSTRAP_NO_CHECK_GPG=0
 EATMYDATA=1
+CCACHE=0
 
 while :; do
     case "$1" in
@@ -215,6 +232,10 @@ while :; do
             EATMYDATA=0
             shift
             ;;
+        --ccache)
+            CCACHE=1
+            shift
+            ;;
         --distro)
             DISTRO="$2"
             shift 2
@@ -229,6 +250,14 @@ while :; do
             ;;
         --target)
             TARGET_ARCH="$2"
+            shift 2
+            ;;
+        --ccache-dir)
+            CCACHE_DIR="$2"
+            shift 2
+            ;;
+        --ccache-size)
+            CCACHE_SIZE="$2"
             shift 2
             ;;
         --)
@@ -425,6 +454,51 @@ if [ $EATMYDATA -eq 1 ]; then
             DEBOOTSTRAP_INCLUDE="${DEBOOTSTRAP_INCLUDE:+$DEBOOTSTRAP_INCLUDE,}eatmydata"
             ;;
     esac
+fi
+
+if [ $CCACHE -eq 1 ]; then
+    if [ -z "$CCACHE_DIR" ] || [[ "$(dirname "$CCACHE_DIR")" == '/' ]]; then
+        echo "Invalid ccache dir: ${CCACHE_DIR}" >&2
+        exit 1
+    fi
+
+    # We can safely use a global cache path, in such case changing size applies
+    # to all the schroots
+    setup_script="$CCACHE_DIR"/mk-sbuild-setup
+    if [ -d "$CCACHE_DIR" ]; then
+        echo "Reusing $CCACHE_DIR as CCACHE_DIR, will be configured to use max-size=${CCACHE_SIZE}"
+        rm -f "$setup_script"
+    else
+        echo "Configuring $CCACHE_DIR as CCACHE_DIR with max-size=${CCACHE_SIZE}"
+        sudo install --group=sbuild --mode=2775 -d "$CCACHE_DIR"
+    fi
+
+    if [ ! -x "$setup_script" ]; then
+        cat <<END | sudo tee "$setup_script" 1>/dev/null
+#!/bin/sh
+export CCACHE_DIR="$CCACHE_DIR"
+export CCACHE_MAXSIZE="${CCACHE_SIZE}"
+export CCACHE_UMASK=002
+export CCACHE_COMPRESS=1
+unset CCACHE_HARDLINK
+export CCACHE_NOHARDLINK=1
+export PATH="/usr/lib/ccache:\$PATH"
+exec "\$@"
+END
+        sudo chmod a+rx "$setup_script"
+    fi
+
+    if ! sudo grep -qs "$CCACHE_DIR" /etc/schroot/sbuild/fstab; then
+        # This acts on host configuration, but there is no other way to handle
+        # this, however it won't affect anything
+        cat <<END | sudo tee -a /etc/schroot/sbuild/fstab 1>/dev/null
+${CCACHE_DIR} ${CCACHE_DIR} none rw,bind 0 0
+END
+    fi
+
+    DEBOOTSTRAP_INCLUDE="${DEBOOTSTRAP_INCLUDE:+$DEBOOTSTRAP_INCLUDE,}ccache"
+    BUILD_PKGS="$BUILD_PKGS ccache"
+    COMMAND_PREFIX="${COMMAND_PREFIX:+$COMMAND_PREFIX,}$setup_script"
 fi
 
 if [ -z "$SCHROOT_TYPE" ]; then
@@ -810,6 +884,11 @@ root-groups=$ADMIN_GROUPS
 type=SCHROOT_TYPE
 profile=$SCHROOT_PROFILE
 EOM
+    if [ -n "$COMMAND_PREFIX" ]; then
+    cat >> "$TEMP_SCHROOTCONF" <<EOM
+command-prefix=${COMMAND_PREFIX}
+EOM
+    fi
     case "$SCHROOT_TYPE" in
     "lvm-snapshot")
         cat >> "$TEMP_SCHROOTCONF" <<EOM
