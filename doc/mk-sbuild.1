@@ -64,6 +64,9 @@ Disable checking gpg signatures of downloaded Release files by using
 debootstrap's \fB\-\-no\-check\-gpg\fR option. See \fBdebootstrap\fR (8)
 for more details.
 .TP
+.B \-\-debootstrap\-proxy\fR=\fIPROXY
+Use \fIPROXY\fR as apt proxy.
+.TP
 .B \-\-distro\fR=\fIDISTRO
 Enable distro-specific logic.
 When not provided, the distribution is determined from \fIrelease\fR.
@@ -119,6 +122,10 @@ Keyring file to use for checking gpg signatures of retrieved release files
 .B DEBOOTSTRAP_NO_CHECK_GPG
 Disable gpg verification of retrieved release files (same as
 \fB\-\-debootstrap\-no\-check\-gpg\fR)
+.TP
+.B DEBOOTSTRAP_PROXY
+Proxy to use for apt. (same as
+\fB\-\-debootstrap\-proxy\fR)
 .TP
 .B SOURCE_CHROOTS_DIR
 Use \fBSOURCE_CHROOTS_DIR\fR as home of schroot source directories.
