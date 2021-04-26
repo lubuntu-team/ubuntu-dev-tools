@@ -139,6 +139,7 @@ EATMYDATA=1
 while :; do
     case "$1" in
         --debug)
+            DEBUG=1
             set -x
             shift
             ;;
@@ -866,7 +867,9 @@ sudo chmod a+x "$MNT"/usr/sbin/policy-rc.d
 # Create image finalization script
 sudo bash -c "cat >> $MNT/finish.sh" <<EOM
 #!/bin/bash
-#set -x
+if [ "$DEBUG" = 1 ]; then
+    set -x
+fi
 set -e
 if [ -n "$proxy" ]; then
    mkdir -p /etc/apt/apt.conf.d/
