@@ -294,9 +294,14 @@ class PbuilderDist(object):
                 self.enable_updates = False
 
             if self.enable_security:
-                othermirrors.append('deb %s %s/updates %s'
+                pocket = '-security'
+                with suppress(ValueError):
+                    # before bullseye (version 11) security suite is /updates
+                    if float(debian_info.version(codename)) < 11.0:
+                        pocket = '/updates'
+                othermirrors.append('deb %s %s%s %s'
                                     % (config.get_value('DEBSEC_MIRROR'),
-                                       self.target_distro, components))
+                                       self.target_distro, pocket, components))
             if self.enable_updates:
                 othermirrors.append('deb %s %s-updates %s'
                                     % (mirror, self.target_distro, components))
