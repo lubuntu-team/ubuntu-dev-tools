@@ -67,6 +67,12 @@ for more details.
 .B \-\-debootstrap\-proxy\fR=\fIPROXY
 Use \fIPROXY\fR as apt proxy.
 .TP
+.B \-\-eatmydata
+Install and use eatmydata (default)
+.TP
+.B \-\-skip\-eatmydata
+Don't install and use eatmydata
+.TP
 .B \-\-distro\fR=\fIDISTRO
 Enable distro-specific logic.
 When not provided, the distribution is determined from \fIrelease\fR.
@@ -126,6 +132,10 @@ Disable gpg verification of retrieved release files (same as
 .B DEBOOTSTRAP_PROXY
 Proxy to use for apt. (same as
 \fB\-\-debootstrap\-proxy\fR)
+.TP
+.B EATMYDATA
+Enable or disable eatmydata usage, see \fB\-\-eatmydata\fR
+and \fB\-\-skip\-eatmydata\fR
 .TP
 .B SOURCE_CHROOTS_DIR
 Use \fBSOURCE_CHROOTS_DIR\fR as home of schroot source directories.
