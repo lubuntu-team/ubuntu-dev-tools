@@ -187,8 +187,7 @@ class SourcePackage(ABC):
                 self._dsc = Dsc(f.read())
             self.source = self._dsc['Source']
             self._version = Version(self._dsc['Version'])
-            if self._verify_signature:
-                self._check_dsc_signature()
+            self._check_dsc_signature()
 
     @property
     def lp_spph(self):
@@ -286,8 +285,7 @@ class SourcePackage(ABC):
             self.pull_dsc()
             with open(self.dsc_pathname, 'rb') as f:
                 self._dsc = Dsc(f.read())
-            if self._verify_signature:
-                self._check_dsc_signature()
+            self._check_dsc_signature()
         return self._dsc
 
     def getDistribution(self):
@@ -336,6 +334,8 @@ class SourcePackage(ABC):
 
     def _check_dsc_signature(self):
         "Check that the dsc signature matches what we are expecting"
+        if not self._verify_signature:
+            return
         try:
             gpg_info = self.dsc.get_gpg_info((
                 '/usr/share/keyrings/debian-keyring.gpg',
