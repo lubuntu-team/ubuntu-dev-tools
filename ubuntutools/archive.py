@@ -375,8 +375,11 @@ class SourcePackage(ABC):
         return True
 
     def _download_file(self, url, filename, size=0, dscverify=False, sha1sum=None, sha256sum=None):
-        "Download url to filename in workdir."
-        pathname = os.path.join(self.workdir, filename)
+        "Download url to filename; will be put in workdir unless filename is absolute path."
+        if os.path.isabs(filename):
+            pathname = filename
+        else:
+            pathname = os.path.join(self.workdir, filename)
 
         if self._verify_file(pathname, dscverify, sha1sum, sha256sum, size):
             Logger.info('Using existing file %s', filename)
