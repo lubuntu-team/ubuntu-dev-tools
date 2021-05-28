@@ -282,7 +282,8 @@ class SourcePackage(ABC):
     def dsc(self):
         "Return the Dsc"
         if not self._dsc:
-            self.pull_dsc()
+            urls = self._source_urls(self.dsc_name)
+            self._download_file_from_urls(urls, self.dsc_pathname)
             with open(self.dsc_pathname, 'rb') as f:
                 self._dsc = Dsc(f.read())
             self._check_dsc_signature()
@@ -408,9 +409,18 @@ class SourcePackage(ABC):
         raise DownloadError('Failed to download %s' % filename)
 
     def pull_dsc(self):
-        "Pull dscfile into workdir"
-        urls = self._source_urls(self.dsc_name)
-        self._download_file_from_urls(urls, self.dsc_name)
+        '''DEPRECATED
+
+        This method is badly named and historically has only 'pulled' the
+        dsc into memory, not actually to a file. Since the other 'pull' methods
+        actually 'pull' to real files, this method makes no sense; additionally
+        there is no need for this method since we can 'pull' the dsc into
+        memory when the .dsc property is accessed.
+
+        This method no longer does anything at all and should not be used by
+        anyone.
+        '''
+        Logger.debug('Please fix your program: the "pull_dsc" method is deprecated')
 
     def pull(self):
         "Pull into workdir"
