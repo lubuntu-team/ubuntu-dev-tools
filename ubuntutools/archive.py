@@ -37,6 +37,7 @@ import os.path
 import re
 import subprocess
 import sys
+import tempfile
 
 from abc import (ABC, abstractmethod)
 
@@ -52,7 +53,7 @@ from ubuntutools.lp.udtexceptions import (PackageNotFoundException,
                                           SeriesNotFoundException,
                                           PocketDoesNotExistError,
                                           InvalidDistroValueError)
-from ubuntutools.misc import (download, verify_file_checksum, verify_file_checksums)
+from ubuntutools.misc import (download, download_text, verify_file_checksum, verify_file_checksums)
 from ubuntutools.version import Version
 
 import logging
@@ -180,11 +181,7 @@ class SourcePackage(ABC):
 
         # If provided a dscfile, process it now to set our source and version
         if self._dsc_source:
-            filename = os.path.basename(urlparse(self._dsc_source).path)
-            dst = os.path.join(self.workdir, filename)
-            download(self._dsc_source, dst)
-            with open(dst, 'rb') as f:
-                self._dsc = Dsc(f.read())
+            self._dsc = Dsc(download_text(self._dsc_source, mode='rb'))
             self.source = self._dsc['Source']
             self._version = Version(self._dsc['Version'])
             self._check_dsc_signature()
@@ -282,11 +279,15 @@ class SourcePackage(ABC):
     def dsc(self):
         "Return the Dsc"
         if not self._dsc:
+            if self._dsc_source:
+                raise RuntimeError('Internal error: we have a dsc file but dsc not set')
             urls = self._source_urls(self.dsc_name)
-            self._download_file_from_urls(urls, self.dsc_pathname)
-            with open(self.dsc_pathname, 'rb') as f:
-                self._dsc = Dsc(f.read())
-            self._check_dsc_signature()
+            with tempfile.TemporaryDirectory() as d:
+                tmpdsc = os.path.join(d, self.dsc_name)
+                self._download_file_from_urls(urls, tmpdsc)
+                with open(tmpdsc, 'rb') as f:
+                    self._dsc = Dsc(f.read())
+                self._check_dsc_signature()
         return self._dsc
 
     def getDistribution(self):
@@ -424,6 +425,8 @@ class SourcePackage(ABC):
 
     def pull(self):
         "Pull into workdir"
+        with open(self.dsc_pathname, 'wb') as f:
+            f.write(self.dsc.raw_text)
         for entry in self.dsc['Files']:
             name = entry['name']
             urls = self._source_urls(name)
