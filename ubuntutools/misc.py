@@ -334,18 +334,20 @@ def download(src, dst, size=0):
                               size / 1024.0 / 1024))
 
 
-def download_text(src):
+def download_text(src, mode='r'):
     """ return the text content of a downloaded file
 
     src: str
         Source to copy from (file path or url)
+    mode: str
+        Mode to use with open()
 
     Raises the same exceptions as download()
 
-    Returns text content of downloaded file
+    Returns text (or binary, if mode includes 'b') content of downloaded file
     """
     with tempfile.TemporaryDirectory() as d:
         dst = os.path.join(d, 'dst')
         download(src, dst)
-        with open(dst) as f:
+        with open(dst, mode=mode) as f:
             return f.read()
