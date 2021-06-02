@@ -3,6 +3,8 @@ ubuntu-dev-tools (0.182) UNRELEASED; urgency=medium
   * syncpackage, ubuntutools/archive.py:
     Don't save dsc file to disk until requested with pull()
     (LP: #1928946)
+  * syncpackage:
+    Don't login to LP if using --simulate
 
  -- Dan Streetman <ddstreet@canonical.com>  Wed, 02 Jun 2021 11:47:44 -0400
 
