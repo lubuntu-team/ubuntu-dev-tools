@@ -614,7 +614,7 @@ def main():
         # devel for copyPackage and changelogUrl
         kwargs = {'service': options.lpinstance,
                   'api_version': 'devel'}
-        if options.lp:
+        if options.lp and not options.simulate:
             Launchpad.login(**kwargs)
         else:
             Launchpad.login_anonymously(**kwargs)
