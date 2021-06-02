@@ -1,3 +1,11 @@
+ubuntu-dev-tools (0.182) UNRELEASED; urgency=medium
+
+  * syncpackage, ubuntutools/archive.py:
+    Don't save dsc file to disk until requested with pull()
+    (LP: #1928946)
+
+ -- Dan Streetman <ddstreet@canonical.com>  Wed, 02 Jun 2021 11:47:44 -0400
+
 ubuntu-dev-tools (0.181) unstable; urgency=medium
 
   [ Logan Rosen ]
