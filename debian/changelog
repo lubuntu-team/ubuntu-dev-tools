@@ -5,8 +5,12 @@ ubuntu-dev-tools (0.182) UNRELEASED; urgency=medium
     (LP: #1928946)
   * syncpackage:
     Don't login to LP if using --simulate
+  * d/t/control: Add minimum flake8 version
+    The --extend-exclude parameter is first available in flake8 3.8.0
+  * ubuntutools/archive.py: Fix flake8 test failure
+  * d/rules, d/control: Override build tests to use flake8 and nosetests3
 
- -- Dan Streetman <ddstreet@canonical.com>  Wed, 02 Jun 2021 11:47:44 -0400
+ -- Dan Streetman <ddstreet@canonical.com>  Fri, 04 Jun 2021 12:19:29 -0400
 
 ubuntu-dev-tools (0.181) unstable; urgency=medium
 
