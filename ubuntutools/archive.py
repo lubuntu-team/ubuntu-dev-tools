@@ -28,7 +28,6 @@ Approach:
 """
 
 from urllib.error import (URLError, HTTPError)
-from urllib.parse import urlparse
 from urllib.request import urlopen
 import codecs
 import functools
