@@ -5,5 +5,9 @@ override_dh_auto_clean:
 	rm -f .coverage
 	rm -rf .tox
 
+override_dh_auto_test:
+	flake8 -v --max-line-length=99 --extend-exclude=ubuntu-archive-assistant,ubuntu_archive_assistant
+	nosetests3 -v ubuntutools
+
 %:
 	dh $@ --with python3 --buildsystem=pybuild
