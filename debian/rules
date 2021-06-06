@@ -6,8 +6,10 @@ override_dh_auto_clean:
 	rm -rf .tox
 
 override_dh_auto_test:
+ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
 	flake8 -v --max-line-length=99 --extend-exclude=ubuntu-archive-assistant,ubuntu_archive_assistant
 	nosetests3 -v ubuntutools
+endif
 
 %:
 	dh $@ --with python3 --buildsystem=pybuild

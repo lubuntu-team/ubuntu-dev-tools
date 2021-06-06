@@ -1,5 +1,6 @@
 ubuntu-dev-tools (0.182) UNRELEASED; urgency=medium
 
+  [ Dan Streetman ]
   * syncpackage, ubuntutools/archive.py:
     Don't save dsc file to disk until requested with pull()
     (LP: #1928946)
@@ -9,6 +10,9 @@ ubuntu-dev-tools (0.182) UNRELEASED; urgency=medium
     The --extend-exclude parameter is first available in flake8 3.8.0
   * ubuntutools/archive.py: Fix flake8 test failure
   * d/rules, d/control: Override build tests to use flake8 and nosetests3
+
+  [ Stefano Rivera ]
+  * Respect nocheck in DEB_BUILD_OPTIONS, again.
 
  -- Dan Streetman <ddstreet@canonical.com>  Fri, 04 Jun 2021 12:19:29 -0400
 
