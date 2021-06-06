@@ -1,4 +1,4 @@
-ubuntu-dev-tools (0.182) UNRELEASED; urgency=medium
+ubuntu-dev-tools (0.182) unstable; urgency=medium
 
   [ Dan Streetman ]
   * syncpackage, ubuntutools/archive.py:
@@ -14,7 +14,7 @@ ubuntu-dev-tools (0.182) UNRELEASED; urgency=medium
   [ Stefano Rivera ]
   * Respect nocheck in DEB_BUILD_OPTIONS, again.
 
- -- Dan Streetman <ddstreet@canonical.com>  Fri, 04 Jun 2021 12:19:29 -0400
+ -- Stefano Rivera <stefanor@debian.org>  Sun, 06 Jun 2021 19:52:18 -0400
 
 ubuntu-dev-tools (0.181) unstable; urgency=medium
 
