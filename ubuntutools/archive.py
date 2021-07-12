@@ -659,6 +659,27 @@ class PersonalPackageArchiveSourcePackage(UbuntuSourcePackage):
         Logger.debug(f"Using PPA '{ppa.web_link}'")
         return ppa
 
+    def _private_ppa_url(self, filename):
+        "Format the URL for a filename using the private PPA server"
+        url = self.getArchive().getMySubscriptionURL()
+        pkg = self.source
+        subdir = pkg[:4] if pkg.startswith('lib') else pkg[:1]
+        return f'{url}/pool/main/{subdir}/{pkg}/{filename}'
+
+    def _source_urls(self, name):
+        "Generator of sources for name"
+        if self.getArchive().private:
+            yield self._private_ppa_url(name)
+        else:
+            yield super()._source_urls(name)
+
+    def _binary_urls(self, name, bpph):
+        "Generator of URLs for name"
+        if self.getArchive().private:
+            yield self._private_ppa_url(name)
+        else:
+            yield super()._binary_urls(name, bpph)
+
 
 class UbuntuCloudArchiveSourcePackage(PersonalPackageArchiveSourcePackage):
     "Download / unpack an Ubuntu Cloud Archive source package"
