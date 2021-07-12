@@ -1,3 +1,11 @@
+ubuntu-dev-tools (0.184) UNRELEASED; urgency=medium
+
+  * Add support for downloading from private PPAs
+  * Don't use existing file without verifying some checksum
+  * Remove no longer used deps from d/control
+
+ -- Dan Streetman <ddstreet@canonical.com>  Mon, 12 Jul 2021 18:18:32 -0400
+
 ubuntu-dev-tools (0.183) unstable; urgency=medium
 
   [ Dan Streetman ]
