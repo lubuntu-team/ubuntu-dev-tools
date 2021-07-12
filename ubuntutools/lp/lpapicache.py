@@ -764,6 +764,17 @@ class Archive(BaseWrapper):
             ))
         return self._pkgset_uploaders[key]
 
+    def getMySubscriptionURL(self):
+        '''Get the "subscription URL" for the logged in user
+
+        If this is a private archive (i.e. private PPA), this returns
+        the "subscription URL" including authentication; otherwise
+        this returns None.
+        '''
+        if self.private:
+            return PersonTeam.me.getArchiveSubscriptionURL(archive=self._lpobject)
+        return None
+
 
 class SourcePackagePublishingHistory(BaseWrapper):
     '''
@@ -1294,7 +1305,8 @@ class MetaPersonTeam(MetaWrapper):
         '''
         if '_me' not in cls.__dict__:
             try:
-                cls._me = PersonTeam(Launchpad.me)
+                # We have to use me.self_link due to LP: #504297
+                cls._me = PersonTeam(Launchpad.me.self_link)
             except HTTPError as error:
                 if error.response.status == 401:
                     # Anonymous login
