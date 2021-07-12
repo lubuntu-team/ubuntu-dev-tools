@@ -139,6 +139,7 @@ Depends:
  python3-httplib2,
  python3-launchpadlib,
  python3-lazr.restfulclient,
+ python3-requests,
  sensible-utils,
  ${misc:Depends},
  ${python3:Depends},

@@ -26,6 +26,7 @@ import distro_info
 import hashlib
 import locale
 import os
+import requests
 import shutil
 import sys
 import tempfile
@@ -34,7 +35,6 @@ from contextlib import suppress
 from pathlib import Path
 from subprocess import check_output, CalledProcessError
 from urllib.parse import urlparse
-from urllib.request import urlopen
 
 from ubuntutools.lp.udtexceptions import PocketDoesNotExistError
 
@@ -55,6 +55,11 @@ _system_distribution_chain = []
 
 class DownloadError(Exception):
     "Unable to pull a source package"
+    pass
+
+
+class NotFoundError(DownloadError):
+    "Source package not found"
     pass
 
 
@@ -286,74 +291,97 @@ def download(src, dst, size=0):
 
     src: str or Path
         Source to copy from (file path or url)
-    dst: str
+    dst: str or Path
         Destination dir or filename
     size: int
         Size of source, if known
 
-    This calls urllib.request.urlopen() so it may raise the same
-    exceptions as that method (URLError or HTTPError)
+    If the URL contains authentication data in the URL 'netloc',
+    it will be stripped from the URL and passed to the requests library.
+
+    This may throw a DownloadError.
     """
     src = str(src)
-    if not urlparse(src).scheme:
-        src = 'file://%s' % os.path.abspath(os.path.expanduser(src))
-    dst = os.path.abspath(os.path.expanduser(dst))
+    parsedsrc = urlparse(src)
 
-    filename = os.path.basename(urlparse(src).path)
+    dst = Path(dst).expanduser().resolve()
+    if dst.is_dir():
+        dst = dst / Path(parsedsrc.path).name
 
-    if os.path.isdir(dst):
-        dst = os.path.join(dst, filename)
-
-    if urlparse(src).scheme == 'file':
-        srcfile = urlparse(src).path
-        if os.path.exists(srcfile) and os.path.exists(dst):
-            if os.path.samefile(srcfile, dst):
-                Logger.info(f"Using existing file {dst}")
+    # Copy if src is a local file
+    if parsedsrc.scheme in ['', 'file']:
+        src = Path(parsedsrc.path).expanduser().resolve()
+        if src != parsedsrc.path:
+            Logger.info(f'Parsed {parsedsrc.path} as {src}')
+        if not src.exists():
+            raise NotFoundError(f'Source file {src} not found')
+        if dst.exists():
+            if src.samefile(dst):
+                Logger.info(f'Using existing file {dst}')
                 return
+            Logger.info(f'Replacing existing file {dst}')
+        Logger.info(f'Copying file {src} to {dst}')
+        shutil.copyfile(src, dst)
+        return
 
-    with urlopen(src) as fsrc, open(dst, 'wb') as fdst:
-        url = fsrc.geturl()
-        Logger.debug(f"Using URL: {url}")
+    (src, username, password) = extract_authentication(src)
+    auth = (username, password) if username or password else None
 
-        if not size:
-            with suppress(AttributeError, TypeError, ValueError):
-                size = int(fsrc.info().get('Content-Length'))
+    try:
+        with requests.get(src, stream=True, auth=auth) as fsrc, dst.open('wb') as fdst:
+            fsrc.raise_for_status()
+            _download(fsrc, fdst, size)
+    except requests.RequestException as e:
+        if e.response and e.response.status_code == 404:
+            raise NotFoundError(f'URL {src} not found') from e
+        raise DownloadError(f'Could not download {src} to {dst}') from e
 
-        hostname = urlparse(url).hostname
-        sizemb = ' (%0.3f MiB)' % (size / 1024.0 / 1024) if size else ''
-        Logger.info(f'Downloading {filename} from {hostname}{sizemb}')
 
-        if not all((Logger.isEnabledFor(logging.INFO),
-                    sys.stderr.isatty(), size)):
-            shutil.copyfileobj(fsrc, fdst)
-            return
+def _download(fsrc, fdst, size):
+    """ helper method to download src to dst using requests library. """
+    url = fsrc.url
+    Logger.debug(f'Using URL: {url}')
 
-        blocksize = 4096
-        XTRALEN = len('[] 99%')
-        downloaded = 0
-        bar_width = 60
-        term_width = os.get_terminal_size(sys.stderr.fileno())[0]
-        if term_width < bar_width + XTRALEN + 1:
-            bar_width = term_width - XTRALEN - 1
+    if not size:
+        with suppress(AttributeError, TypeError, ValueError):
+            size = int(fsrc.headers.get('Content-Length'))
 
-        try:
-            while True:
-                block = fsrc.read(blocksize)
-                if not block:
-                    break
-                fdst.write(block)
-                downloaded += len(block)
-                pct = float(downloaded) / size
-                bar = ('=' * int(pct * bar_width))[:-1] + '>'
-                fmt = '\r[{bar:<%d}]{pct:>3}%%\r' % bar_width
-                sys.stderr.write(fmt.format(bar=bar, pct=int(pct * 100)))
-                sys.stderr.flush()
-        finally:
-            sys.stderr.write('\r' + ' ' * (term_width - 1) + '\r')
-            if downloaded < size:
-                Logger.error('Partial download: %0.3f MiB of %0.3f MiB' %
-                             (downloaded / 1024.0 / 1024,
-                              size / 1024.0 / 1024))
+    parsed = urlparse(url)
+    filename = Path(parsed.path).name
+    hostname = parsed.hostname
+    sizemb = ' (%0.3f MiB)' % (size / 1024.0 / 1024) if size else ''
+    Logger.info(f'Downloading {filename} from {hostname}{sizemb}')
+
+    if not all((Logger.isEnabledFor(logging.INFO), sys.stderr.isatty(), size)):
+        shutil.copyfileobj(fsrc.raw, fdst)
+        return
+
+    blocksize = 4096
+    XTRALEN = len('[] 99%')
+    downloaded = 0
+    bar_width = 60
+    term_width = os.get_terminal_size(sys.stderr.fileno())[0]
+    if term_width < bar_width + XTRALEN + 1:
+        bar_width = term_width - XTRALEN - 1
+
+    try:
+        while True:
+            block = fsrc.raw.read(blocksize)
+            if not block:
+                break
+            fdst.write(block)
+            downloaded += len(block)
+            pct = float(downloaded) / size
+            bar = ('=' * int(pct * bar_width))[:-1] + '>'
+            fmt = '\r[{bar:<%d}]{pct:>3}%%\r' % bar_width
+            sys.stderr.write(fmt.format(bar=bar, pct=int(pct * 100)))
+            sys.stderr.flush()
+    finally:
+        sys.stderr.write('\r' + ' ' * (term_width - 1) + '\r')
+        if downloaded < size:
+            Logger.error('Partial download: %0.3f MiB of %0.3f MiB' %
+                         (downloaded / 1024.0 / 1024,
+                          size / 1024.0 / 1024))
 
 
 def _download_text(src, binary):

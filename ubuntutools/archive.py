@@ -27,7 +27,6 @@ Approach:
 3. Verify checksums.
 """
 
-from urllib.error import (URLError, HTTPError)
 from urllib.request import urlopen
 import codecs
 import functools
@@ -46,8 +45,12 @@ import debian.deb822
 from contextlib import closing
 
 from ubuntutools.config import UDTConfig
-from ubuntutools.lp.lpapicache import (Launchpad, Distribution, PersonTeam, Project,
-                                       SourcePackagePublishingHistory)
+from ubuntutools.lp.lpapicache import (Launchpad,
+                                       Distribution,
+                                       PersonTeam,
+                                       Project,
+                                       SourcePackagePublishingHistory,
+                                       HTTPError)
 from ubuntutools.lp.udtexceptions import (PackageNotFoundException,
                                           SeriesNotFoundException,
                                           PocketDoesNotExistError,
@@ -56,7 +59,8 @@ from ubuntutools.misc import (download,
                               download_bytes,
                               verify_file_checksum,
                               verify_file_checksums,
-                              DownloadError)
+                              DownloadError,
+                              NotFoundError)
 from ubuntutools.version import Version
 
 import logging
@@ -397,15 +401,12 @@ class SourcePackage(ABC):
                 if self._download_file(url, filename, size, dscverify=dscverify,
                                        sha1sum=sha1sum, sha256sum=sha256sum):
                     return
-            except HTTPError as e:
-                if e.code == 404:
-                    # It's ok if the file isn't found, just try the next url
-                    Logger.debug("File not found at %s" % url)
-                else:
-                    Logger.error('HTTP Error %i: %s', e.code, str(e))
-            except URLError as e:
-                Logger.error('URL Error: %s', e.reason)
-        raise DownloadError('Failed to download %s' % filename)
+            except NotFoundError:
+                # It's ok if the file isn't found, just try the next url
+                Logger.debug(f'File not found at {url}')
+            except DownloadError as e:
+                Logger.error(f'Download Error: {e}')
+        raise DownloadError(f'Failed to download {filename}')
 
     def pull_dsc(self):
         '''DEPRECATED
