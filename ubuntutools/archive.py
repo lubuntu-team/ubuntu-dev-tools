@@ -53,7 +53,7 @@ from ubuntutools.lp.udtexceptions import (PackageNotFoundException,
                                           PocketDoesNotExistError,
                                           InvalidDistroValueError)
 from ubuntutools.misc import (download,
-                              download_text,
+                              download_bytes,
                               verify_file_checksum,
                               verify_file_checksums,
                               DownloadError)
@@ -179,7 +179,7 @@ class SourcePackage(ABC):
 
         # If provided a dscfile, process it now to set our source and version
         if self._dsc_source:
-            self._dsc = Dsc(download_text(self._dsc_source, mode='rb'))
+            self._dsc = Dsc(download_bytes(self._dsc_source))
             self.source = self._dsc['Source']
             self._version = Version(self._dsc['Version'])
             self._check_dsc_signature()

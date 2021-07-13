@@ -339,20 +339,29 @@ def download(src, dst, size=0):
                               size / 1024.0 / 1024))
 
 
-def download_text(src, mode='r'):
-    """ return the text content of a downloaded file
+def _download_text(src, binary):
+    with tempfile.TemporaryDirectory() as d:
+        dst = os.path.join(d, 'dst')
+        download(src, dst)
+        with open(dst, mode='rb' if binary else 'r') as f:
+            return f.read()
+
+
+def download_text(src, mode=None):
+    """ Return the text content of a downloaded file
 
     src: str
         Source to copy from (file path or url)
     mode: str
-        Mode to use with open()
+        Deprecated, ignored unless a string that contains 'b'
 
     Raises the same exceptions as download()
 
-    Returns text (or binary, if mode includes 'b') content of downloaded file
+    Returns text content of downloaded file
     """
-    with tempfile.TemporaryDirectory() as d:
-        dst = os.path.join(d, 'dst')
-        download(src, dst)
-        with open(dst, mode=mode) as f:
-            return f.read()
+    return _download_text(src, binary='b' in (mode or ''))
+
+
+def download_bytes(src):
+    """ Same as download_text() but returns bytes """
+    return _download_text(src, binary=True)
