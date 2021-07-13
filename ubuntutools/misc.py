@@ -31,6 +31,7 @@ import sys
 import tempfile
 
 from contextlib import suppress
+from pathlib import Path
 from subprocess import check_output, CalledProcessError
 from urllib.parse import urlparse
 from urllib.request import urlopen
@@ -126,16 +127,16 @@ def readlist(filename, uniq=True):
     Read a list of words from the indicated file. If 'uniq' is True, filter
     out duplicated words.
     """
+    p = Path(filename)
 
-    if not os.path.isfile(filename):
-        Logger.error('File "%s" does not exist.' % filename)
+    if not p.is_file():
+        Logger.error(f'File {p} does not exist.')
         return False
 
-    with open(filename) as f:
-        content = f.read().replace('\n', ' ').replace(',', ' ')
+    content = p.read_text().replace('\n', ' ').replace(',', ' ')
 
     if not content.strip():
-        Logger.error('File "%s" is empty.' % filename)
+        Logger.error(f'File {p} is empty.')
         return False
 
     items = [item for item in content.split() if item]
@@ -211,7 +212,7 @@ def verify_file_checksums(pathname, checksums={}, size=0):
 
     Any failure will log an error.
 
-    pathname: str
+    pathname: str or Path
         full path to file
     checksums: dict
         keys are alg name, values are expected checksum
@@ -220,30 +221,29 @@ def verify_file_checksums(pathname, checksums={}, size=0):
 
     Returns True if all checks pass, False otherwise
     """
-    if not os.path.isfile(pathname):
-        Logger.error('File not found: %s', pathname)
+    p = Path(pathname)
+
+    if not p.is_file():
+        Logger.error(f'File {p} not found')
         return False
-    filename = os.path.basename(pathname)
-    if size and size != os.path.getsize(pathname):
-        Logger.error('File %s incorrect size, got %s expected %s',
-                     filename, os.path.getsize(pathname), size)
+    filesize = p.stat().st_size
+    if size and size != filesize:
+        Logger.error(f'File {p} incorrect size, got {filesize} expected {size}')
         return False
 
     for (alg, checksum) in checksums.items():
         h = hashlib.new(alg)
-        with open(pathname, 'rb') as f:
+        with p.open('rb') as f:
             while True:
                 block = f.read(h.block_size)
                 if len(block) == 0:
                     break
                 h.update(block)
-        match = h.hexdigest() == checksum
-        if match:
-            Logger.debug('File %s checksum (%s) verified: %s',
-                         filename, alg, checksum)
+        digest = h.hexdigest()
+        if digest == checksum:
+            Logger.debug(f'File {p} checksum ({alg}) verified: {checksum}')
         else:
-            Logger.error('File %s checksum (%s) mismatch: got %s expected %s',
-                         filename, alg, h.hexdigest(), checksum)
+            Logger.error(f'File {p} checksum ({alg}) mismatch: got {digest} expected {checksum}')
             return False
     return True
 
@@ -251,7 +251,7 @@ def verify_file_checksums(pathname, checksums={}, size=0):
 def verify_file_checksum(pathname, alg, checksum, size=0):
     """ verify checksum of file
 
-    pathname: str
+    pathname: str or Path
         full path to file
     alg: str
         name of checksum alg
@@ -268,7 +268,7 @@ def verify_file_checksum(pathname, alg, checksum, size=0):
 def download(src, dst, size=0):
     """ download/copy a file/url to local file
 
-    src: str
+    src: str or Path
         Source to copy from (file path or url)
     dst: str
         Destination dir or filename
@@ -278,6 +278,7 @@ def download(src, dst, size=0):
     This calls urllib.request.urlopen() so it may raise the same
     exceptions as that method (URLError or HTTPError)
     """
+    src = str(src)
     if not urlparse(src).scheme:
         src = 'file://%s' % os.path.abspath(os.path.expanduser(src))
     dst = os.path.abspath(os.path.expanduser(dst))
@@ -341,16 +342,15 @@ def download(src, dst, size=0):
 
 def _download_text(src, binary):
     with tempfile.TemporaryDirectory() as d:
-        dst = os.path.join(d, 'dst')
+        dst = Path(d) / 'dst'
         download(src, dst)
-        with open(dst, mode='rb' if binary else 'r') as f:
-            return f.read()
+        return dst.read_bytes() if binary else dst.read_text()
 
 
 def download_text(src, mode=None):
     """ Return the text content of a downloaded file
 
-    src: str
+    src: str or Path
         Source to copy from (file path or url)
     mode: str
         Deprecated, ignored unless a string that contains 'b'
