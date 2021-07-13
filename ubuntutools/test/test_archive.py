@@ -15,51 +15,40 @@
 # PERFORMANCE OF THIS SOFTWARE.
 
 
-import os.path
-import shutil
+import filecmp
 import tempfile
 import unittest
 
-from io import BytesIO
-from unittest import mock
 import ubuntutools.archive
+
+from pathlib import Path
 
 from ubuntutools.test.example_package import ExamplePackage
 
 
-def setUpModule():
-    if not os.path.exists('test-data/example-0.1-1.dsc'):
-        ex_pkg = ExamplePackage()
-        ex_pkg.create_orig()
-        ex_pkg.create()
-        ex_pkg.cleanup()
-
-
-class DscVerificationTestCase(unittest.TestCase):
+class BaseVerificationTestCase(unittest.TestCase):
     def setUp(self):
-        with open('test-data/example_1.0-1.dsc', 'rb') as f:
-            self.dsc = ubuntutools.archive.Dsc(f.read())
+        d = tempfile.TemporaryDirectory()
+        self.addCleanup(d.cleanup)
+        self.pkg = ExamplePackage(destdir=Path(d.name))
+        self.pkg.create()
+        self.dsc = ubuntutools.archive.Dsc(self.pkg.dsc.read_bytes())
 
+
+class DscVerificationTestCase(BaseVerificationTestCase):
     def test_good(self):
-        self.assertTrue(self.dsc.verify_file(
-            'test-data/example_1.0.orig.tar.gz'))
-        self.assertTrue(self.dsc.verify_file(
-            'test-data/example_1.0-1.debian.tar.xz'))
+        self.assertTrue(self.dsc.verify_file(self.pkg.orig))
+        self.assertTrue(self.dsc.verify_file(self.pkg.debian))
 
     def test_missing(self):
-        self.assertFalse(self.dsc.verify_file(
-            'test-data/does.not.exist'))
+        self.assertFalse(self.dsc.verify_file(self.pkg.destdir / 'does.not.exist'))
 
     def test_bad(self):
-        fn = 'test-data/example_1.0.orig.tar.gz'
-        with open(fn, 'rb') as f:
-            data = f.read()
+        data = self.pkg.orig.read_bytes()
         last_byte = chr(data[-1] ^ 8).encode()
         data = data[:-1] + last_byte
-        m = mock.MagicMock(name='open', spec=open)
-        m.return_value = BytesIO(data)
-        with mock.patch('builtins.open', m):
-            self.assertFalse(self.dsc.verify_file(fn))
+        self.pkg.orig.write_bytes(data)
+        self.assertFalse(self.dsc.verify_file(self.pkg.orig))
 
     def test_sha1(self):
         del self.dsc['Checksums-Sha256']
@@ -73,63 +62,64 @@ class DscVerificationTestCase(unittest.TestCase):
         self.test_bad()
 
 
-class LocalSourcePackageTestCase(unittest.TestCase):
+class LocalSourcePackageTestCase(BaseVerificationTestCase):
     SourcePackage = ubuntutools.archive.UbuntuSourcePackage
 
     def setUp(self):
-        self.workdir = tempfile.mkdtemp(prefix='udt-test')
+        super().setUp()
+        d = tempfile.TemporaryDirectory()
+        self.addCleanup(d.cleanup)
+        self.workdir = Path(d.name)
 
-    def tearDown(self):
-        shutil.rmtree(self.workdir)
+    def pull(self, **kwargs):
+        ''' Do the pull from pkg dir to the workdir, return the SourcePackage '''
+        srcpkg = self.SourcePackage(dscfile=self.pkg.dsc, workdir=self.workdir, **kwargs)
+        srcpkg.pull()
+        return srcpkg
 
-    def test_local_copy(self):
-        pkg = self.SourcePackage(package='example',
-                                 version='1.0-1',
-                                 component='main',
-                                 dscfile='test-data/example_1.0-1.dsc',
-                                 workdir=self.workdir,
-                                 verify_signature=False)
-        pkg.pull()
-        pkg.unpack()
+    def test_pull(self, **kwargs):
+        srcpkg = self.pull(**kwargs)
+        self.assertTrue(filecmp.cmp(self.pkg.dsc, self.workdir / self.pkg.dsc.name))
+        self.assertTrue(filecmp.cmp(self.pkg.orig, self.workdir / self.pkg.orig.name))
+        self.assertTrue(filecmp.cmp(self.pkg.debian, self.workdir / self.pkg.debian.name))
+        return srcpkg
 
-    def test_workdir_srcpkg_noinfo(self):
-        shutil.copy2('test-data/example_1.0-1.dsc', self.workdir)
-        shutil.copy2('test-data/example_1.0.orig.tar.gz', self.workdir)
-        shutil.copy2('test-data/example_1.0-1.debian.tar.xz', self.workdir)
+    def test_unpack(self, **kwargs):
+        srcpkg = kwargs.get('srcpkg', self.pull(**kwargs))
+        srcpkg.unpack()
+        content = self.workdir / self.pkg.dirname / self.pkg.content_filename
+        self.assertEqual(self.pkg.content_text, content.read_text())
+        debian = self.workdir / self.pkg.dirname / 'debian'
+        self.assertTrue(debian.exists())
+        self.assertTrue(debian.is_dir())
 
-        pkg = self.SourcePackage(dscfile=os.path.join(self.workdir,
-                                                      'example_1.0-1.dsc'),
-                                 workdir=self.workdir,
-                                 verify_signature=False)
-        pkg.pull()
-        pkg.unpack()
+    def test_pull_and_unpack(self, **kwargs):
+        self.test_unpack(srcpkg=self.test_pull(**kwargs))
 
-    def test_workdir_srcpkg_info(self):
-        shutil.copy2('test-data/example_1.0-1.dsc', self.workdir)
-        shutil.copy2('test-data/example_1.0.orig.tar.gz', self.workdir)
-        shutil.copy2('test-data/example_1.0-1.debian.tar.xz', self.workdir)
+    def test_with_package(self):
+        self.test_pull_and_unpack(package=self.pkg.source)
 
-        pkg = self.SourcePackage(package='example', version='1.0-1',
-                                 component='main',
-                                 dscfile=os.path.join(self.workdir,
-                                                      'example_1.0-1.dsc'),
-                                 workdir=self.workdir,
-                                 verify_signature=False)
-        pkg.pull()
-        pkg.unpack()
+    def test_with_package_version(self):
+        self.test_pull_and_unpack(package=self.pkg.source, version=self.pkg.version)
+
+    def test_with_package_version_component(self):
+        self.test_pull_and_unpack(package=self.pkg.source,
+                                  version=self.pkg.version,
+                                  componet='main')
 
     def test_verification(self):
-        shutil.copy2('test-data/example_1.0-1.dsc', self.workdir)
-        shutil.copy2('test-data/example_1.0.orig.tar.gz', self.workdir)
-        shutil.copy2('test-data/example_1.0-1.debian.tar.xz', self.workdir)
-        with open(os.path.join(self.workdir, 'example_1.0-1.debian.tar.xz'),
-                  'r+b') as f:
-            f.write(b'CORRUPTION')
+        corruption = b'CORRUPTION'
 
-        pkg = self.SourcePackage(package='example',
-                                 version='1.0-1',
-                                 component='main',
-                                 dscfile='test-data/example_1.0-1.dsc',
-                                 workdir=self.workdir,
-                                 verify_signature=False)
-        pkg.pull()
+        self.pull()
+
+        testfile = self.workdir / self.pkg.debian.name
+        self.assertTrue(testfile.exists())
+        self.assertTrue(testfile.is_file())
+        self.assertNotEqual(testfile.read_bytes(), corruption)
+        testfile.write_bytes(corruption)
+        self.assertEqual(testfile.read_bytes(), corruption)
+
+        self.test_pull()
+        self.assertTrue(testfile.exists())
+        self.assertTrue(testfile.is_file())
+        self.assertNotEqual(testfile.read_bytes(), corruption)
