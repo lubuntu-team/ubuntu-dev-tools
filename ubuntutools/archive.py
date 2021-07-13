@@ -52,16 +52,15 @@ from ubuntutools.lp.udtexceptions import (PackageNotFoundException,
                                           SeriesNotFoundException,
                                           PocketDoesNotExistError,
                                           InvalidDistroValueError)
-from ubuntutools.misc import (download, download_text, verify_file_checksum, verify_file_checksums)
+from ubuntutools.misc import (download,
+                              download_text,
+                              verify_file_checksum,
+                              verify_file_checksums,
+                              DownloadError)
 from ubuntutools.version import Version
 
 import logging
 Logger = logging.getLogger(__name__)
-
-
-class DownloadError(Exception):
-    "Unable to pull a source package"
-    pass
 
 
 class Dsc(debian.deb822.Dsc):

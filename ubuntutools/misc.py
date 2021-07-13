@@ -52,6 +52,11 @@ UPLOAD_QUEUE_STATUSES = ('New', 'Unapproved', 'Accepted', 'Done', 'Rejected')
 _system_distribution_chain = []
 
 
+class DownloadError(Exception):
+    "Unable to pull a source package"
+    pass
+
+
 def system_distribution_chain():
     """ system_distribution_chain() -> [string]
 
