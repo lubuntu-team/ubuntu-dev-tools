@@ -385,7 +385,8 @@ class SourcePackage(ABC):
         else:
             pathname = os.path.join(self.workdir, filename)
 
-        if self._verify_file(pathname, dscverify, sha1sum, sha256sum, size):
+        can_verify = any((dscverify, sha1sum, sha256sum))
+        if can_verify and self._verify_file(pathname, dscverify, sha1sum, sha256sum, size):
             Logger.info('Using existing file %s', filename)
             return True
 
