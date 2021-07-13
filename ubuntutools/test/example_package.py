@@ -14,55 +14,69 @@
 # OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 # PERFORMANCE OF THIS SOFTWARE.
 
-import os.path
-import shutil
+import os
 import subprocess
+import tempfile
 
+from pathlib import Path
 from ubuntutools.version import Version
 
 
 class ExamplePackage(object):
-    def __init__(self, source='example', version='1.0-1'):
+    def __init__(self, source='example', version='1.0-1', destdir='test-data'):
         self.source = source
         self.version = Version(version)
-        self.srcdir = os.path.join('test-data', '%s-%s' % (source,
-                                   self.version.upstream_version))
-        if os.path.exists(self.srcdir):
-            shutil.rmtree(self.srcdir)
-        shutil.copytree('test-data/blank-example', self.srcdir)
+        self.destdir = Path(destdir)
 
-    def create_orig(self):
-        "Create .orig.tar.gz"
-        orig = '%s_%s.orig.tar.gz' % (self.source,
-                                      self.version.upstream_version)
-        subprocess.check_call(
-            (
-                'tar',
-                '-czf', orig,
-                '--exclude', 'debian',
-                os.path.basename(self.srcdir),
-            ),
-            cwd='test-data'
-        )
+        self.env = dict(os.environ)
+        self.env['DEBFULLNAME'] = 'Example'
+        self.env['DEBEMAIL'] = 'example@example.net'
 
-    def changelog_entry(self, version=None, create=False):
-        "Add a changelog entry"
-        cmd = ['dch', '--noconf', '--preserve', '--package', self.source]
-        if create:
-            cmd.append('--create')
-        cmd += ['--newversion', version or self.version.full_version]
-        cmd.append('')
-        env = dict(os.environ)
-        env['DEBFULLNAME'] = 'Example'
-        env['DEBEMAIL'] = 'example@example.net'
-        subprocess.check_call(cmd, env=env, cwd=self.srcdir)
+    @property
+    def orig(self):
+        return self.destdir / f'{self.source}_{self.version.upstream_version}.orig.tar.xz'
+
+    @property
+    def debian(self):
+        return self.destdir / f'{self.source}_{self.version}.debian.tar.xz'
+
+    @property
+    def dsc(self):
+        return self.destdir / f'{self.source}_{self.version}.dsc'
+
+    @property
+    def dirname(self):
+        return f'{self.source}-{self.version.upstream_version}'
+
+    @property
+    def content_filename(self):
+        return 'content'
+
+    @property
+    def content_text(self):
+        return 'my content'
 
     def create(self):
-        "Build source package"
-        self.changelog_entry(create=True)
-        (basename, dirname) = os.path.split(self.srcdir)
-        subprocess.check_call(('dpkg-source', '-b', dirname), cwd=basename)
+        with tempfile.TemporaryDirectory() as d:
+            self._create(Path(d))
 
-    def cleanup(self):
-        "Remove srcdir"
-        shutil.rmtree(self.srcdir)
+    def _create(self, d):
+        pkgdir = d / self.dirname
+        pkgdir.mkdir()
+        (pkgdir / self.content_filename).write_text(self.content_text)
+
+        # run dh_make to create orig tarball
+        subprocess.run('dh_make -sy --createorig'.split(),
+                       check=True, env=self.env, cwd=str(pkgdir),
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+        # run dpkg-source -b to create debian tar and dsc
+        subprocess.run(f'dpkg-source -b {self.dirname}'.split(),
+                       check=True, env=self.env, cwd=str(d),
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+        # move tarballs and dsc to destdir
+        self.destdir.mkdir(parents=True, exist_ok=True)
+        (d / self.orig.name).rename(self.orig)
+        (d / self.debian.name).rename(self.debian)
+        (d / self.dsc.name).rename(self.dsc)

@@ -5,9 +5,7 @@ __pycache__/
 *.pyc
 /build/
 /.pybuild/
-/test-data/example_1.0-1.debian.tar.xz
-/test-data/example_1.0-1.dsc
-/test-data/example_1.0.orig.tar.gz
+/test-data/
 /debian/python-ubuntutools/
 /debian/python3-ubuntutools/
 /debian/ubuntu-dev-tools/

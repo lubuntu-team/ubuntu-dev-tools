@@ -5,6 +5,7 @@ Restrictions: allow-stderr
 
 Test-Command: nosetests3 -v ubuntutools
 Depends:
+ dh-make,
  python3-nose,
  python3-setuptools,
  @,

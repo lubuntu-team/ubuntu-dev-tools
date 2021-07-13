@@ -10,6 +10,7 @@ Build-Depends:
  dctrl-tools,
  debhelper-compat (= 12),
  devscripts (>= 2.11.0~),
+ dh-make,
  dh-python,
  distro-info (>= 0.2~),
  flake8,

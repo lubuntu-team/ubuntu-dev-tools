@@ -152,7 +152,6 @@ Files: doc/pull-debian-debdiff.1
        reverse-depends
        seeded-in-ubuntu
        sponsor-patch
-       test-data/*
        ubuntu-upload-permission
        ubuntutools/archive.py
        ubuntutools/builder.py
@@ -167,7 +166,7 @@ Copyright: 2009-2011, Benjamin Drung <bdrung@ubuntu.com>
            2010,      Evan Broder <evan@ebroder.net>
            2008,      Siegfried-Angel Gevatter Pujals <rainct@ubuntu.com>
            2010-2011, Stefano Rivera <stefanor@ubuntu.com>
-           2017-2019, Dan Streetman <ddstreet@canonical.com>
+           2017-2021, Dan Streetman <ddstreet@canonical.com>
 License: ISC
  Permission to use, copy, modify, and/or distribute this software for any
  purpose with or without fee is hereby granted, provided that the above
