@@ -265,6 +265,22 @@ def verify_file_checksum(pathname, alg, checksum, size=0):
     return verify_file_checksums(pathname, {alg: checksum}, size)
 
 
+def extract_authentication(url):
+    """ Remove plaintext authentication data from a URL
+
+    If the URL has a username:password in its netloc, this removes it
+    and returns the remaining URL, along with the username and password
+    separately. If no authentication data is in the netloc, this just
+    returns the URL unchanged with None for the username and password.
+
+    This returns a tuple in the form (url, username, password)
+    """
+    u = urlparse(url)
+    if u.username or u.password:
+        return (u._replace(netloc=u.hostname).geturl(), u.username, u.password)
+    return (url, None, None)
+
+
 def download(src, dst, size=0):
     """ download/copy a file/url to local file
 
