@@ -5,5 +5,3 @@ httplib2
 launchpadlib
 requests
 setuptools
-termcolor
-pyyaml
