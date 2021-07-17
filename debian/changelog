@@ -1,10 +1,31 @@
-ubuntu-dev-tools (0.184) UNRELEASED; urgency=medium
+ubuntu-dev-tools (0.184) experimental; urgency=medium
 
-  * Add support for downloading from private PPAs
-  * Don't use existing file without verifying some checksum
-  * Remove no longer used deps from d/control
+  [ Dan Streetman ]
+  * Drop never packaged ubuntu-archive-assistant.
+  * Add support for downloading from private PPAs:
+    + ubuntutools/misc:
+      - Refactor to use Pathlib and f-strings.
+      - Refactor to use requests instead of urllib (for the earier auth)
+    + ubuntutools/archive:
+      - Refactor to use Pathlib.
+      - Add support for the special URLs of private PPAs.
+  * Don't use existing file without verifying their checksum.
+  * tests: recreate the test package files on demand.
+  * Remove no longer used dependencies on python3-termcolor and python3-yaml
 
- -- Dan Streetman <ddstreet@canonical.com>  Mon, 12 Jul 2021 18:18:32 -0400
+  [ Mattia Rizzolo ]
+  * pbuilder-dist: use shutil.which instead of
+    distutils.spawn.find_executable() to save a dependency.  LP: #1936697
+  * d/control:
+    + Drop redundant Recommends that are already in Depends.
+    + Bump debhelper compat level to 13.
+
+  [ Marco Trevisan (Treviño) ]
+  * mk-sbuild:
+    + Enable debugging in the finish.sh script if --debug is used.
+    + Add support to configure ccache for each schroot.
+
+ -- Mattia Rizzolo <mattia@debian.org>  Sat, 17 Jul 2021 17:31:19 +0200
 
 ubuntu-dev-tools (0.183) unstable; urgency=medium
 
