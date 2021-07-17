@@ -29,11 +29,11 @@
 # configurations. For example, a symlink called pbuilder-hardy will assume
 # that the target distribution is always meant to be Ubuntu Hardy.
 
-import distutils.spawn
 import os
 import os.path
-import subprocess
 import sys
+import subprocess
+import shutil
 
 import debian.deb822
 from contextlib import suppress
@@ -449,7 +449,7 @@ def main():
     if len(parts) > 2:
         requested_arch = parts[2]
     elif len(args) > 0:
-        if distutils.spawn.find_executable('arch-test'):
+        if shutil.which('arch-test') is not None:
             if subprocess.run(
                     ['arch-test', args[0]],
                     stdout=subprocess.DEVNULL).returncode == 0:
