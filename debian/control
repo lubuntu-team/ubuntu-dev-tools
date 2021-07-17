@@ -8,7 +8,7 @@ Uploaders:
  Mattia Rizzolo <mattia@debian.org>,
 Build-Depends:
  dctrl-tools,
- debhelper-compat (= 12),
+ debhelper-compat (= 13),
  devscripts (>= 2.11.0~),
  dh-make,
  dh-python,
