@@ -5,6 +5,11 @@ ubuntu-dev-tools (0.185) UNRELEASED; urgency=medium
     + Fix crash due to PersonalPackageArchiveSourcePackage() returning the
       wrong object when requesting a download url.  LP: #1938659
 
+  [ Brian Murray ]
+  * import-bug-from-debian:
+    + Don't create a bug description with email.message.Message objects.
+      Closes #969510
+
  -- Mattia Rizzolo <mattia@debian.org>  Wed, 04 Aug 2021 11:59:05 +0200
 
 ubuntu-dev-tools (0.184) experimental; urgency=medium
