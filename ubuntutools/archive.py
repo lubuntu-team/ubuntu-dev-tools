@@ -674,14 +674,14 @@ class PersonalPackageArchiveSourcePackage(UbuntuSourcePackage):
         if self.getArchive().private:
             yield self._private_ppa_url(name)
         else:
-            yield super()._source_urls(name)
+            yield from super()._source_urls(name)
 
     def _binary_urls(self, name, bpph):
         "Generator of URLs for name"
         if self.getArchive().private:
             yield self._private_ppa_url(name)
         else:
-            yield super()._binary_urls(name, bpph)
+            yield from super()._binary_urls(name, bpph)
 
 
 class UbuntuCloudArchiveSourcePackage(PersonalPackageArchiveSourcePackage):
