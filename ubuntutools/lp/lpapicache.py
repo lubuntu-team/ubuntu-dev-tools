@@ -743,10 +743,12 @@ class Archive(BaseWrapper):
         [Note: the permission records, themselves, aren't exposed]
         '''
         if source_package_name not in self._pkg_uploaders:
-            self._pkg_uploaders[source_package_name] = sorted(set(
-                PersonTeam(permission.person_link) for permission in
-                self._lpobject.getUploadersForPackage(source_package_name=source_package_name)
-            ))
+            self._pkg_uploaders[source_package_name] = sorted(
+                set(
+                    PersonTeam(permission.person_link) for permission in
+                    self._lpobject.getUploadersForPackage(source_package_name=source_package_name)
+                )
+            )
         return self._pkg_uploaders[source_package_name]
 
     def getUploadersForPackageset(self, packageset, direct_permissions=False):
