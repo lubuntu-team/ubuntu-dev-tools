@@ -747,7 +747,8 @@ class Archive(BaseWrapper):
                 set(
                     PersonTeam(permission.person_link) for permission in
                     self._lpobject.getUploadersForPackage(source_package_name=source_package_name)
-                )
+                ),
+                key=lambda s: s.name
             )
         return self._pkg_uploaders[source_package_name]
 
