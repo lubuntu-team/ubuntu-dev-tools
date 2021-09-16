@@ -327,14 +327,17 @@ def download(src, dst, size=0):
     (src, username, password) = extract_authentication(src)
     auth = (username, password) if username or password else None
 
-    try:
-        with requests.get(src, stream=True, auth=auth) as fsrc, dst.open('wb') as fdst:
-            fsrc.raise_for_status()
-            _download(fsrc, fdst, size)
-    except requests.RequestException as e:
-        if e.response and e.response.status_code == 404:
-            raise NotFoundError(f'URL {src} not found') from e
-        raise DownloadError(f'Could not download {src} to {dst}') from e
+    with tempfile.TemporaryDirectory() as d:
+        tmpdst = Path(d) / 'dst'
+        try:
+            with requests.get(src, stream=True, auth=auth) as fsrc, tmpdst.open('wb') as fdst:
+                fsrc.raise_for_status()
+                _download(fsrc, fdst, size)
+        except requests.RequestException as e:
+            if e.response and e.response.status_code == 404:
+                raise NotFoundError(f'URL {src} not found') from e
+            raise DownloadError(f'Could not download {src} to {dst}') from e
+        shutil.move(tmpdst, dst)
 
 
 def _download(fsrc, fdst, size):
