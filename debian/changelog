@@ -1,4 +1,4 @@
-ubuntu-dev-tools (0.185) UNRELEASED; urgency=medium
+ubuntu-dev-tools (0.185) unstable; urgency=medium
 
   [ Alex Murray ]
   * ubuntutools/archive.py:
@@ -19,7 +19,7 @@ ubuntu-dev-tools (0.185) UNRELEASED; urgency=medium
   [ Stefano Rivera ]
   * Bump Standards-Version to 4.6.0, no changes needed.
 
- -- Stefano Rivera <stefanor@debian.org>  Fri, 17 Sep 2021 15:46:07 -0700
+ -- Stefano Rivera <stefanor@debian.org>  Fri, 17 Sep 2021 15:53:02 -0700
 
 ubuntu-dev-tools (0.184) experimental; urgency=medium
 
