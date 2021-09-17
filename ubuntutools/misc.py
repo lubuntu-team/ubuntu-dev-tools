@@ -333,10 +333,15 @@ def download(src, dst, size=0):
             with requests.get(src, stream=True, auth=auth) as fsrc, tmpdst.open('wb') as fdst:
                 fsrc.raise_for_status()
                 _download(fsrc, fdst, size)
-        except requests.RequestException as e:
-            if e.response and e.response.status_code == 404:
-                raise NotFoundError(f'URL {src} not found') from e
-            raise DownloadError(f'Could not download {src} to {dst}') from e
+        except requests.exceptions.HTTPError as e:
+            if e.response != None and e.response.status_code == 404:
+                raise NotFoundError(f'URL {src} not found: {e}')
+            raise DownloadError(e)
+        except requests.exceptions.ConnectionError as e:
+            # This is most likely a archive hostname that doesn't resolve, like 'ftpmaster.internal'
+            raise NotFoundError(f'URL {src} not found: {e}')
+        except requests.exceptions.RequestException as e:
+            raise DownloadError(e)
         shutil.move(tmpdst, dst)
 
 
