@@ -302,13 +302,13 @@ class SourcePackage(ABC):
     def getArchive(self):
         return self.getDistribution().getArchive()
 
-    def _mirror_url(self, mirror, filename):
+    def _mirror_url(self, mirror, component, filename):
         "Build a source package URL on a mirror"
         if self.source.startswith('lib'):
             group = self.source[:4]
         else:
             group = self.source[0]
-        return os.path.join(mirror, 'pool', self.component, group,
+        return os.path.join(mirror, 'pool', component, group,
                             self.source, filename)
 
     def _archive_servers(self):
@@ -325,14 +325,14 @@ class SourcePackage(ABC):
         if self._dsc_source:
             yield str(self._dsc_source.parent / name)
         for server in self._archive_servers():
-            yield self._mirror_url(server, name)
+            yield self._mirror_url(server, self.component, name)
         if self.lp_spph.sourceFileUrl(name):
             yield self.lp_spph.sourceFileUrl(name)
 
     def _binary_urls(self, name, bpph):
         "Generator of URLs for name"
         for server in self._archive_servers():
-            yield self._mirror_url(server, name)
+            yield self._mirror_url(server, bpph.getComponent(), name)
         if bpph.binaryFileUrl(name):
             yield bpph.binaryFileUrl(name)
         if bpph.getUrl():
