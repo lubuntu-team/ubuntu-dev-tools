@@ -334,11 +334,11 @@ def download(src, dst, size=0):
                 fsrc.raise_for_status()
                 _download(fsrc, fdst, size)
         except requests.exceptions.HTTPError as e:
-            if e.response != None and e.response.status_code == 404:
+            if e.response is not None and e.response.status_code == 404:
                 raise NotFoundError(f'URL {src} not found: {e}')
             raise DownloadError(e)
         except requests.exceptions.ConnectionError as e:
-            # This is most likely a archive hostname that doesn't resolve, like 'ftpmaster.internal'
+            # This is likely a archive hostname that doesn't resolve, like 'ftpmaster.internal'
             raise NotFoundError(f'URL {src} not found: {e}')
         except requests.exceptions.RequestException as e:
             raise DownloadError(e)
