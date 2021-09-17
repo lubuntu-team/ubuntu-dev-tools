@@ -16,6 +16,9 @@ ubuntu-dev-tools (0.185) UNRELEASED; urgency=medium
     binaries (LP: #1943819)
   * misc: fix flake8 complaints
 
+  [ Stefano Rivera ]
+  * Bump Standards-Version to 4.6.0, no changes needed.
+
  -- Stefano Rivera <stefanor@debian.org>  Fri, 17 Sep 2021 15:46:07 -0700
 
 ubuntu-dev-tools (0.184) experimental; urgency=medium
