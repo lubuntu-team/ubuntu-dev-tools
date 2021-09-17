@@ -8,7 +8,15 @@ ubuntu-dev-tools (0.185) UNRELEASED; urgency=medium
   [ Krytarik Raido ]
   * merge-changelog: Fix setting of newlines.
 
- -- Mattia Rizzolo <mattia@debian.org>  Wed, 04 Aug 2021 11:59:05 +0200
+  [ Dan Streetman ]
+  * misc: download to tmp file, to avoid leftover 0-size file on error
+  * misc: handle ConnectionError as NotFoundError
+  * archive: use proper component source packages sometimes have different
+    component than their bpphs, so use the correct component when downloading
+    binaries (LP: #1943819)
+  * misc: fix flake8 complaints
+
+ -- Stefano Rivera <stefanor@debian.org>  Fri, 17 Sep 2021 15:46:07 -0700
 
 ubuntu-dev-tools (0.184) experimental; urgency=medium
 
