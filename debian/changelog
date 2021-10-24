@@ -1,3 +1,9 @@
+ubuntu-dev-tools (0.186) UNRELEASED; urgency=medium
+
+  * Replace nose with pytest (see: #997758).
+
+ -- Stefano Rivera <stefanor@debian.org>  Sun, 24 Oct 2021 15:57:04 -0700
+
 ubuntu-dev-tools (0.185) unstable; urgency=medium
 
   [ Alex Murray ]

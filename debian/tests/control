@@ -3,10 +3,10 @@ Depends:
  flake8,
 Restrictions: allow-stderr
 
-Test-Command: nosetests3 -v ubuntutools
+Test-Command: python3 -m pytest -v ubuntutools
 Depends:
  dh-make,
- python3-nose,
+ python3-pytest,
  python3-setuptools,
  @,
 Restrictions: allow-stderr
