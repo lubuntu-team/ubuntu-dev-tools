@@ -8,6 +8,8 @@ ubuntu-dev-tools (0.187) UNRELEASED; urgency=medium
   * mk-sbuild:
     + Apply patch from Peter Pentchev to avoid a broken log message.
       Closes: #968316
+  * backportpackage:
+    + Support backporting to Debian releases.  LP: #974132
 
  -- Mattia Rizzolo <mattia@debian.org>  Sun, 31 Oct 2021 16:24:56 +0100
 

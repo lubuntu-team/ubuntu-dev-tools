@@ -29,6 +29,7 @@ from urllib.parse import quote
 
 import lsb_release
 from httplib2 import Http, HttpLib2Error
+from distro_info import DebianDistroInfo
 
 from ubuntutools.archive import (DebianSourcePackage,
                                  UbuntuSourcePackage, DownloadError)
@@ -225,10 +226,19 @@ def get_backport_version(version, suffix, upload, release):
     distribution = codename_to_distribution(release)
     if not distribution:
         error('Unknown release codename %s' % release)
-    series = Distribution(distribution.lower()).\
-        getSeries(name_or_version=release)
+    if distribution == 'Debian':
+        supported = DebianDistroInfo().supported()
+        if release not in supported:
+            error('%s is not supported (%s)' % (release, supported))
+        release_version = DebianDistroInfo.version(release)
+        backport_version = version + '~bpo%s+1' % release_version
+    elif distribution == 'Ubuntu':
+        series = Distribution(distribution.lower()).\
+            getSeries(name_or_version=release)
 
-    backport_version = version + ('~%s%s.1' % (distribution.lower(), series.version))
+        backport_version = version + ('~%s%s.1' % (distribution.lower(), series.version))
+    else:
+        error('Unknown distribution «%s» for release «%s»' % (distribution, release))
     if suffix is not None:
         backport_version += suffix
     elif upload and upload.startswith('ppa:'):
