@@ -1,6 +1,8 @@
 ubuntu-dev-tools (0.187) UNRELEASED; urgency=medium
 
-  * WIP.
+  [ Paride Legovini ]
+  * mk-sbuild:
+    + Add support for zfs-snapshot schroots.  LP: #1945349
 
  -- Mattia Rizzolo <mattia@debian.org>  Sun, 31 Oct 2021 16:24:56 +0100
 

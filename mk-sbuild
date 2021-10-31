@@ -26,7 +26,7 @@
 # ##################################################################
 #
 # This script creates chroots designed to be used in a snapshot mode
-# (with LVM, btrfs, overlay, overlay or aufs) with schroot and sbuild.
+# (with LVM, btrfs, zfs, overlay, overlay or aufs) with schroot and sbuild.
 # Much love to "man sbuild-setup", https://wiki.ubuntu.com/PbuilderHowto,
 # and https://help.ubuntu.com/community/SbuildLVMHowto.
 #
@@ -51,6 +51,7 @@ function usage()
     echo "  --name=NAME                Base name for the schroot (arch is appended)"
     echo "  --personality=PERSONALITY  What personality to use (defaults to match --arch)"
     echo "  --vg=VG                    use LVM snapshots, with group VG"
+    echo "  --zfs-dataset=DATASET      use ZFS snapshots, with parent dataset DATASET"
     echo "  --debug                    Turn on script debugging"
     echo "  --skip-updates             Do not include -updates pocket in sources.list"
     echo "  --skip-security            Do not include -security pocket in sources.list"
@@ -76,8 +77,9 @@ function usage()
     echo "                                 (defaults to determining from release name)"
     echo "  --target=ARCH              Target architecture for cross-building"
     echo "  --type=SCHROOT_TYPE        Define the schroot type:"
-    echo "                                 'directory'(default), 'file', or 'btrfs-snapshot'"
+    echo "                                 'directory' (default), 'file', or 'btrfs-snapshot'."
     echo "                                 'lvm-snapshot' is selected via --vg"
+    echo "                                 'zfs-snapshot' is selected via --zfs-dataset"
     echo ""
     echo "Configuration (via ~/.mk-sbuild.rc)"
     echo "  LV_SIZE                    Size of source LVs (default ${LV_SIZE})"
@@ -136,6 +138,7 @@ supported_options=(
     personality:
     distro:
     vg:
+    zfs-dataset:
     type:
     target:
     ccache-dir:
@@ -242,6 +245,10 @@ while :; do
             ;;
         --vg)
             VG="$2"
+            shift 2
+            ;;
+        --zfs-dataset)
+            ZFS_PARENT_DATASET="$2"
             shift 2
             ;;
         --type)
@@ -505,6 +512,9 @@ if [ -z "$SCHROOT_TYPE" ]; then
     # To build the LV, we need to know which volume group to use
     if [ -n "$VG" ]; then
         SCHROOT_TYPE="lvm-snapshot"
+    # To build the ZFS dataset, we need to know which parent to use
+    elif [ -n "$ZFS_PARENT_DATASET" ]; then
+        SCHROOT_TYPE="zfs-snapshot"
     else
         SCHROOT_TYPE="directory"
     fi
@@ -551,7 +561,7 @@ case "$SCHROOT_TYPE" in
     # Set up some variables for use in the paths and names
     CHROOT_PATH="${SOURCE_CHROOTS_TGZ}/${CHROOT_NAME}.tgz"
     ;;
-"btrfs-snapshot")
+"btrfs-snapshot" | "zfs-snapshot")
     if [ ! -d "${SOURCE_CHROOTS_DIR}" ]; then
         sudo mkdir -p "${SOURCE_CHROOTS_DIR}"
     fi
@@ -757,6 +767,19 @@ case "$SCHROOT_TYPE" in
     fi
     sudo btrfs subvolume create "${MNT}"
     ;;
+
+"zfs-snapshot")
+    ZFS_DATASET="${ZFS_PARENT_DATASET}/${CHROOT_NAME}"
+    if sudo zfs list "${ZFS_DATASET}" >/dev/null 2>&1; then
+        echo "E: ZFS dataset ${ZFS_DATASET} already exists; aborting" >&2
+        exit 1
+    fi
+    sudo zfs create -p -o mountpoint=legacy "${ZFS_DATASET}"
+
+    # Mount
+    MNT=`mktemp -d -t schroot-XXXXXX`
+    sudo mount -t zfs "${ZFS_DATASET}" "${MNT}"
+    ;;
 "file")
     MNT=`mktemp -d -t schroot-XXXXXX`
 esac
@@ -909,6 +932,12 @@ btrfs-source-subvolume=CHROOT_PATH
 btrfs-snapshot-directory=CHROOT_SNAPSHOT_DIR
 EOM
     ;;
+zfs-snapshot)
+        cat >> "${TEMP_SCHROOTCONF}" <<EOM
+zfs-dataset=ZFS_DATASET
+EOM
+    ;;
+
     esac
 fi
 if [ ! -z "$personality" ]; then
@@ -925,6 +954,7 @@ sed -e "s|CHROOT_NAME|$CHROOT_NAME|g" \
     -e "s|SNAPSHOT_SIZE|$SNAPSHOT_SIZE|g" \
     -e "s|SCHROOT_TYPE|$SCHROOT_TYPE|g" \
     -e "s|CHROOT_SNAPSHOT_DIR|$CHROOT_SNAPSHOT_DIR|g" \
+    -e "s|ZFS_DATASET|$ZFS_DATASET|g" \
     "$TEMP_SCHROOTCONF" \
     | sudo tee "/etc/schroot/chroot.d/sbuild-$CHROOT_NAME" > /dev/null
 rm -f "$TEMP_SCHROOTCONF"
@@ -999,7 +1029,7 @@ EOM
 sudo chmod a+x "$MNT"/finish.sh
 
 case "$SCHROOT_TYPE" in
-"lvm-snapshot")
+"lvm-snapshot"|"zfs-snapshot")
     sudo umount "$MNT"
     rmdir "$MNT"
     ;;
