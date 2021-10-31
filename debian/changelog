@@ -1,3 +1,9 @@
+ubuntu-dev-tools (0.187) UNRELEASED; urgency=medium
+
+  * WIP.
+
+ -- Mattia Rizzolo <mattia@debian.org>  Sun, 31 Oct 2021 16:24:56 +0100
+
 ubuntu-dev-tools (0.186) unstable; urgency=medium
 
   * Replace nose with pytest (see: #997758).
