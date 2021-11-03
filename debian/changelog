@@ -1,3 +1,10 @@
+ubuntu-dev-tools (0.185~bpo20.04.1) focal-backports; urgency=medium
+
+  * Rebuild for focal-backports.  LP: #1947192
+    + backport changes: revert to debhelper compat 12.
+
+ -- Mattia Rizzolo <mattia@debian.org>  Wed, 03 Nov 2021 17:32:27 +0100
+
 ubuntu-dev-tools (0.185) unstable; urgency=medium
 
   [ Alex Murray ]
