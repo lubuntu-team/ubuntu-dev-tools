@@ -26,6 +26,7 @@ import os
 import re
 import sys
 import errno
+import subprocess
 
 from argparse import ArgumentParser
 
@@ -401,7 +402,9 @@ class PullPkg(object):
 
         if options['upload_queue']:
             # upload queue API is different/simpler
-            self.pull_upload_queue(pull, arch=options['arch'], **params)
+            self.pull_upload_queue(pull, arch=options['arch'],
+                                   download_only=options['download_only'],
+                                   **params)
             return
 
         # call implementation, and allow exceptions to flow up to caller
@@ -559,8 +562,23 @@ class PullPkg(object):
             urls |= set(p.sourceFileUrls())
             if not urls:
                 Logger.error("No source files to download")
+            dscfile = None
             for url in urls:
-                download(url, os.getcwd())
+                dst = download(url, os.getcwd())
+                if dst.name.endswith('.dsc'):
+                    dscfile = dst
+            if params['download_only']:
+                Logger.debug("--download-only specified, not extracting")
+            elif not dscfile:
+                Logger.error("No source dsc file found, cannot extract")
+            else:
+                cmd = ['dpkg-source', '-x', dscfile.name]
+                Logger.debug(' '.join(cmd))
+                result = subprocess.run(cmd, encoding='utf-8',
+                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                if result.returncode != 0:
+                    Logger.error('Source unpack failed.')
+                    Logger.debug(result.stdout)
         else:
             name = '.*'
             if pull == PULL_DEBS:
