@@ -397,9 +397,11 @@ def _download(fsrc, fdst, size, *, blocksize):
     #   logging INFO is suppressed
     #   stderr isn't a tty
     #   we don't know the total file size
+    #   the file is content-encoded (i.e. compressed)
     show_progress = all((Logger.isEnabledFor(logging.INFO),
                          sys.stderr.isatty(),
-                         size > 0))
+                         size > 0,
+                         'Content-Encoding' not in fsrc.headers))
 
     terminal_width = 0
     if show_progress:
@@ -411,10 +413,7 @@ def _download(fsrc, fdst, size, *, blocksize):
 
     downloaded = 0
     try:
-        while True:
-            block = fsrc.raw.read(blocksize)
-            if not block:
-                break
+        for block in fsrc.iter_content(blocksize):
             fdst.write(block)
             downloaded += len(block)
             progress_bar.update(downloaded, size)
