@@ -11,6 +11,14 @@ ubuntu-dev-tools (0.187) UNRELEASED; urgency=medium
   * backportpackage:
     + Support backporting to Debian releases.  LP: #974132
 
+  [ Dan Streetman ]
+  * misc:
+    + Refactor download progress bar code.
+    + Save files that have Content-Encoding correctly,
+      such as the changes file from upload queue packages.
+  * pullpkg:
+    + Extract source packages pulled from upload queue.
+
  -- Mattia Rizzolo <mattia@debian.org>  Sun, 31 Oct 2021 16:24:56 +0100
 
 ubuntu-dev-tools (0.186) unstable; urgency=medium
