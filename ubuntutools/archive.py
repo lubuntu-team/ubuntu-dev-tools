@@ -492,7 +492,7 @@ class SourcePackage(ABC):
                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         if result.returncode != 0:
             Logger.error('Source unpack failed.')
-            sys.exit(1)
+            Logger.debug(result.stdout)
 
     def debdiff(self, newpkg, diffstat=False):
         """Write a debdiff comparing this src pkg to a newer one.
