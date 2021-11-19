@@ -304,6 +304,8 @@ def download(src, dst, size=0, *, blocksize=DOWNLOAD_BLOCKSIZE_DEFAULT):
     it will be stripped from the URL and passed to the requests library.
 
     This may throw a DownloadError.
+
+    On success, this will return the dst as a Path object.
     """
     src = str(src)
     parsedsrc = urlparse(src)
@@ -322,11 +324,11 @@ def download(src, dst, size=0, *, blocksize=DOWNLOAD_BLOCKSIZE_DEFAULT):
         if dst.exists():
             if src.samefile(dst):
                 Logger.info(f'Using existing file {dst}')
-                return
+                return dst
             Logger.info(f'Replacing existing file {dst}')
         Logger.info(f'Copying file {src} to {dst}')
         shutil.copyfile(src, dst)
-        return
+        return dst
 
     (src, username, password) = extract_authentication(src)
     auth = (username, password) if username or password else None
@@ -347,6 +349,7 @@ def download(src, dst, size=0, *, blocksize=DOWNLOAD_BLOCKSIZE_DEFAULT):
         except requests.exceptions.RequestException as e:
             raise DownloadError(e)
         shutil.move(tmpdst, dst)
+    return dst
 
 
 class _StderrProgressBar(object):
