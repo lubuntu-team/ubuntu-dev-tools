@@ -50,6 +50,8 @@ STATUSES = DEFAULT_STATUSES + ('Superseded', 'Deleted', 'Obsolete')
 
 UPLOAD_QUEUE_STATUSES = ('New', 'Unapproved', 'Accepted', 'Done', 'Rejected')
 
+DOWNLOAD_BLOCKSIZE_DEFAULT = 8192
+
 _system_distribution_chain = []
 
 
@@ -345,6 +347,35 @@ def download(src, dst, size=0):
         shutil.move(tmpdst, dst)
 
 
+class _StderrProgressBar(object):
+    BAR_WIDTH_MIN = 40
+    BAR_WIDTH_DEFAULT = 60
+
+    def __init__(self, max_width):
+        self.full_width = min(max_width, self.BAR_WIDTH_DEFAULT)
+        self.width = self.full_width - len('[] 99%')
+        self.show_progress = self.full_width >= self.BAR_WIDTH_MIN
+
+    def update(self, progress, total):
+        if not self.show_progress:
+            return
+        pct = progress * 100 // total
+        pctstr = f'{pct:>3}%'
+        barlen = self.width * pct // 100
+        barstr = '=' * barlen
+        barstr = barstr[:-1] + '>'
+        barstr = barstr.ljust(self.width)
+        fullstr = f'\r[{barstr}]{pctstr}'
+        sys.stderr.write(fullstr)
+        sys.stderr.flush()
+
+    def finish(self):
+        if not self.show_progress:
+            return
+        sys.stderr.write('\n')
+        sys.stderr.flush()
+
+
 def _download(fsrc, fdst, size):
     """ helper method to download src to dst using requests library. """
     url = fsrc.url
@@ -360,18 +391,24 @@ def _download(fsrc, fdst, size):
     sizemb = ' (%0.3f MiB)' % (size / 1024.0 / 1024) if size else ''
     Logger.info(f'Downloading {filename} from {hostname}{sizemb}')
 
-    if not all((Logger.isEnabledFor(logging.INFO), sys.stderr.isatty(), size)):
-        shutil.copyfileobj(fsrc.raw, fdst)
-        return
+    # Don't show progress if:
+    #   logging INFO is suppressed
+    #   stderr isn't a tty
+    #   we don't know the total file size
+    show_progress = all((Logger.isEnabledFor(logging.INFO),
+                         sys.stderr.isatty(),
+                         size > 0))
 
-    blocksize = 4096
-    XTRALEN = len('[] 99%')
+    terminal_width = 0
+    if show_progress:
+        try:
+            terminal_width = os.get_terminal_size(sys.stderr.fileno()).columns
+        except Exception as e:
+            Logger.error(f'Error finding stderr width, suppressing progress bar: {e}')
+    progress_bar = _StderrProgressBar(max_width=terminal_width)
+
     downloaded = 0
-    bar_width = 60
-    term_width = os.get_terminal_size(sys.stderr.fileno())[0]
-    if term_width < bar_width + XTRALEN + 1:
-        bar_width = term_width - XTRALEN - 1
-
+    blocksize = DOWNLOAD_BLOCKSIZE_DEFAULT
     try:
         while True:
             block = fsrc.raw.read(blocksize)
@@ -379,14 +416,10 @@ def _download(fsrc, fdst, size):
                 break
             fdst.write(block)
             downloaded += len(block)
-            pct = float(downloaded) / size
-            bar = ('=' * int(pct * bar_width))[:-1] + '>'
-            fmt = '\r[{bar:<%d}]{pct:>3}%%\r' % bar_width
-            sys.stderr.write(fmt.format(bar=bar, pct=int(pct * 100)))
-            sys.stderr.flush()
+            progress_bar.update(downloaded, size)
     finally:
-        sys.stderr.write('\r' + ' ' * (term_width - 1) + '\r')
-        if downloaded < size:
+        progress_bar.finish()
+        if size and size > downloaded:
             Logger.error('Partial download: %0.3f MiB of %0.3f MiB' %
                          (downloaded / 1024.0 / 1024,
                           size / 1024.0 / 1024))
