@@ -288,7 +288,7 @@ def extract_authentication(url):
     return (url, None, None)
 
 
-def download(src, dst, size=0):
+def download(src, dst, size=0, *, blocksize=DOWNLOAD_BLOCKSIZE_DEFAULT):
     """ download/copy a file/url to local file
 
     src: str or Path
@@ -297,6 +297,8 @@ def download(src, dst, size=0):
         Destination dir or filename
     size: int
         Size of source, if known
+    blocksize: int or None
+        Blocksize to use when downloading
 
     If the URL contains authentication data in the URL 'netloc',
     it will be stripped from the URL and passed to the requests library.
@@ -334,7 +336,7 @@ def download(src, dst, size=0):
         try:
             with requests.get(src, stream=True, auth=auth) as fsrc, tmpdst.open('wb') as fdst:
                 fsrc.raise_for_status()
-                _download(fsrc, fdst, size)
+                _download(fsrc, fdst, size, blocksize=blocksize)
         except requests.exceptions.HTTPError as e:
             if e.response is not None and e.response.status_code == 404:
                 raise NotFoundError(f'URL {src} not found: {e}')
@@ -376,7 +378,7 @@ class _StderrProgressBar(object):
         sys.stderr.flush()
 
 
-def _download(fsrc, fdst, size):
+def _download(fsrc, fdst, size, *, blocksize):
     """ helper method to download src to dst using requests library. """
     url = fsrc.url
     Logger.debug(f'Using URL: {url}')
@@ -408,7 +410,6 @@ def _download(fsrc, fdst, size):
     progress_bar = _StderrProgressBar(max_width=terminal_width)
 
     downloaded = 0
-    blocksize = DOWNLOAD_BLOCKSIZE_DEFAULT
     try:
         while True:
             block = fsrc.raw.read(blocksize)
@@ -425,28 +426,30 @@ def _download(fsrc, fdst, size):
                           size / 1024.0 / 1024))
 
 
-def _download_text(src, binary):
+def _download_text(src, binary, *, blocksize):
     with tempfile.TemporaryDirectory() as d:
         dst = Path(d) / 'dst'
-        download(src, dst)
+        download(src, dst, blocksize=blocksize)
         return dst.read_bytes() if binary else dst.read_text()
 
 
-def download_text(src, mode=None):
+def download_text(src, mode=None, *, blocksize=DOWNLOAD_BLOCKSIZE_DEFAULT):
     """ Return the text content of a downloaded file
 
     src: str or Path
         Source to copy from (file path or url)
     mode: str
         Deprecated, ignored unless a string that contains 'b'
+    blocksize: int or None
+        Blocksize to use when downloading
 
     Raises the same exceptions as download()
 
     Returns text content of downloaded file
     """
-    return _download_text(src, binary='b' in (mode or ''))
+    return _download_text(src, binary='b' in (mode or ''), blocksize=blocksize)
 
 
-def download_bytes(src):
+def download_bytes(src, *, blocksize=DOWNLOAD_BLOCKSIZE_DEFAULT):
     """ Same as download_text() but returns bytes """
-    return _download_text(src, binary=True)
+    return _download_text(src, binary=True, blocksize=blocksize)
