@@ -72,13 +72,11 @@ License: GPL-2+
 
 Files: doc/bitesize.1
        doc/grab-merge.1
-       doc/hugdaylist.1
        doc/merge-changelog.1
        doc/setup-packaging-environment.1
        doc/syncpackage.1
        bitesize
        grab-merge
-       hugdaylist
        merge-changelog
        setup-packaging-environment
        syncpackage
@@ -109,7 +107,6 @@ Files: dch-repeat
        grep-merges
        mk-sbuild
        ubuntu-build
-       ubuntutools/lp/libsupport.py
        ubuntutools/lp/lpapicache.py
        ubuntutools/misc.py
 Copyright: 2007-2010, Canonical Ltd.

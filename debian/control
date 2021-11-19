@@ -90,7 +90,6 @@ Description: useful tools for Ubuntu developers
   - dch-repeat - used to repeat a change log into an older release.
   - grab-merge - grabs a merge from merges.ubuntu.com easily.
   - grep-merges - search for pending merges from Debian.
-  - hugdaylist - compile HugDay lists from bug list URLs.
   - import-bug-from-debian - copy a bug from the Debian BTS to Launchpad
   - merge-changelog - manually merges two Debian changelogs with the same base
     version.
