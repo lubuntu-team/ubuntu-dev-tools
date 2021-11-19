@@ -461,27 +461,25 @@ class PullPkg(object):
             Logger.error("Internal error: invalid pull value after parse_pull()")
             raise InvalidPullValueError("Invalid pull value '%s'" % pull)
 
-    def pull_upload_queue(self, pull, **params):
-        package = params['package']
-        version = params['version']
-        arch = params['arch']
-
-        if not params['series']:
+    def pull_upload_queue(self, pull, *,
+                          package, version=None, arch=None, series=None, pocket=None,
+                          status=None, download_only=None, **kwargs):
+        if not series:
             Logger.error("Using --upload-queue requires specifying series")
             return
 
-        series = Distribution('ubuntu').getSeries(params['series'])
+        series = Distribution('ubuntu').getSeries(series)
 
         queueparams = {'name': package}
-        if params['pocket']:
-            queueparams['pocket'] = params['pocket']
+        if pocket:
+            queueparams['pocket'] = pocket
 
-        if params['status'] == 'all':
+        if status == 'all':
             queueparams['status'] = None
             queuetype = 'any'
-        elif params['status']:
-            queueparams['status'] = params['status']
-            queuetype = params['status']
+        elif status:
+            queueparams['status'] = status
+            queuetype = status
         else:
             queuetype = 'Unapproved'
 
@@ -567,7 +565,7 @@ class PullPkg(object):
                 dst = download(url, os.getcwd())
                 if dst.name.endswith('.dsc'):
                     dscfile = dst
-            if params['download_only']:
+            if download_only:
                 Logger.debug("--download-only specified, not extracting")
             elif not dscfile:
                 Logger.error("No source dsc file found, cannot extract")
