@@ -9,7 +9,7 @@ ubuntu-dev-tools (0.187) UNRELEASED; urgency=medium
     + Apply patch from Peter Pentchev to avoid a broken log message.
       Closes: #968316
   * backportpackage:
-    + Support backporting to Debian releases.  LP: #974132
+    + Support backporting to Debian releases.  Closes: #776442; LP: #974132
     + Fix the guessing algorithm for the target release:
       - for Debian: pick the current stable release.
       - for Ubuntu: pick the current LTS release.
