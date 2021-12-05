@@ -81,7 +81,7 @@ def parse(args):
                       metavar='MESSAGE',
                       default="No-change",
                       help='Changelog message to use instead of "No-change" '
-                           '(default: No-change backport to DEST)')
+                           '(default: No-change backport to DEST.)')
     parser.add_option('-b', '--build',
                       default=False,
                       action='store_true',
@@ -343,7 +343,7 @@ def do_backport(workdir, pkg, suffix, message, close, release, release_pocket,
     old_version = get_old_version(pkg.source, release)
     bp_dist = get_backport_dist(release, release_pocket)
 
-    changelog = '%s backport to %s' % (message, release,)
+    changelog = '%s backport to %s.' % (message, release,)
     if close:
         changelog += ' (LP: #%s)' % (close,)
     check_call(['dch',
