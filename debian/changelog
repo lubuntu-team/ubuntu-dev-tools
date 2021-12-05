@@ -1,4 +1,4 @@
-ubuntu-dev-tools (0.187) UNRELEASED; urgency=medium
+ubuntu-dev-tools (0.187) unstable; urgency=medium
 
   [ Paride Legovini ]
   * mk-sbuild:
@@ -29,7 +29,7 @@ ubuntu-dev-tools (0.187) UNRELEASED; urgency=medium
   * hugdaylist:
     + Remove long unused and non-working script.
 
- -- Mattia Rizzolo <mattia@debian.org>  Sun, 31 Oct 2021 16:24:56 +0100
+ -- Mattia Rizzolo <mattia@debian.org>  Sun, 05 Dec 2021 15:58:15 +0100
 
 ubuntu-dev-tools (0.186) unstable; urgency=medium
 
