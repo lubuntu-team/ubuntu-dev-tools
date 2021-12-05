@@ -26,6 +26,8 @@ ubuntu-dev-tools (0.187) UNRELEASED; urgency=medium
       such as the changes file from upload queue packages.
   * pullpkg:
     + Extract source packages pulled from upload queue.
+  * hugdaylist:
+    + Remove long unused and non-working script.
 
  -- Mattia Rizzolo <mattia@debian.org>  Sun, 31 Oct 2021 16:24:56 +0100
 

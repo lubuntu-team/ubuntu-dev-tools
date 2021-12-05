@@ -21,7 +21,6 @@ scripts = [
     'dch-repeat',
     'grab-merge',
     'grep-merges',
-    'hugdaylist',
     'import-bug-from-debian',
     'merge-changelog',
     'mk-sbuild',
