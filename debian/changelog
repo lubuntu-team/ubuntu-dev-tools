@@ -11,6 +11,11 @@ ubuntu-dev-tools (0.187) UNRELEASED; urgency=medium
   * backportpackage:
     + Support backporting to Debian releases.  LP: #974132
 
+  [ Unit 193 ]
+  * backportpackage:
+    + Change the generated Ubuntu version following the new policy from the
+      Backporters team.
+
   [ Dan Streetman ]
   * misc:
     + Refactor download progress bar code.
