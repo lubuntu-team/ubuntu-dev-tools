@@ -227,11 +227,17 @@ def get_backport_version(version, suffix, upload, release):
     if not distribution:
         error('Unknown release codename %s' % release)
     if distribution == 'Debian':
-        supported = DebianDistroInfo().supported()
-        if release not in supported:
-            error('%s is not supported (%s)' % (release, supported))
-        release_version = DebianDistroInfo.version(release)
-        backport_version = version + '~bpo%s+1' % release_version
+        debian_distro_info = DebianDistroInfo()
+        debian_codenames = debian_distro_info.supported()
+        if release in debian_codenames:
+            release_version = debian_distro_info.version(release)
+            if not release_version:
+                error(f"Can't find the release version for {release}")
+            backport_version = "{}~bpo{}+1".format(
+                version, release_version
+            )
+        else:
+            error(f"{release} is not a supported release ({debian_codenames})")
     elif distribution == 'Ubuntu':
         series = Distribution(distribution.lower()).\
             getSeries(name_or_version=release)
