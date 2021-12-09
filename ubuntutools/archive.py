@@ -649,14 +649,15 @@ class PersonalPackageArchiveSourcePackage(UbuntuSourcePackage):
         self._ppaname = ppa[1]
         self.masters = []
 
-    @functools.cached_property
+    @property
+    @functools.lru_cache(maxsize=None)
     def team(self):
         try:
             return PersonTeam.fetch(self._teamname)
         except KeyError:
             raise ValueError(f"No user/team '{self._teamname}' found on Launchpad")
 
-    @functools.lru_cache
+    @functools.lru_cache()
     def getArchive(self):
         ppa = self.team.getPPAByName(self._ppaname)
         Logger.debug(f"Using PPA '{ppa.web_link}'")
@@ -727,7 +728,7 @@ class UbuntuCloudArchiveSourcePackage(PersonalPackageArchiveSourcePackage):
         return super(UbuntuCloudArchiveSourcePackage, self).pull_binaries(arch, name, ext)
 
     @classmethod
-    @functools.lru_cache
+    @functools.lru_cache()
     def getUbuntuCloudArchiveProject(cls):
         return Project(cls.PROJECT)
 
@@ -754,12 +755,12 @@ class UbuntuCloudArchiveSourcePackage(PersonalPackageArchiveSourcePackage):
         return cls.getUbuntuCloudArchiveReleaseNames()[0]
 
     @classmethod
-    @functools.lru_cache
+    @functools.lru_cache()
     def getUbuntuCloudArchiveTeam(cls):
         return PersonTeam.fetch(cls.TEAM)
 
     @classmethod
-    @functools.lru_cache
+    @functools.lru_cache()
     def getUbuntuCloudArchivePPAs(cls, release=None, pocket=None):
         """ Get sorted list of UCA ppa Archive objects
 

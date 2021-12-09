@@ -1,3 +1,12 @@
+ubuntu-dev-tools (0.188) UNRELEASED; urgency=medium
+
+  [ Mattia Rizzolo ]
+  * archive.py:
+    + Support Python 3.6 by calling functools.lru_cache() as a function, and
+      avoid using @functools.cached_property (both new in Python 3.8).
+
+ -- Mattia Rizzolo <mattia@debian.org>  Thu, 09 Dec 2021 17:54:27 +0100
+
 ubuntu-dev-tools (0.187) unstable; urgency=medium
 
   [ Paride Legovini ]
