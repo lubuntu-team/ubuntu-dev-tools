@@ -162,7 +162,7 @@ class BaseWrapper(object, metaclass=MetaWrapper):
                     Logger.debug("%s: %s" % (cls.__name__, data.self_link))
                     # add additional class specific caching (if available)
                     cache = getattr(cls, 'cache', None)
-                    if isinstance(cache, collections.Callable):
+                    if isinstance(cache, collections.abc.Callable):
                         cache(cached)
                 return cached
             else:
@@ -171,7 +171,7 @@ class BaseWrapper(object, metaclass=MetaWrapper):
         else:
             # not a LP API representation, let the specific class handle it
             fetch = getattr(cls, 'fetch', None)
-            if isinstance(fetch, collections.Callable):
+            if isinstance(fetch, collections.abc.Callable):
                 return fetch(data)
             else:
                 raise NotImplementedError("Don't know how to fetch '%s' from LP"
