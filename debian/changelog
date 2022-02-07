@@ -8,7 +8,7 @@ ubuntu-dev-tools (0.188) UNRELEASED; urgency=medium
   [ Graham Inggs ]
   * lpapicache.py:
     + Use collections.abc.Callable instead of the long deprecated
-      collections.Callable.
+      collections.Callable.  LP: #1959541
 
  -- Mattia Rizzolo <mattia@debian.org>  Thu, 09 Dec 2021 17:54:27 +0100
 
