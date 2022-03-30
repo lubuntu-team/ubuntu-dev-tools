@@ -691,7 +691,7 @@ if [ -n "$TARGET_ARCH" ]; then
         echo "Unknown target architecture $TARGET_ARCH" >&2
         exit 1
     fi
-    BUILD_PKGS="$BUILD_PKGS g++-$target_tuple pkg-config-$target_tuple dpkg-cross libc-dev:$TARGET_ARCH"
+    BUILD_PKGS="$BUILD_PKGS g++-$target_tuple pkg-config dpkg-cross libc-dev:$TARGET_ARCH"
 fi
 
 debootstrap_opts="--components=$(echo $COMPONENTS | tr ' ' ,)"
