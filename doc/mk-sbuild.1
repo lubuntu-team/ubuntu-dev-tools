@@ -83,10 +83,16 @@ Specify a volume group, and subsequently use a default \fBSCHROOT_TYPE\fR of
 "\fBlvm-snapshot\fR" rather than "\fBdirectory\fR" (via overlayfs or
 aufs) mounts.
 .TP
+.B \-\-zfs-dataset=\fIDATASET
+Specify a zfs dataset, and subsequently use a default \fBSCHROOT_TYPE\fR of
+"\fBzfs-snapshot\fR" rather than "\fBdirectory\fR" (via overlayfs or
+aufs) mounts.
+.TP
 .B \-\-type\fR=\fISHROOT_TYPE
 Specify a \fBSCHROOT_TYPE\fR.  Supported values are "\fBdirectory\fR"
 (default if \fB\-\-vg\fR not specified), "\fBlvm-snapshot\fR" (default
-if \fB\-\-vg\fR specified), "\fBbtrfs-snapshot\fR", and "\fBfile\fR".
+if \fB\-\-vg\fR specified), "\fBbtrfs-snapshot\fR", "\fBzfs-snapshot\fR"
+and "\fBfile\fR".
 .TP
 .B \-\-ccache
 Enable usage of \fBccache\fR by default. See \fBccache\fR (1) for
