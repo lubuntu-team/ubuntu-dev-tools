@@ -2,6 +2,11 @@ ubuntu-dev-tools (0.190) UNRELEASED; urgency=medium
 
   *  WIP.
 
+  [ Dimitri John Ledkov ]
+  * mk-sbuild:
+    + For ubuntu, fix the debootstrap script to "gutsy", so to allow using
+      mk-sbuild for newer releases without requiring a newer debootstrap.
+
  -- Mattia Rizzolo <mattia@debian.org>  Mon, 04 Apr 2022 15:05:39 +0200
 
 ubuntu-dev-tools (0.189) unstable; urgency=medium
