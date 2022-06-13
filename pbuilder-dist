@@ -457,7 +457,7 @@ def main():
             elif (os.path.isdir('/usr/lib/arch-test')
                     and args[0] in os.listdir('/usr/lib/arch-test/')):
                 Logger.error('Architecture "%s" is not supported on your '
-                             'currently running kernal. Consider installing '
+                             'currently running kernel. Consider installing '
                              'the qemu-user-static package to enable the use of '
                              'foreign architectures.', args[0])
                 sys.exit(1)
