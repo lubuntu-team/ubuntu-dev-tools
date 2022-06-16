@@ -394,8 +394,8 @@ elif [ -z "$DISTRO" ]; then
     exit 1
 fi
 
-# By default SCRIPT must match RELEASE
-SCRIPT="$RELEASE"
+# By default DEBOOTSTRAP_SCRIPT must match RELEASE
+DEBOOTSTRAP_SCRIPT="$RELEASE"
 
 if [ "$DISTRO" = "ubuntu" ]; then
     ubuntu_dist_ge() {
@@ -420,8 +420,8 @@ if [ "$DISTRO" = "ubuntu" ]; then
       done
       [ $left -ge $right ] && return 0 || return 1
     }
-    # On Ubuntu, set SCRIPT to gutsy to allow building new RELEASES without new debootstrap
-    SCRIPT=gutsy
+    # On Ubuntu, set DEBOOTSTRAP_SCRIPT to gutsy to allow building new RELEASES without new debootstrap
+    DEBOOTSTRAP_SCRIPT=gutsy
 fi
 
 # By default, name the schroot the same as the release
@@ -583,8 +583,8 @@ esac
 
 # Is the specified release known to debootstrap?
 variant_opt="--variant=buildd"
-if [ ! -r "/usr/share/debootstrap/scripts/$SCRIPT" ]; then
-    echo "Specified release ($SCRIPT) not known to debootstrap" >&2
+if [ ! -r "/usr/share/debootstrap/scripts/$DEBOOTSTRAP_SCRIPT" ]; then
+    echo "Specified release ($DEBOOTSTRAP_SCRIPT) not known to debootstrap" >&2
     exit 1
 fi
 
@@ -806,7 +806,7 @@ esac
 sudo mkdir -p -m 0700 "$MNT"/root/.gnupg
 
 # debootstrap the chroot
-sudo ${proxy:+"http_proxy=${proxy}"} "$DEBOOTSTRAP_COMMAND" --arch="$CHROOT_ARCH" $variant_opt $debootstrap_opts "$RELEASE" "$MNT" "${DEBOOTSTRAP_MIRROR:-http://archive.ubuntu.com/ubuntu}" "$SCRIPT"
+sudo ${proxy:+"http_proxy=${proxy}"} "$DEBOOTSTRAP_COMMAND" --arch="$CHROOT_ARCH" $variant_opt $debootstrap_opts "$RELEASE" "$MNT" "${DEBOOTSTRAP_MIRROR:-http://archive.ubuntu.com/ubuntu}" "$DEBOOTSTRAP_SCRIPT"
 
 if [ $EATMYDATA -eq 1 ]; then
     sudo mkdir -p "${MNT}/usr/local/libexec/mk-sbuild"
