@@ -3,21 +3,23 @@ Upstream-Name: Ubuntu Developer Tools
 Upstream-Contact: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 Source: https://launchpad.net/ubuntu-dev-tools
 
-Files: *
-       backportpackage
+Files: backportpackage
        bash_completion/pbuilder-dist
        check-symbols
+       debian/*
        doc/backportpackage.1
        doc/check-symbols.1
        doc/requestsync.1
        doc/ubuntu-iso.1
+       GPL-2
+       README.updates
        requestsync
        setup.py
+       TODO
        ubuntu-iso
-       ubuntutools/requestsync/lp.py
-       ubuntutools/requestsync/mail.py
+       ubuntutools/requestsync/*.py
 Copyright: 2007,      Albert Damen <albrt@gmx.net>
-           2010,      Benjamin Drung <bdrung@ubuntu.com>
+           2010-2022, Benjamin Drung <bdrung@ubuntu.com>
            2007-2010, Canonical Ltd.
            2006-2007, Daniel Holbach <daniel.holbach@ubuntu.com>
            2010,      Evan Broder <evan@ebroder.net>
@@ -71,11 +73,14 @@ License: GPL-2+
  version 2 can be found in the /usr/share/common-licenses/GPL-2 file.
 
 Files: doc/bitesize.1
+       doc/check-mir.1
        doc/grab-merge.1
        doc/merge-changelog.1
        doc/setup-packaging-environment.1
        doc/syncpackage.1
        bitesize
+       check-mir
+       GPL-3
        grab-merge
        merge-changelog
        setup-packaging-environment
@@ -103,12 +108,23 @@ Files: dch-repeat
        doc/dch-repeat.1
        doc/grep-merges.1
        doc/mk-sbuild.1
+       doc/pull-pkg.1
        doc/ubuntu-build.1
        grep-merges
        mk-sbuild
+       pull-pkg
+       pull-*debs
+       pull-*-source
+       requirements.txt
+       test-requirements.txt
+       tox.ini
        ubuntu-build
+       ubuntutools/__init__.py
+       ubuntutools/lp/__init__.py
        ubuntutools/lp/lpapicache.py
+       ubuntutools/lp/udtexceptions.py
        ubuntutools/misc.py
+       ubuntutools/pullpkg.py
 Copyright: 2007-2010, Canonical Ltd.
            2008-2009, Iain Lane <iain@orangesquash.org.uk>
            2006,      John Dong <jdong@ubuntu.com>
@@ -134,7 +150,6 @@ License: GPL-3+
  version 3 can be found in the /usr/share/common-licenses/GPL-3 file.
 
 Files: doc/pull-debian-debdiff.1
-       doc/pull-pkg.1
        doc/requestbackport.1
        doc/reverse-depends.1
        doc/seeded-in-ubuntu.1
@@ -144,7 +159,6 @@ Files: doc/pull-debian-debdiff.1
        doc/update-maintainer.1
        enforced-editing-wrapper
        pull-debian-debdiff
-       pull-pkg
        requestbackport
        reverse-depends
        seeded-in-ubuntu
@@ -158,6 +172,7 @@ Files: doc/pull-debian-debdiff.1
        ubuntutools/sponsor_patch/*
        ubuntutools/test/*
        ubuntutools/update_maintainer.py
+       ubuntutools/version.py
        update-maintainer
 Copyright: 2009-2011, Benjamin Drung <bdrung@ubuntu.com>
            2010,      Evan Broder <evan@ebroder.net>
