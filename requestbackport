@@ -40,7 +40,7 @@ class DestinationException(Exception):
 def determine_destinations(source, destination):
     ubuntu_info = UbuntuDistroInfo()
     if destination is None:
-        destination = ubuntu_info.stable()
+        destination = ubuntu_info.lts()
 
     if source not in ubuntu_info.all:
         raise DestinationException("Source release %s does not exist" % source)
@@ -86,32 +86,23 @@ def disclaimer():
     confirmation_prompt()
 
 
-def check_existing(package, destinations):
+def check_existing(package):
     """Search for possible existing bug reports"""
-    # The LP bug search is indexed, not substring:
-    query = re.findall(r'[a-z]+', package)
-    bugs = []
-    for release in destinations:
-        project_name = '{}-backports'.format(release)
-        try:
-            project = Launchpad.projects[project_name]
-        except KeyError:
-            Logger.error("The backports tracking project '%s' doesn't seem to "
-                         "exist.  Please check the situation with the "
-                         "backports team.", project_name)
-            sys.exit(1)
-        bugs += project.searchTasks(omit_duplicates=True,
-                                    search_text=query,
-                                    status=["Incomplete", "New", "Confirmed",
-                                            "Triaged", "In Progress",
-                                            "Fix Committed"])
+    distro = Distribution('ubuntu')
+    srcpkg = distro.getSourcePackage(name=package.getPackageName())
+
+    bugs = srcpkg.searchTasks(omit_duplicates=True,
+                              search_text="[BPO]",
+                              status=["Incomplete", "New", "Confirmed",
+                                      "Triaged", "In Progress",
+                                      "Fix Committed"])
     if not bugs:
         return
 
     Logger.info("There are existing bug reports that look similar to your "
                 "request. Please check before continuing:")
 
-    for bug in sorted(set(bug_task.bug for bug_task in bugs)):
+    for bug in sorted([bug_task.bug for bug_task in bugs], key=lambda bug: bug.id):
         Logger.info(" * LP: #%-7i: %s  %s", bug.id, bug.title, bug.web_link)
 
     confirmation_prompt()
@@ -178,21 +169,17 @@ def locate_package(package, distribution):
             package_spph = archive.getSourcePackage(package, distribution)
             return package_spph
         except PackageNotFoundException as e:
-            if pass_ == 'binary':
+            try:
+                apt_pkg = apt.Cache()[package]
+            except KeyError:
                 Logger.error(str(e))
                 sys.exit(1)
-
-        try:
-            apt_pkg = apt.Cache()[package]
-        except KeyError:
-            continue
-        package = apt_pkg.candidate.source_name
-        Logger.info("Binary package specified, considering its source "
-                    "package instead: %s", package)
+            package = apt_pkg.candidate.source_name
+            Logger.info("Binary package specified, considering its source "
+                        "package instead: %s", package)
 
 
 def request_backport(package_spph, source, destinations):
-
     published_binaries = set()
     for bpph in package_spph.getBinaries():
         published_binaries.add(bpph.getPackageName())
@@ -205,18 +192,11 @@ def request_backport(package_spph, source, destinations):
                     "the binaries have been accepted.")
         sys.exit(1)
 
-    testing = []
-    testing += ["You can test-build the backport in your PPA with "
-                "backportpackage:"]
-    testing += ["$ backportpackage -u ppa:<lp username>/<ppa name> "
-                "-s %s -d %s %s"
-                % (source, dest, package_spph.getPackageName())
-                for dest in destinations]
-    testing += [""]
+    testing = ["[Testing]", ""]
     for dest in destinations:
-        testing += ['* %s:' % dest]
-        testing += ["[ ] Package builds without modification"]
-        testing += ["[ ] %s installs cleanly and runs" % binary
+        testing += [" * %s:" % dest.capitalize()]
+        testing += ["   [ ] Package builds without modification"]
+        testing += ["   [ ] %s installs cleanly and runs" % binary
                     for binary in published_binaries]
 
     subst = {
@@ -226,22 +206,22 @@ def request_backport(package_spph, source, destinations):
         'source': package_spph.getSeriesAndPocket(),
         'destinations': ', '.join(destinations),
     }
-    subject = ("Please backport %(package)s %(version)s (%(component)s) "
-               "from %(source)s" % subst)
+    subject = "[BPO] %(package)s %(version)s to %(destinations)s" % subst
     body = ('\n'.join(
             [
-             "Please backport %(package)s %(version)s (%(component)s) "
-             "from %(source)s to %(destinations)s.",
+             "[Impact]",
              "",
-             "Reason for the backport:",
-             "========================",
-             ">>> Enter your reasoning here <<<",
+             " * Justification for backporting the new version to the stable release.",
              "",
-             "Testing:",
-             "========",
-             "Mark off items in the checklist [X] as you test them, "
-             "but please leave the checklist so that backporters can quickly "
-             "evaluate the state of testing.",
+             "[Scope]",
+             "",
+             " * List the Ubuntu release you will backport from, and the specific package version.",
+             "",
+             " * List the Ubuntu release(s) you will backport to.",
+             "",
+             "[Other Info]",
+             "",
+             " * Anything else you think is useful to include",
              ""
             ]
             + testing
@@ -258,12 +238,20 @@ def request_backport(package_spph, source, destinations):
     if YesNoQuestion().ask("Request this backport", "yes") == "no":
         sys.exit(1)
 
-    targets = [Launchpad.projects['%s-backports' % destination]
-               for destination in destinations]
+    distro = Distribution('ubuntu')
+    pkgname = package_spph.getPackageName()
+
     bug = Launchpad.bugs.createBug(title=subject, description=body,
-                                   target=targets[0])
-    for target in targets[1:]:
-        bug.addTask(target=target)
+                                   target=distro.getSourcePackage(name=pkgname))
+
+    bug.subscribe(person=Launchpad.people['ubuntu-backporters'])
+
+    for dest in destinations:
+        series = distro.getSeries(dest)
+        try:
+            bug.addTask(target=series.getSourcePackage(name=pkgname))
+        except:
+            break
 
     Logger.info("Backport request filed as %s", bug.web_link)
 
@@ -273,7 +261,7 @@ def main():
     parser.add_option('-d', '--destination', metavar='DEST',
                       help='Backport to DEST release and necessary '
                            'intermediate releases '
-                           '(default: current stable release)')
+                           '(default: current LTS release)')
     parser.add_option('-s', '--source', metavar='SOURCE',
                       help='Backport from SOURCE release '
                            '(default: current devel release)')
@@ -307,9 +295,9 @@ def main():
 
     disclaimer()
 
-    check_existing(package, destinations)
-
     package_spph = locate_package(package, options.source)
+
+    check_existing(package_spph)
     request_backport(package_spph, options.source, destinations)
 
 
