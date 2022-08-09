@@ -30,6 +30,7 @@ from ubuntutools.lp.udtexceptions import (SeriesNotFoundException,
                                           PackageNotFoundException,
                                           PocketDoesNotExistError,)
 from ubuntutools.lp.lpapicache import Distribution, PersonTeam
+from launchpadlib.credentials import TokenAuthorizationException
 from ubuntutools.misc import split_release_pocket
 
 from ubuntutools import getLogger
@@ -138,7 +139,7 @@ def main():
         try:
             # Will fail here if we have no credentials, bail out
             Launchpad.login()
-        except IOError:
+        except TokenAuthorizationException:
             sys.exit(1)
 
         # Get the ubuntu archive
