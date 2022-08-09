@@ -135,12 +135,14 @@ def main():
             Logger.error(error)
             sys.exit(1)
 
-        # Get the ubuntu archive
         try:
-            ubuntu_archive = Distribution('ubuntu').getArchive()
-        # Will fail here if we have no credentials, bail out
+            # Will fail here if we have no credentials, bail out
+            Launchpad.login()
         except IOError:
             sys.exit(1)
+
+        # Get the ubuntu archive
+        ubuntu_archive = Distribution('ubuntu').getArchive()
         # Get list of published sources for package in question.
         try:
             sources = ubuntu_archive.getSourcePackage(package, release, pocket)
