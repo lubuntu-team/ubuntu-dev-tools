@@ -76,6 +76,12 @@ class _Launchpad(object):
         if not self.logged_in:
             self.__lp = LP.login_with('ubuntu-dev-tools', service,
                                       version=api_version)
+            # Unfortunately launchpadlib may 'login' using cached
+            # credentials, without actually verifying if the credentials
+            # are valid; which can lead to this 'login' not actually
+            # logging in.
+            # So, this forces actual LP access here, to force actual login.
+            self.__lp.me
         else:
             raise AlreadyLoggedInError('Already logged in to Launchpad.')
 
