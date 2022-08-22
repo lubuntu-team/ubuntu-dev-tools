@@ -74,12 +74,14 @@ class _Launchpad(object):
     def login(self, service=service, api_version=api_version):
         '''Enforce a non-anonymous login.'''
         if not self.logged_in:
-            try:
-                self.__lp = LP.login_with('ubuntu-dev-tools', service,
-                                          version=api_version)
-            except IOError as error:
-                Logger.error(str(error))
-                raise
+            self.__lp = LP.login_with('ubuntu-dev-tools', service,
+                                      version=api_version)
+            # Unfortunately launchpadlib may 'login' using cached
+            # credentials, without actually verifying if the credentials
+            # are valid; which can lead to this 'login' not actually
+            # logging in.
+            # So, this forces actual LP access here, to force actual login.
+            self.__lp.me
         else:
             raise AlreadyLoggedInError('Already logged in to Launchpad.')
 
