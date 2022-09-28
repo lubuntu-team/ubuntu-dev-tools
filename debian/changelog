@@ -2,6 +2,12 @@ ubuntu-dev-tools (0.191) UNRELEASED; urgency=medium
 
   [ Mattia Rizzolo ]
   * WIP.
+  [ Dan Streetman ]
+  * lpapicache:
+    + Make sure that login() actually logins and doesn't use cached credentials.
+  * ubuntu-build:
+    + Fix crash caused by a change in lpapicache that changed the default
+      operation mode from authenticated to anonymous.  LP: #1984113
 
   [ Stefano Rivera ]
   * backportpackage: Add support for lsb-release-minimal, which doesn't have a
