@@ -1,6 +1,11 @@
 ubuntu-dev-tools (0.191) UNRELEASED; urgency=medium
 
+  [ Mattia Rizzolo ]
   * WIP.
+
+  [ Stefano Rivera ]
+  * backportpackage: Add support for lsb-release-minimal, which doesn't have a
+    Python module, thanks Gioele Barabucci. (Closes: 1020901)
 
  -- Mattia Rizzolo <mattia@debian.org>  Mon, 22 Aug 2022 17:55:53 +0200
 
