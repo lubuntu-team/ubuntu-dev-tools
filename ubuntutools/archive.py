@@ -27,7 +27,7 @@ Approach:
 3. Verify checksums.
 """
 
-from urllib.request import urlopen
+from urllib.request import urlopen, urlparse, urljoin
 import codecs
 import functools
 import json
@@ -168,7 +168,9 @@ class SourcePackage(ABC):
         self._series = series
         self._pocket = pocket
         self._status = status
-        self._dsc_source = Path(dscfile) if dscfile else None
+        # dscfile can be either a path or an URL.  misc.py's download() will
+        # later fiture it out
+        self._dsc_source = dscfile
         self._verify_signature = verify_signature
 
         # Cached values:
@@ -323,7 +325,12 @@ class SourcePackage(ABC):
     def _source_urls(self, name):
         "Generator of sources for name"
         if self._dsc_source:
-            yield str(self._dsc_source.parent / name)
+            # we only take "" as file, as regardless if for some reason this
+            # is a file:// url we still need to handle it with urljoin
+            if urlparse(str(self._dsc_source)).scheme == "":
+                yield str(Path(self._dsc_source).parent / name)
+            else:
+                yield urljoin(self._dsc_source, name)
         for server in self._archive_servers():
             yield self._mirror_url(server, self.component, name)
         if self.lp_spph.sourceFileUrl(name):

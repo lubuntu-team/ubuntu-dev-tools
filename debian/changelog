@@ -1,7 +1,7 @@
 ubuntu-dev-tools (0.191) UNRELEASED; urgency=medium
 
-  [ Mattia Rizzolo ]
   * WIP.
+
   [ Dan Streetman ]
   * lpapicache:
     + Make sure that login() actually logins and doesn't use cached credentials.
@@ -10,8 +10,16 @@ ubuntu-dev-tools (0.191) UNRELEASED; urgency=medium
       operation mode from authenticated to anonymous.  LP: #1984113
 
   [ Stefano Rivera ]
-  * backportpackage: Add support for lsb-release-minimal, which doesn't have a
-    Python module, thanks Gioele Barabucci. (Closes: 1020901)
+  * backportpackage:
+    + Add support for lsb-release-minimal, which doesn't have a Python module.
+      Thanks to Gioele Barabucci for the patch.  Closes: #1020901
+
+  [ Mattia Rizzolo ]
+  * ubuntutools/archive.py:
+    + Fix operation of SourcePackage._source_urls() (as used, for example, in
+      SourcePackage.pull() called by backportpackage) to also work when the
+      class is instantiated with a URL as .dsc.  Fixes regression from v0.184.
+      Thanks to Unit 193 for the initial patch.
 
  -- Mattia Rizzolo <mattia@debian.org>  Mon, 22 Aug 2022 17:55:53 +0200
 
