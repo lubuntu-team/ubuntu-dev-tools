@@ -16,7 +16,7 @@ ubuntu-dev-tools (0.191) unstable; urgency=medium
   [ Stefano Rivera ]
   * backportpackage:
     + Add support for lsb-release-minimal, which doesn't have a Python module.
-      Thanks to Gioele Barabucci for the patch.  Closes: #1020901
+      Thanks to Gioele Barabucci for the patch.  Closes: #1020901; LP: #1991828
 
   [ Mattia Rizzolo ]
   * ubuntutools/archive.py:
