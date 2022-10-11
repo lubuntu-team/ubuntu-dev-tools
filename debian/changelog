@@ -1,3 +1,9 @@
+ubuntu-dev-tools (0.192) UNRELEASED; urgency=medium
+
+  * WIP.
+
+ -- Mattia Rizzolo <mattia@debian.org>  Tue, 11 Oct 2022 13:57:46 +0200
+
 ubuntu-dev-tools (0.191) unstable; urgency=medium
 
   [ Dan Streetman ]
