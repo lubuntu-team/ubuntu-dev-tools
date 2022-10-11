@@ -1,6 +1,4 @@
-ubuntu-dev-tools (0.191) UNRELEASED; urgency=medium
-
-  * WIP.
+ubuntu-dev-tools (0.191) unstable; urgency=medium
 
   [ Dan Streetman ]
   * lpapicache:
@@ -21,7 +19,7 @@ ubuntu-dev-tools (0.191) UNRELEASED; urgency=medium
       class is instantiated with a URL as .dsc.  Fixes regression from v0.184.
       Thanks to Unit 193 for the initial patch.
 
- -- Mattia Rizzolo <mattia@debian.org>  Mon, 22 Aug 2022 17:55:53 +0200
+ -- Mattia Rizzolo <mattia@debian.org>  Tue, 11 Oct 2022 13:56:03 +0200
 
 ubuntu-dev-tools (0.190) unstable; urgency=medium
 
