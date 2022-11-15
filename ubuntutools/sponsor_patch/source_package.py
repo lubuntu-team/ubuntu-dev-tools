@@ -327,12 +327,9 @@ class SourcePackage(object):
         if not Logger.isEnabledFor(logging.DEBUG):
             cmd.insert(1, "-q")
         Logger.debug(' '.join(cmd) + " > " + self._debdiff_filename)
-        debdiff = subprocess.check_output(cmd, encoding='utf-8')
-
-        # write debdiff file
-        debdiff_file = open(self._debdiff_filename, "w")
-        debdiff_file.writelines(debdiff)
-        debdiff_file.close()
+        with open(self._debdiff_filename, "w") as debdiff_file:
+            debdiff = subprocess.run(cmd, check=False, stdout=debdiff_file)
+            assert debdiff.returncode in (0, 1)
 
     def is_fixed(self, lp_bug):
         """Make sure that the given Launchpad bug is closed.
