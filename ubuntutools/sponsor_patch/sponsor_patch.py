@@ -181,7 +181,7 @@ def merge_branch(branch):
 
 
 def extract_source(dsc_file, verbose=False):
-    cmd = ["dpkg-source", "--no-preparation", "-x", dsc_file]
+    cmd = ["dpkg-source", "--skip-patches", "-x", dsc_file]
     if not verbose:
         cmd.insert(1, "-q")
     Logger.debug(' '.join(cmd))
