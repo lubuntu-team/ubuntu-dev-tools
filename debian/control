@@ -59,8 +59,6 @@ Depends:
  ${perl:Depends},
 Recommends:
  arch-test,
- bzr | brz,
- bzr-builddeb | brz-debian,
  ca-certificates,
  debian-archive-keyring,
  debian-keyring,
@@ -74,6 +72,8 @@ Recommends:
  reportbug (>= 3.39ubuntu1),
  ubuntu-keyring | ubuntu-archive-keyring,
 Suggests:
+ bzr | brz,
+ bzr-builddeb | brz-debian,
  qemu-user-static,
 Description: useful tools for Ubuntu developers
  This is a collection of useful tools that Ubuntu developers use to make their
