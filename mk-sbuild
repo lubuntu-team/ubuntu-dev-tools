@@ -675,7 +675,11 @@ debian)
     # Debian only performs security updates
     SKIP_UPDATES=1
     if [ -z "$SOURCES_SECURITY_SUITE" ]; then
-        SOURCES_SECURITY_SUITE="RELEASE/updates"
+        if debian_dist_ge "$RELEASE" "bullseye"; then
+            SOURCES_SECURITY_SUITE="RELEASE-security"
+        else
+            SOURCES_SECURITY_SUITE="RELEASE/updates"
+        fi
     fi
     if [ -z "$SOURCES_SECURITY_URL" ]; then
         SOURCES_SECURITY_URL="http://security.debian.org/"
