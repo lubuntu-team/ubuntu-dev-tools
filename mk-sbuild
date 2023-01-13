@@ -397,29 +397,41 @@ fi
 # By default DEBOOTSTRAP_SCRIPT must match RELEASE
 DEBOOTSTRAP_SCRIPT="$RELEASE"
 
-if [ "$DISTRO" = "ubuntu" ]; then
-    ubuntu_dist_ge() {
-      local releases="$(ubuntu-distro-info --all)"
-      local left=999
-      local right=0
-      local seq=1
-      for i in $releases; do
+dist_ge() {
+    local releases="$($3-distro-info --all)"
+    local left=999
+    local right=0
+    local seq=1
+
+    for i in $releases; do
         if [ $1 = $i ]; then
-          local left=$seq
-          break
+            local left=$seq
+            break
         fi
         seq=$((seq+1))
-      done
-      seq=1
-      for i in $releases; do
+    done
+
+    seq=1
+    for i in $releases; do
         if [ $2 = $i ]; then
-          local right=$seq
-          break
+            local right=$seq
+            break
         fi
         seq=$((seq+1))
-      done
-      [ $left -ge $right ] && return 0 || return 1
-    }
+    done
+
+    [ $left -ge $right ] && return 0 || return 1
+}
+
+ubuntu_dist_ge () {
+    dist_ge $1 $2 ubuntu
+}
+
+debian_dist_ge () {
+    dist_ge $1 $2 debian
+}
+
+if [ "$DISTRO" = "ubuntu" ]; then
     # On Ubuntu, set DEBOOTSTRAP_SCRIPT to gutsy to allow building new RELEASES without new debootstrap
     DEBOOTSTRAP_SCRIPT=gutsy
 fi
