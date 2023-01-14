@@ -9,6 +9,11 @@ ubuntu-dev-tools (0.192) UNRELEASED; urgency=medium
   * Demote bzr/brz from Recommends to Suggests, as nowadays git is the way.
     Closes: #940531
 
+  [ Masahiro Yamada ]
+  * mk-sbuild:
+    + Handle the new location of the Debian bullseye security archive.
+      Closes: #1001832; LP: #1955116
+
  -- Mattia Rizzolo <mattia@debian.org>  Tue, 11 Oct 2022 13:57:46 +0200
 
 ubuntu-dev-tools (0.191) unstable; urgency=medium
