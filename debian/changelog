@@ -1,6 +1,13 @@
 ubuntu-dev-tools (0.192) UNRELEASED; urgency=medium
 
-  * WIP.
+  * WIP
+
+  [ Benjamin Drung ]
+  * sponsor-patch:
+    + Ignore exit code 1 of debdiff call.
+    + Use --skip-patches instead of --no-preparation with dpkg-source -x.
+  * Demote bzr/brz from Recommends to Suggests, as nowadays git is the way.
+    Closes: #940531
 
  -- Mattia Rizzolo <mattia@debian.org>  Tue, 11 Oct 2022 13:57:46 +0200
 
