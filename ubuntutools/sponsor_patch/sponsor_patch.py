@@ -15,6 +15,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+import logging
 import os
 import pwd
 import shutil
@@ -22,18 +23,14 @@ import subprocess
 import sys
 
 from distro_info import UbuntuDistroInfo
-
 from launchpadlib.launchpad import Launchpad
 
-from ubuntutools.update_maintainer import update_maintainer, MaintainerUpdateException
 from ubuntutools.question import input_number
-
 from ubuntutools.sponsor_patch.bugtask import BugTask, is_sync
 from ubuntutools.sponsor_patch.patch import Patch
 from ubuntutools.sponsor_patch.question import ask_for_manual_fixing
 from ubuntutools.sponsor_patch.source_package import SourcePackage
-
-import logging
+from ubuntutools.update_maintainer import MaintainerUpdateException, update_maintainer
 
 Logger = logging.getLogger(__name__)
 

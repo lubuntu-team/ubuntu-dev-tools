@@ -19,9 +19,9 @@ import os
 import sys
 
 from ubuntutools.update_maintainer import (
-    update_maintainer,
-    restore_maintainer,
     MaintainerUpdateException,
+    restore_maintainer,
+    update_maintainer,
 )
 
 

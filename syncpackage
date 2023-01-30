@@ -32,7 +32,8 @@ import urllib.request
 
 from lazr.restfulclient.errors import HTTPError
 
-from ubuntutools.archive import DebianSourcePackage, UbuntuSourcePackage, DownloadError
+from ubuntutools import getLogger
+from ubuntutools.archive import DebianSourcePackage, DownloadError, UbuntuSourcePackage
 from ubuntutools.config import UDTConfig, ubu_email
 from ubuntutools.lp import udtexceptions
 from ubuntutools.lp.lpapicache import (
@@ -43,11 +44,9 @@ from ubuntutools.lp.lpapicache import (
 )
 from ubuntutools.misc import split_release_pocket
 from ubuntutools.question import YesNoQuestion
-from ubuntutools.requestsync.mail import get_debian_srcpkg as requestsync_mail_get_debian_srcpkg
 from ubuntutools.requestsync.lp import get_debian_srcpkg, get_ubuntu_srcpkg
+from ubuntutools.requestsync.mail import get_debian_srcpkg as requestsync_mail_get_debian_srcpkg
 from ubuntutools.version import Version
-
-from ubuntutools import getLogger
 
 Logger = getLogger()
 

@@ -15,6 +15,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+import logging
 import os
 import re
 from urllib.parse import unquote
@@ -24,8 +25,6 @@ import distro_info
 import httplib2
 
 from ubuntutools.version import Version
-
-import logging
 
 Logger = logging.getLogger(__name__)
 

@@ -22,17 +22,16 @@
 # ##################################################################
 
 import argparse
-import debianbts
 import logging
 import re
 import sys
 import webbrowser
 
+import debianbts
 from launchpadlib.launchpad import Launchpad
 
-from ubuntutools.config import UDTConfig
-
 from ubuntutools import getLogger
+from ubuntutools.config import UDTConfig
 
 Logger = getLogger()
 

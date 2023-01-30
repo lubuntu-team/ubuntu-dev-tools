@@ -15,6 +15,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+import logging
 import os
 import re
 import subprocess
@@ -24,14 +25,11 @@ import debian.changelog
 import debian.deb822
 
 from ubuntutools.question import Question, YesNoQuestion
-
 from ubuntutools.sponsor_patch.question import (
     ask_for_ignoring_or_fixing,
     ask_for_manual_fixing,
     user_abort,
 )
-
-import logging
 
 Logger = logging.getLogger(__name__)
 

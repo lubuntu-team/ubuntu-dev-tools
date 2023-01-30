@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 
-from setuptools import setup
 import glob
 import os
 import re
+
+from setuptools import setup
 
 
 def make_pep440_compliant(version: str) -> str:

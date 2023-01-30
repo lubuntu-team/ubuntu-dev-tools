@@ -16,11 +16,11 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-import tempfile
 import os
 import re
 import subprocess
 import sys
+import tempfile
 
 
 class Question(object):

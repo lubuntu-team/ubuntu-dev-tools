@@ -24,12 +24,11 @@
 import sys
 from optparse import OptionParser
 
-from launchpadlib.launchpad import Launchpad
 from launchpadlib.errors import HTTPError
-
-from ubuntutools.config import UDTConfig
+from launchpadlib.launchpad import Launchpad
 
 from ubuntutools import getLogger
+from ubuntutools.config import UDTConfig
 
 Logger = getLogger()
 

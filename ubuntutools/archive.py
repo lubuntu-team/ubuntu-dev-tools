@@ -27,51 +27,47 @@ Approach:
 3. Verify checksums.
 """
 
-from urllib.request import urlopen, urlparse, urljoin
 import codecs
 import functools
 import json
+import logging
 import os
 import re
 import subprocess
 import sys
 import tempfile
-
 from abc import ABC, abstractmethod
-
-from debian.changelog import Changelog
-import debian.deb822
-
 from contextlib import closing
-
 from pathlib import Path
+from urllib.request import urljoin, urlopen, urlparse
+
+import debian.deb822
+from debian.changelog import Changelog
 
 from ubuntutools.config import UDTConfig
 from ubuntutools.lp.lpapicache import (
-    Launchpad,
     Distribution,
+    HTTPError,
+    Launchpad,
     PersonTeam,
     Project,
     SourcePackagePublishingHistory,
-    HTTPError,
 )
 from ubuntutools.lp.udtexceptions import (
-    PackageNotFoundException,
-    SeriesNotFoundException,
-    PocketDoesNotExistError,
     InvalidDistroValueError,
+    PackageNotFoundException,
+    PocketDoesNotExistError,
+    SeriesNotFoundException,
 )
 from ubuntutools.misc import (
+    DownloadError,
+    NotFoundError,
     download,
     download_bytes,
     verify_file_checksum,
     verify_file_checksums,
-    DownloadError,
-    NotFoundError,
 )
 from ubuntutools.version import Version
-
-import logging
 
 Logger = logging.getLogger(__name__)
 

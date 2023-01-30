@@ -17,17 +17,16 @@
 import optparse
 import sys
 
+from ubuntutools import getLogger
 from ubuntutools.lp.lpapicache import (
-    Launchpad,
     Distribution,
-    PersonTeam,
-    Packageset,
+    Launchpad,
     PackageNotFoundException,
+    Packageset,
+    PersonTeam,
     SeriesNotFoundException,
 )
 from ubuntutools.misc import split_release_pocket
-
-from ubuntutools import getLogger
 
 Logger = getLogger()
 

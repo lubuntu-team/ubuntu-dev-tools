@@ -22,11 +22,10 @@ import sys
 
 import debian.changelog
 
+from ubuntutools import getLogger
 from ubuntutools.archive import DebianSourcePackage, DownloadError
 from ubuntutools.config import UDTConfig
 from ubuntutools.version import Version
-
-from ubuntutools import getLogger
 
 Logger = getLogger()
 

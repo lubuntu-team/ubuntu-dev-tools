@@ -15,15 +15,14 @@
 # OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 # PERFORMANCE OF THIS SOFTWARE.
 
+import locale
+import logging
 import os
 import pwd
 import re
 import shlex
 import socket
 import sys
-import locale
-
-import logging
 
 Logger = logging.getLogger(__name__)
 

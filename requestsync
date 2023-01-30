@@ -32,13 +32,12 @@ import sys
 
 from distro_info import UbuntuDistroInfo
 
+from ubuntutools import getLogger
 from ubuntutools.config import UDTConfig, ubu_email
 from ubuntutools.lp import udtexceptions
 from ubuntutools.misc import require_utf8
-from ubuntutools.question import confirmation_prompt, EditBugReport
+from ubuntutools.question import EditBugReport, confirmation_prompt
 from ubuntutools.version import Version
-
-from ubuntutools import getLogger
 
 Logger = getLogger()
 
@@ -176,15 +175,15 @@ def main():
 
     # import the needed requestsync module
     if options.lpapi:
+        from ubuntutools.lp.lpapicache import Distribution, Launchpad
         from ubuntutools.requestsync.lp import (
             check_existing_reports,
             get_debian_srcpkg,
-            get_ubuntu_srcpkg,
             get_ubuntu_delta_changelog,
+            get_ubuntu_srcpkg,
             need_sponsorship,
             post_bug,
         )
-        from ubuntutools.lp.lpapicache import Distribution, Launchpad
 
         # See if we have LP credentials and exit if we don't -
         # cannot continue in this case
@@ -198,8 +197,8 @@ def main():
         from ubuntutools.requestsync.mail import (
             check_existing_reports,
             get_debian_srcpkg,
-            get_ubuntu_srcpkg,
             get_ubuntu_delta_changelog,
+            get_ubuntu_srcpkg,
             mail_bug,
             need_sponsorship,
         )

@@ -22,46 +22,42 @@
 # ##################################################################
 
 
+import errno
+import logging
 import os
 import re
-import sys
-import errno
 import subprocess
-
+import sys
 from argparse import ArgumentParser
+from urllib.parse import urlparse
 
 from distro_info import DebianDistroInfo
 
-from urllib.parse import urlparse
-
+# by default we use standard logging.getLogger() and only use
+# ubuntutools.getLogger() in PullPkg().main()
+from ubuntutools import getLogger as ubuntutools_getLogger
 from ubuntutools.archive import (
-    UbuntuSourcePackage,
     DebianSourcePackage,
-    UbuntuCloudArchiveSourcePackage,
     PersonalPackageArchiveSourcePackage,
+    UbuntuCloudArchiveSourcePackage,
+    UbuntuSourcePackage,
 )
 from ubuntutools.config import UDTConfig
 from ubuntutools.lp.lpapicache import Distribution, Launchpad
 from ubuntutools.lp.udtexceptions import (
     AlreadyLoggedInError,
-    SeriesNotFoundException,
+    InvalidDistroValueError,
     PackageNotFoundException,
     PocketDoesNotExistError,
-    InvalidDistroValueError,
+    SeriesNotFoundException,
 )
 from ubuntutools.misc import (
-    split_release_pocket,
-    host_architecture,
-    download,
-    UPLOAD_QUEUE_STATUSES,
     STATUSES,
+    UPLOAD_QUEUE_STATUSES,
+    download,
+    host_architecture,
+    split_release_pocket,
 )
-
-
-# by default we use standard logging.getLogger() and only use
-# ubuntutools.getLogger() in PullPkg().main()
-from ubuntutools import getLogger as ubuntutools_getLogger
-import logging
 
 Logger = logging.getLogger(__name__)
 

@@ -22,23 +22,22 @@
 #
 # ##################################################################
 
-import distro_info
 import hashlib
 import locale
+import logging
 import os
-import requests
 import shutil
 import sys
 import tempfile
-
 from contextlib import suppress
 from pathlib import Path
-from subprocess import check_output, CalledProcessError
+from subprocess import CalledProcessError, check_output
 from urllib.parse import urlparse
 
-from ubuntutools.lp.udtexceptions import PocketDoesNotExistError
+import distro_info
+import requests
 
-import logging
+from ubuntutools.lp.udtexceptions import PocketDoesNotExistError
 
 Logger = logging.getLogger(__name__)
 

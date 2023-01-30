@@ -20,12 +20,13 @@
 #   Please see the /usr/share/common-licenses/GPL-2 file for the full text
 #   of the GNU General Public License license.
 
+import logging
 import os
 import re
-import sys
 import smtplib
 import socket
 import subprocess
+import sys
 import tempfile
 
 from debian.changelog import Changelog
@@ -33,9 +34,7 @@ from distro_info import DebianDistroInfo, DistroDataOutdated
 
 from ubuntutools.archive import DebianSourcePackage, UbuntuSourcePackage
 from ubuntutools.lp.udtexceptions import PackageNotFoundException
-from ubuntutools.question import confirmation_prompt, YesNoQuestion
-
-import logging
+from ubuntutools.question import YesNoQuestion, confirmation_prompt
 
 Logger = logging.getLogger(__name__)
 

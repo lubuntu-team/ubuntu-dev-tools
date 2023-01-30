@@ -22,28 +22,19 @@
 #   Based on code written by Jonathan Davies <jpds@ubuntu.com>
 
 import collections
+import logging
 import os
 import re
-
 from copy import copy
-
-from debian.changelog import Changelog
-from launchpadlib.launchpad import Launchpad as LP
-from launchpadlib.errors import HTTPError
-from lazr.restfulclient.resource import Entry
 from urllib.error import URLError
 from urllib.parse import urlparse
 
-from ubuntutools.version import Version
-from ubuntutools.lp import service, api_version
-from ubuntutools.misc import (
-    download_text,
-    host_architecture,
-    DEFAULT_POCKETS,
-    POCKETS,
-    DEFAULT_STATUSES,
-    STATUSES,
-)
+from debian.changelog import Changelog
+from launchpadlib.errors import HTTPError
+from launchpadlib.launchpad import Launchpad as LP
+from lazr.restfulclient.resource import Entry
+
+from ubuntutools.lp import api_version, service
 from ubuntutools.lp.udtexceptions import (
     AlreadyLoggedInError,
     ArchiveNotFoundException,
@@ -52,8 +43,15 @@ from ubuntutools.lp.udtexceptions import (
     PocketDoesNotExistError,
     SeriesNotFoundException,
 )
-
-import logging
+from ubuntutools.misc import (
+    DEFAULT_POCKETS,
+    DEFAULT_STATUSES,
+    POCKETS,
+    STATUSES,
+    download_text,
+    host_architecture,
+)
+from ubuntutools.version import Version
 
 Logger = logging.getLogger(__name__)
 

@@ -19,7 +19,6 @@ import unittest
 
 from setup import scripts
 
-
 TIMEOUT = 10
 
 

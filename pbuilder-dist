@@ -31,20 +31,19 @@
 
 import os
 import os.path
-import sys
-import subprocess
 import shutil
+import subprocess
+import sys
+from contextlib import suppress
 
 import debian.deb822
-from contextlib import suppress
-from distro_info import DebianDistroInfo, UbuntuDistroInfo, DistroDataOutdated
+from distro_info import DebianDistroInfo, DistroDataOutdated, UbuntuDistroInfo
 
 import ubuntutools.misc
 import ubuntutools.version
+from ubuntutools import getLogger
 from ubuntutools.config import UDTConfig
 from ubuntutools.question import YesNoQuestion
-
-from ubuntutools import getLogger
 
 Logger = getLogger()
 

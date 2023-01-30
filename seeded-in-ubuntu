@@ -22,9 +22,8 @@ import os
 import time
 import urllib.request
 
-from ubuntutools.lp.lpapicache import Distribution, Launchpad, PackageNotFoundException
-
 from ubuntutools import getLogger
+from ubuntutools.lp.lpapicache import Distribution, Launchpad, PackageNotFoundException
 
 Logger = getLogger()
 

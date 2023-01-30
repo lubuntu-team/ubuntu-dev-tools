@@ -16,12 +16,11 @@
 
 """This module is for updating the Maintainer field of an Ubuntu package."""
 
+import logging
 import os
 import re
 
 import debian.changelog
-
-import logging
 
 Logger = logging.getLogger(__name__)
 

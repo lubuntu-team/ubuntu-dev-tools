@@ -18,10 +18,9 @@
 #   CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 
+import logging
 import os
 import subprocess
-
-import logging
 
 Logger = logging.getLogger(__name__)
 

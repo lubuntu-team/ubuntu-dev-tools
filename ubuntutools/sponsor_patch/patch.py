@@ -15,14 +15,13 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+import logging
 import os
 import re
 import subprocess
-
-from ubuntutools.sponsor_patch.question import ask_for_manual_fixing
 from functools import reduce
 
-import logging
+from ubuntutools.sponsor_patch.question import ask_for_manual_fixing
 
 Logger = logging.getLogger(__name__)
 

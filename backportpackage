@@ -31,22 +31,21 @@ try:
     import lsb_release
 except ImportError:
     lsb_release = None
-from httplib2 import Http, HttpLib2Error
 from distro_info import DebianDistroInfo, UbuntuDistroInfo
-
-from ubuntutools.archive import DebianSourcePackage, UbuntuSourcePackage, DownloadError
-from ubuntutools.config import UDTConfig, ubu_email
-from ubuntutools.builder import get_builder
-from ubuntutools.lp.lpapicache import (
-    Launchpad,
-    Distribution,
-    SeriesNotFoundException,
-    PackageNotFoundException,
-)
-from ubuntutools.misc import system_distribution, vendor_to_distroinfo, codename_to_distribution
-from ubuntutools.question import YesNoQuestion
+from httplib2 import Http, HttpLib2Error
 
 from ubuntutools import getLogger
+from ubuntutools.archive import DebianSourcePackage, DownloadError, UbuntuSourcePackage
+from ubuntutools.builder import get_builder
+from ubuntutools.config import UDTConfig, ubu_email
+from ubuntutools.lp.lpapicache import (
+    Distribution,
+    Launchpad,
+    PackageNotFoundException,
+    SeriesNotFoundException,
+)
+from ubuntutools.misc import codename_to_distribution, system_distribution, vendor_to_distroinfo
+from ubuntutools.question import YesNoQuestion
 
 Logger = getLogger()
 

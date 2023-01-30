@@ -20,6 +20,7 @@
 #   Please see the /usr/share/common-licenses/GPL-2 file for the full text
 #   of the GNU General Public License license.
 
+import logging
 import re
 
 from debian.deb822 import Changes
@@ -28,14 +29,12 @@ from httplib2 import Http, HttpLib2Error
 
 from ubuntutools.lp import udtexceptions
 from ubuntutools.lp.lpapicache import (
-    Launchpad,
     Distribution,
-    PersonTeam,
     DistributionSourcePackage,
+    Launchpad,
+    PersonTeam,
 )
 from ubuntutools.question import confirmation_prompt
-
-import logging
 
 Logger = logging.getLogger(__name__)
 

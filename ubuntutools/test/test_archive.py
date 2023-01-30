@@ -18,11 +18,9 @@
 import filecmp
 import tempfile
 import unittest
-
-import ubuntutools.archive
-
 from pathlib import Path
 
+import ubuntutools.archive
 from ubuntutools.test.example_package import ExamplePackage
 
 

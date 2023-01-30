@@ -22,20 +22,19 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-# Our modules to import.
 import sys
-from optparse import OptionGroup
-from optparse import OptionParser
-from ubuntutools.lp.udtexceptions import (
-    SeriesNotFoundException,
-    PackageNotFoundException,
-    PocketDoesNotExistError,
-)
-from ubuntutools.lp.lpapicache import Distribution, Launchpad, PersonTeam
+from optparse import OptionGroup, OptionParser
+
 from launchpadlib.credentials import TokenAuthorizationException
-from ubuntutools.misc import split_release_pocket
 
 from ubuntutools import getLogger
+from ubuntutools.lp.lpapicache import Distribution, Launchpad, PersonTeam
+from ubuntutools.lp.udtexceptions import (
+    PackageNotFoundException,
+    PocketDoesNotExistError,
+    SeriesNotFoundException,
+)
+from ubuntutools.misc import split_release_pocket
 
 Logger = getLogger()
 

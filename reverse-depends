@@ -19,10 +19,9 @@ import sys
 
 from distro_info import DistroDataOutdated
 
-from ubuntutools.misc import system_distribution, vendor_to_distroinfo, codename_to_distribution
-from ubuntutools.rdepends import query_rdepends, RDependsException
-
 from ubuntutools import getLogger
+from ubuntutools.misc import codename_to_distribution, system_distribution, vendor_to_distroinfo
+from ubuntutools.rdepends import RDependsException, query_rdepends
 
 Logger = getLogger()
 

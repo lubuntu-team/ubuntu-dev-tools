@@ -27,19 +27,16 @@ import os
 import re
 import shutil
 import sys
-
-from subprocess import call, check_call, run, Popen, PIPE, DEVNULL
-
+from subprocess import DEVNULL, PIPE, Popen, call, check_call, run
 from tempfile import mkdtemp
 
 from debian.changelog import Changelog
-from distro_info import UbuntuDistroInfo, DistroDataOutdated
-
-from ubuntutools.config import ubu_email
-from ubuntutools.question import YesNoQuestion, EditFile
-from ubuntutools.update_maintainer import update_maintainer, restore_maintainer
+from distro_info import DistroDataOutdated, UbuntuDistroInfo
 
 from ubuntutools import getLogger
+from ubuntutools.config import ubu_email
+from ubuntutools.question import EditFile, YesNoQuestion
+from ubuntutools.update_maintainer import restore_maintainer, update_maintainer
 
 Logger = getLogger()
 
