@@ -14,3 +14,6 @@ isort --check-only --diff .
 
 echo "Running flake8..."
 flake8 --max-line-length=99 --ignore=E203,W503 . $PYTHON_SCRIPTS
+
+echo "Running pylint..."
+pylint $(find * -name '*.py') $PYTHON_SCRIPTS

@@ -176,7 +176,8 @@ Files: doc/pull-debian-debdiff.1
        ubuntutools/update_maintainer.py
        ubuntutools/version.py
        update-maintainer
-Copyright: 2009-2011, Benjamin Drung <bdrung@ubuntu.com>
+       .pylintrc
+Copyright: 2009-2023, Benjamin Drung <bdrung@ubuntu.com>
            2010,      Evan Broder <evan@ebroder.net>
            2008,      Siegfried-Angel Gevatter Pujals <rainct@ubuntu.com>
            2010-2011, Stefano Rivera <stefanor@ubuntu.com>
