@@ -6,5 +6,8 @@ set -eu
 
 PYTHON_SCRIPTS=$(grep -l -r '^#! */usr/bin/python3$' .)
 
+echo "Running black..."
+black --check --diff . $PYTHON_SCRIPTS
+
 echo "Running flake8..."
 flake8 --max-line-length=99 --ignore=E203,W503 . $PYTHON_SCRIPTS

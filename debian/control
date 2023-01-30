@@ -7,6 +7,7 @@ Uploaders:
  Stefano Rivera <stefanor@debian.org>,
  Mattia Rizzolo <mattia@debian.org>,
 Build-Depends:
+ black <!nocheck>,
  dctrl-tools,
  debhelper-compat (= 13),
  devscripts (>= 2.11.0~),

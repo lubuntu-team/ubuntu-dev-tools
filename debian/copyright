@@ -83,6 +83,7 @@ Files: doc/bitesize.1
        GPL-3
        grab-merge
        merge-changelog
+       pyproject.toml
        run-linters
        setup-packaging-environment
        syncpackage
