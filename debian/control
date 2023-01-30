@@ -15,6 +15,7 @@ Build-Depends:
  dh-python,
  distro-info (>= 0.2~),
  flake8,
+ isort <!nocheck>,
  lsb-release,
  python3-all,
  python3-apt,
