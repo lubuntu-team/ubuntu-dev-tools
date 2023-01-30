@@ -29,7 +29,7 @@ from optparse import OptionParser
 from ubuntutools.lp.udtexceptions import (SeriesNotFoundException,
                                           PackageNotFoundException,
                                           PocketDoesNotExistError,)
-from ubuntutools.lp.lpapicache import Distribution, PersonTeam
+from ubuntutools.lp.lpapicache import Distribution, Launchpad, PersonTeam
 from launchpadlib.credentials import TokenAuthorizationException
 from ubuntutools.misc import split_release_pocket
 

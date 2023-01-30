@@ -16,7 +16,6 @@
 
 from collections import defaultdict
 import optparse
-import re
 import sys
 
 import apt
@@ -215,7 +214,8 @@ def request_backport(package_spph, source, destinations):
              "",
              "[Scope]",
              "",
-             " * List the Ubuntu release you will backport from, and the specific package version.",
+             " * List the Ubuntu release you will backport from,"
+             " and the specific package version.",
              "",
              " * List the Ubuntu release(s) you will backport to.",
              "",
@@ -250,7 +250,7 @@ def request_backport(package_spph, source, destinations):
         series = distro.getSeries(dest)
         try:
             bug.addTask(target=series.getSourcePackage(name=pkgname))
-        except:
+        except Exception:
             break
 
     Logger.info("Backport request filed as %s", bug.web_link)
