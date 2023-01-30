@@ -17,28 +17,45 @@
 import optparse
 import sys
 
-from ubuntutools.lp.lpapicache import (Launchpad, Distribution, PersonTeam,
-                                       Packageset, PackageNotFoundException,
-                                       SeriesNotFoundException)
+from ubuntutools.lp.lpapicache import (
+    Launchpad,
+    Distribution,
+    PersonTeam,
+    Packageset,
+    PackageNotFoundException,
+    SeriesNotFoundException,
+)
 from ubuntutools.misc import split_release_pocket
 
 from ubuntutools import getLogger
+
 Logger = getLogger()
 
 
 def parse_arguments():
-    '''Parse arguments and return (options, package)'''
-    parser = optparse.OptionParser('%prog [options] package')
-    parser.add_option('-r', '--release', default=None, metavar='RELEASE',
-                      help='Use RELEASE, rather than the current development '
-                           'release')
-    parser.add_option('-a', '--list-uploaders',
-                      default=False, action='store_true',
-                      help='List all the people/teams with upload rights')
-    parser.add_option('-t', '--list-team-members',
-                      default=False, action='store_true',
-                      help='List all team members of teams with upload rights '
-                           '(implies --list-uploaders)')
+    """Parse arguments and return (options, package)"""
+    parser = optparse.OptionParser("%prog [options] package")
+    parser.add_option(
+        "-r",
+        "--release",
+        default=None,
+        metavar="RELEASE",
+        help="Use RELEASE, rather than the current development release",
+    )
+    parser.add_option(
+        "-a",
+        "--list-uploaders",
+        default=False,
+        action="store_true",
+        help="List all the people/teams with upload rights",
+    )
+    parser.add_option(
+        "-t",
+        "--list-team-members",
+        default=False,
+        action="store_true",
+        help="List all team members of teams with upload rights (implies --list-uploaders)",
+    )
     options, args = parser.parse_args()
 
     if len(args) != 1:
@@ -52,12 +69,12 @@ def parse_arguments():
 
 
 def main():
-    '''Query upload permissions'''
+    """Query upload permissions"""
     options, package = parse_arguments()
     # Need to be logged in to see uploaders:
     Launchpad.login()
 
-    ubuntu = Distribution('ubuntu')
+    ubuntu = Distribution("ubuntu")
     archive = ubuntu.getArchive()
     if options.release is None:
         options.release = ubuntu.getDevelopmentSeries().name
@@ -74,20 +91,22 @@ def main():
         Logger.error(str(e))
         sys.exit(2)
     component = spph.getComponent()
-    if (options.list_uploaders and (pocket != 'Release' or series.status in
-                                    ('Experimental', 'Active Development', 'Pre-release Freeze'))):
+    if options.list_uploaders and (
+        pocket != "Release"
+        or series.status in ("Experimental", "Active Development", "Pre-release Freeze")
+    ):
 
-        component_uploader = archive.getUploadersForComponent(
-                component_name=component)[0]
+        component_uploader = archive.getUploadersForComponent(component_name=component)[0]
         Logger.info("All upload permissions for %s:" % package)
         Logger.info("")
         Logger.info("Component (%s)" % component)
         Logger.info("============" + ("=" * len(component)))
         print_uploaders([component_uploader], options.list_team_members)
 
-        packagesets = sorted(Packageset.setsIncludingSource(
-                distroseries=series,
-                sourcepackagename=package), key=lambda p: p.name)
+        packagesets = sorted(
+            Packageset.setsIncludingSource(distroseries=series, sourcepackagename=package),
+            key=lambda p: p.name,
+        )
         if packagesets:
             Logger.info("")
             Logger.info("Packagesets")
@@ -95,11 +114,12 @@ def main():
             for packageset in packagesets:
                 Logger.info("")
                 Logger.info("%s:" % packageset.name)
-                print_uploaders(archive.getUploadersForPackageset(
-                    packageset=packageset), options.list_team_members)
+                print_uploaders(
+                    archive.getUploadersForPackageset(packageset=packageset),
+                    options.list_team_members,
+                )
 
-        ppu_uploaders = archive.getUploadersForPackage(
-                source_package_name=package)
+        ppu_uploaders = archive.getUploadersForPackage(source_package_name=package)
         if ppu_uploaders:
             Logger.info("")
             Logger.info("Per-Package-Uploaders")
@@ -108,37 +128,45 @@ def main():
             print_uploaders(ppu_uploaders, options.list_team_members)
         Logger.info("")
 
-    if PersonTeam.me.canUploadPackage(archive, series, package, component,
-                                      pocket):
+    if PersonTeam.me.canUploadPackage(archive, series, package, component, pocket):
         Logger.info("You can upload %s to %s." % (package, options.release))
     else:
         Logger.info("You can not upload %s to %s, yourself." % (package, options.release))
-        if (series.status in ('Current Stable Release', 'Supported', 'Obsolete')
-                and pocket == 'Release'):
-            Logger.info("%s is in the '%s' state. You may want to query the %s-proposed pocket." %
-                        (release, series.status, release))
+        if (
+            series.status in ("Current Stable Release", "Supported", "Obsolete")
+            and pocket == "Release"
+        ):
+            Logger.info(
+                "%s is in the '%s' state. You may want to query the %s-proposed pocket."
+                % (release, series.status, release)
+            )
         else:
-            Logger.info("But you can still contribute to it via the sponsorship "
-                        "process: https://wiki.ubuntu.com/SponsorshipProcess")
+            Logger.info(
+                "But you can still contribute to it via the sponsorship "
+                "process: https://wiki.ubuntu.com/SponsorshipProcess"
+            )
             if not options.list_uploaders:
-                Logger.info("To see who has the necessary upload rights, "
-                            "use the --list-uploaders option.")
+                Logger.info(
+                    "To see who has the necessary upload rights, "
+                    "use the --list-uploaders option."
+                )
         sys.exit(1)
 
 
-def print_uploaders(uploaders, expand_teams=False, prefix=''):
+def print_uploaders(uploaders, expand_teams=False, prefix=""):
     """Given a list of uploaders, pretty-print them all
     Each line is prefixed with prefix.
     If expand_teams is set, recurse, adding more spaces to prefix on each
     recursion.
     """
     for uploader in sorted(uploaders, key=lambda p: p.display_name):
-        Logger.info("%s* %s (%s)%s" %
-                    (prefix, uploader.display_name, uploader.name,
-                     ' [team]' if uploader.is_team else ''))
+        Logger.info(
+            "%s* %s (%s)%s"
+            % (prefix, uploader.display_name, uploader.name, " [team]" if uploader.is_team else "")
+        )
         if expand_teams and uploader.is_team:
-            print_uploaders(uploader.participants, True, prefix=prefix + '  ')
+            print_uploaders(uploader.participants, True, prefix=prefix + "  ")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

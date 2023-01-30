@@ -34,18 +34,20 @@ except ImportError:
 from httplib2 import Http, HttpLib2Error
 from distro_info import DebianDistroInfo, UbuntuDistroInfo
 
-from ubuntutools.archive import (DebianSourcePackage,
-                                 UbuntuSourcePackage, DownloadError)
+from ubuntutools.archive import DebianSourcePackage, UbuntuSourcePackage, DownloadError
 from ubuntutools.config import UDTConfig, ubu_email
 from ubuntutools.builder import get_builder
-from ubuntutools.lp.lpapicache import (Launchpad, Distribution,
-                                       SeriesNotFoundException,
-                                       PackageNotFoundException)
-from ubuntutools.misc import (system_distribution, vendor_to_distroinfo,
-                              codename_to_distribution)
+from ubuntutools.lp.lpapicache import (
+    Launchpad,
+    Distribution,
+    SeriesNotFoundException,
+    PackageNotFoundException,
+)
+from ubuntutools.misc import system_distribution, vendor_to_distroinfo, codename_to_distribution
 from ubuntutools.question import YesNoQuestion
 
 from ubuntutools import getLogger
+
 Logger = getLogger()
 
 
@@ -55,130 +57,152 @@ def error(msg):
 
 
 def check_call(cmd, *args, **kwargs):
-    Logger.debug(' '.join(cmd))
+    Logger.debug(" ".join(cmd))
     ret = subprocess.call(cmd, *args, **kwargs)
     if ret != 0:
-        error('%s returned %d.' % (cmd[0], ret))
+        error("%s returned %d." % (cmd[0], ret))
 
 
 def parse(args):
-    usage = 'Usage: %prog [options] <source package name or .dsc URL/file>'
+    usage = "Usage: %prog [options] <source package name or .dsc URL/file>"
     parser = optparse.OptionParser(usage)
-    parser.add_option('-d', '--destination',
-                      metavar='DEST',
-                      dest='dest_releases',
-                      default=[],
-                      action='append',
-                      help='Backport to DEST release '
-                           '(default: current release)')
-    parser.add_option('-s', '--source',
-                      metavar='SOURCE',
-                      dest='source_release',
-                      help='Backport from SOURCE release '
-                           '(default: devel release)')
-    parser.add_option('-S', '--suffix',
-                      metavar='SUFFIX',
-                      help='Suffix to append to version number '
-                           '(default: ~ppa1 when uploading to a PPA)')
-    parser.add_option('-e', '--message',
-                      metavar='MESSAGE',
-                      default="No-change",
-                      help='Changelog message to use instead of "No-change" '
-                           '(default: No-change backport to DEST.)')
-    parser.add_option('-b', '--build',
-                      default=False,
-                      action='store_true',
-                      help='Build the package before uploading '
-                           '(default: %default)')
-    parser.add_option('-B', '--builder',
-                      metavar='BUILDER',
-                      help='Specify the package builder (default: pbuilder)')
-    parser.add_option('-U', '--update',
-                      default=False,
-                      action='store_true',
-                      help='Update the build environment before '
-                           'attempting to build')
-    parser.add_option('-u', '--upload',
-                      metavar='UPLOAD',
-                      help='Specify an upload destination')
-    parser.add_option("-k", "--key",
-                      dest='keyid',
-                      help="Specify the key ID to be used for signing.")
-    parser.add_option('--dont-sign',
-                      dest='keyid', action='store_false',
-                      help='Do not sign the upload.')
-    parser.add_option('-y', '--yes',
-                      dest='prompt',
-                      default=True,
-                      action='store_false',
-                      help='Do not prompt before uploading to a PPA')
-    parser.add_option('-v', '--version',
-                      metavar='VERSION',
-                      help='Package version to backport (or verify)')
-    parser.add_option('-w', '--workdir',
-                      metavar='WORKDIR',
-                      help='Specify a working directory '
-                           '(default: temporary dir)')
-    parser.add_option('-r', '--release-pocket',
-                      default=False,
-                      action='store_true',
-                      help='Target the release pocket in the .changes file. '
-                           'Necessary (and default) for uploads to PPAs')
-    parser.add_option('-c', '--close',
-                      metavar='BUG',
-                      help='Bug to close in the changelog entry.')
-    parser.add_option('-m', '--mirror',
-                      metavar='URL',
-                      help='Preferred mirror (default: Launchpad)')
-    parser.add_option('-l', '--lpinstance',
-                      metavar='INSTANCE',
-                      help='Launchpad instance to connect to '
-                           '(default: production)')
-    parser.add_option('--no-conf',
-                      default=False,
-                      action='store_true',
-                      help="Don't read config files or environment variables")
+    parser.add_option(
+        "-d",
+        "--destination",
+        metavar="DEST",
+        dest="dest_releases",
+        default=[],
+        action="append",
+        help="Backport to DEST release (default: current release)",
+    )
+    parser.add_option(
+        "-s",
+        "--source",
+        metavar="SOURCE",
+        dest="source_release",
+        help="Backport from SOURCE release (default: devel release)",
+    )
+    parser.add_option(
+        "-S",
+        "--suffix",
+        metavar="SUFFIX",
+        help="Suffix to append to version number (default: ~ppa1 when uploading to a PPA)",
+    )
+    parser.add_option(
+        "-e",
+        "--message",
+        metavar="MESSAGE",
+        default="No-change",
+        help='Changelog message to use instead of "No-change" '
+        "(default: No-change backport to DEST.)",
+    )
+    parser.add_option(
+        "-b",
+        "--build",
+        default=False,
+        action="store_true",
+        help="Build the package before uploading (default: %default)",
+    )
+    parser.add_option(
+        "-B",
+        "--builder",
+        metavar="BUILDER",
+        help="Specify the package builder (default: pbuilder)",
+    )
+    parser.add_option(
+        "-U",
+        "--update",
+        default=False,
+        action="store_true",
+        help="Update the build environment before attempting to build",
+    )
+    parser.add_option("-u", "--upload", metavar="UPLOAD", help="Specify an upload destination")
+    parser.add_option(
+        "-k", "--key", dest="keyid", help="Specify the key ID to be used for signing."
+    )
+    parser.add_option(
+        "--dont-sign", dest="keyid", action="store_false", help="Do not sign the upload."
+    )
+    parser.add_option(
+        "-y",
+        "--yes",
+        dest="prompt",
+        default=True,
+        action="store_false",
+        help="Do not prompt before uploading to a PPA",
+    )
+    parser.add_option(
+        "-v", "--version", metavar="VERSION", help="Package version to backport (or verify)"
+    )
+    parser.add_option(
+        "-w",
+        "--workdir",
+        metavar="WORKDIR",
+        help="Specify a working directory (default: temporary dir)",
+    )
+    parser.add_option(
+        "-r",
+        "--release-pocket",
+        default=False,
+        action="store_true",
+        help="Target the release pocket in the .changes file. "
+        "Necessary (and default) for uploads to PPAs",
+    )
+    parser.add_option("-c", "--close", metavar="BUG", help="Bug to close in the changelog entry.")
+    parser.add_option(
+        "-m", "--mirror", metavar="URL", help="Preferred mirror (default: Launchpad)"
+    )
+    parser.add_option(
+        "-l",
+        "--lpinstance",
+        metavar="INSTANCE",
+        help="Launchpad instance to connect to (default: production)",
+    )
+    parser.add_option(
+        "--no-conf",
+        default=False,
+        action="store_true",
+        help="Don't read config files or environment variables",
+    )
 
     opts, args = parser.parse_args(args)
     if len(args) != 1:
-        parser.error('You must specify a single source package or a .dsc '
-                     'URL/path.')
+        parser.error("You must specify a single source package or a .dsc URL/path.")
     config = UDTConfig(opts.no_conf)
     if opts.builder is None:
-        opts.builder = config.get_value('BUILDER')
+        opts.builder = config.get_value("BUILDER")
     if not opts.update:
-        opts.update = config.get_value('UPDATE_BUILDER', boolean=True)
+        opts.update = config.get_value("UPDATE_BUILDER", boolean=True)
     if opts.workdir is None:
-        opts.workdir = config.get_value('WORKDIR')
+        opts.workdir = config.get_value("WORKDIR")
     if opts.lpinstance is None:
-        opts.lpinstance = config.get_value('LPINSTANCE')
+        opts.lpinstance = config.get_value("LPINSTANCE")
     if opts.upload is None:
-        opts.upload = config.get_value('UPLOAD')
+        opts.upload = config.get_value("UPLOAD")
     if opts.keyid is None:
-        opts.keyid = config.get_value('KEYID')
+        opts.keyid = config.get_value("KEYID")
     if not opts.upload and not opts.workdir:
-        parser.error('Please specify either a working dir or an upload target!')
-    if opts.upload and opts.upload.startswith('ppa:'):
+        parser.error("Please specify either a working dir or an upload target!")
+    if opts.upload and opts.upload.startswith("ppa:"):
         opts.release_pocket = True
 
     return opts, args, config
 
 
-def find_release_package(mirror, workdir, package, version, source_release,
-                         config):
+def find_release_package(mirror, workdir, package, version, source_release, config):
     srcpkg = None
 
     if source_release:
         distribution = codename_to_distribution(source_release)
         if not distribution:
-            error('Unknown release codename %s' % source_release)
+            error("Unknown release codename %s" % source_release)
         info = vendor_to_distroinfo(distribution)()
         source_release = info.codename(source_release, default=source_release)
     else:
         distribution = system_distribution()
     mirrors = [mirror] if mirror else []
 
-    mirrors.append(config.get_value('%s_MIRROR' % distribution.upper()))
+    mirrors.append(config.get_value("%s_MIRROR" % distribution.upper()))
 
     if not version:
         archive = Distribution(distribution.lower()).getArchive()
@@ -188,39 +212,35 @@ def find_release_package(mirror, workdir, package, version, source_release,
             error(str(e))
         version = spph.getVersion()
 
-    if distribution == 'Debian':
-        srcpkg = DebianSourcePackage(package,
-                                     version,
-                                     workdir=workdir,
-                                     mirrors=mirrors)
-    elif distribution == 'Ubuntu':
-        srcpkg = UbuntuSourcePackage(package,
-                                     version,
-                                     workdir=workdir,
-                                     mirrors=mirrors)
+    if distribution == "Debian":
+        srcpkg = DebianSourcePackage(package, version, workdir=workdir, mirrors=mirrors)
+    elif distribution == "Ubuntu":
+        srcpkg = UbuntuSourcePackage(package, version, workdir=workdir, mirrors=mirrors)
 
     return srcpkg
 
 
 def find_package(mirror, workdir, package, version, source_release, config):
     "Returns the SourcePackage"
-    if package.endswith('.dsc'):
+    if package.endswith(".dsc"):
         # Here we are using UbuntuSourcePackage just because we don't have any
         # "general" class that is safely instantiable (as SourcePackage is an
         # abstract class).  None of the distribution-specific details within
         # UbuntuSourcePackage is relevant for this use case.
-        return UbuntuSourcePackage(version=version, dscfile=package,
-                                   workdir=workdir, mirrors=(mirror,))
+        return UbuntuSourcePackage(
+            version=version, dscfile=package, workdir=workdir, mirrors=(mirror,)
+        )
 
     if not source_release and not version:
         info = vendor_to_distroinfo(system_distribution())
         source_release = info().devel()
 
-    srcpkg = find_release_package(mirror, workdir, package, version,
-                                  source_release, config)
+    srcpkg = find_release_package(mirror, workdir, package, version, source_release, config)
     if version and srcpkg.version != version:
-        error('Requested backport of version %s but version of %s in %s is %s'
-              % (version, package, source_release, srcpkg.version))
+        error(
+            "Requested backport of version %s but version of %s in %s is %s"
+            % (version, package, source_release, srcpkg.version)
+        )
 
     return srcpkg
 
@@ -228,30 +248,27 @@ def find_package(mirror, workdir, package, version, source_release, config):
 def get_backport_version(version, suffix, upload, release):
     distribution = codename_to_distribution(release)
     if not distribution:
-        error('Unknown release codename %s' % release)
-    if distribution == 'Debian':
+        error("Unknown release codename %s" % release)
+    if distribution == "Debian":
         debian_distro_info = DebianDistroInfo()
         debian_codenames = debian_distro_info.supported()
         if release in debian_codenames:
             release_version = debian_distro_info.version(release)
             if not release_version:
                 error(f"Can't find the release version for {release}")
-            backport_version = "{}~bpo{}+1".format(
-                version, release_version
-            )
+            backport_version = "{}~bpo{}+1".format(version, release_version)
         else:
             error(f"{release} is not a supported release ({debian_codenames})")
-    elif distribution == 'Ubuntu':
-        series = Distribution(distribution.lower()).\
-            getSeries(name_or_version=release)
+    elif distribution == "Ubuntu":
+        series = Distribution(distribution.lower()).getSeries(name_or_version=release)
 
-        backport_version = version + ('~bpo%s.1' % (series.version))
+        backport_version = version + ("~bpo%s.1" % (series.version))
     else:
-        error('Unknown distribution «%s» for release «%s»' % (distribution, release))
+        error("Unknown distribution «%s» for release «%s»" % (distribution, release))
     if suffix is not None:
         backport_version += suffix
-    elif upload and upload.startswith('ppa:'):
-        backport_version += '~ppa1'
+    elif upload and upload.startswith("ppa:"):
+        backport_version += "~ppa1"
     return backport_version
 
 
@@ -259,10 +276,9 @@ def get_old_version(source, release):
     try:
         distribution = codename_to_distribution(release)
         archive = Distribution(distribution.lower()).getArchive()
-        pkg = archive.getSourcePackage(source,
-                                       release,
-                                       ('Release', 'Security', 'Updates',
-                                        'Proposed', 'Backports'))
+        pkg = archive.getSourcePackage(
+            source, release, ("Release", "Security", "Updates", "Proposed", "Backports")
+        )
         return pkg.getVersion()
     except (SeriesNotFoundException, PackageNotFoundException):
         pass
@@ -272,7 +288,7 @@ def get_backport_dist(release, release_pocket):
     if release_pocket:
         return release
     else:
-        return '%s-backports' % release
+        return "%s-backports" % release
 
 
 def do_build(workdir, dsc, release, builder, update):
@@ -286,41 +302,43 @@ def do_build(workdir, dsc, release, builder, update):
 
     # builder.build is going to chdir to buildresult:
     workdir = os.path.realpath(workdir)
-    return builder.build(os.path.join(workdir, dsc),
-                         release,
-                         os.path.join(workdir, "buildresult"))
+    return builder.build(os.path.join(workdir, dsc), release, os.path.join(workdir, "buildresult"))
 
 
 def do_upload(workdir, package, bp_version, changes, upload, prompt):
-    print('Please check %s %s in file://%s carefully!' % (package, bp_version, workdir))
-    if prompt or upload == 'ubuntu':
-        question = 'Do you want to upload the package to %s' % upload
+    print("Please check %s %s in file://%s carefully!" % (package, bp_version, workdir))
+    if prompt or upload == "ubuntu":
+        question = "Do you want to upload the package to %s" % upload
         answer = YesNoQuestion().ask(question, "yes")
         if answer == "no":
             return
 
-    check_call(['dput', upload, changes], cwd=workdir)
+    check_call(["dput", upload, changes], cwd=workdir)
 
 
 def orig_needed(upload, workdir, pkg):
-    '''Avoid a -sa if possible'''
-    if not upload or not upload.startswith('ppa:'):
+    """Avoid a -sa if possible"""
+    if not upload or not upload.startswith("ppa:"):
         return True
-    ppa = upload.split(':', 1)[1]
-    user, ppa = ppa.split('/', 1)
+    ppa = upload.split(":", 1)[1]
+    user, ppa = ppa.split("/", 1)
 
     version = pkg.version.upstream_version
 
     h = Http()
-    for filename in glob.glob(os.path.join(workdir, '%s_%s.orig*' % (pkg.source, version))):
-        url = ('https://launchpad.net/~%s/+archive/%s/+sourcefiles/%s/%s/%s'
-               % (quote(user), quote(ppa), quote(pkg.source),
-                  quote(pkg.version.full_version),
-                  quote(os.path.basename(filename))))
+    for filename in glob.glob(os.path.join(workdir, "%s_%s.orig*" % (pkg.source, version))):
+        url = "https://launchpad.net/~%s/+archive/%s/+sourcefiles/%s/%s/%s" % (
+            quote(user),
+            quote(ppa),
+            quote(pkg.source),
+            quote(pkg.version.full_version),
+            quote(os.path.basename(filename)),
+        )
         try:
-            headers, body = h.request(url, 'HEAD')
-            if (headers.status != 200 or
-                    not headers['content-location'].startswith('https://launchpadlibrarian.net')):
+            headers, body = h.request(url, "HEAD")
+            if headers.status != 200 or not headers["content-location"].startswith(
+                "https://launchpadlibrarian.net"
+            ):
                 return True
         except HttpLib2Error as e:
             Logger.debug(e)
@@ -328,61 +346,79 @@ def orig_needed(upload, workdir, pkg):
     return False
 
 
-def do_backport(workdir, pkg, suffix, message, close, release, release_pocket,
-                build, builder, update, upload, keyid, prompt):
-    dirname = '%s-%s' % (pkg.source, release)
+def do_backport(
+    workdir,
+    pkg,
+    suffix,
+    message,
+    close,
+    release,
+    release_pocket,
+    build,
+    builder,
+    update,
+    upload,
+    keyid,
+    prompt,
+):
+    dirname = "%s-%s" % (pkg.source, release)
     srcdir = os.path.join(workdir, dirname)
 
     if os.path.exists(srcdir):
-        question = 'Working directory %s already exists. Delete it?' % srcdir
-        if YesNoQuestion().ask(question, 'no') == 'no':
+        question = "Working directory %s already exists. Delete it?" % srcdir
+        if YesNoQuestion().ask(question, "no") == "no":
             sys.exit(1)
         shutil.rmtree(srcdir)
 
     pkg.unpack(dirname)
 
-    bp_version = get_backport_version(pkg.version.full_version, suffix,
-                                      upload, release)
+    bp_version = get_backport_version(pkg.version.full_version, suffix, upload, release)
     old_version = get_old_version(pkg.source, release)
     bp_dist = get_backport_dist(release, release_pocket)
 
-    changelog = '%s backport to %s.' % (message, release,)
+    changelog = "%s backport to %s." % (message, release)
     if close:
-        changelog += ' (LP: #%s)' % (close,)
-    check_call(['dch',
-                '--force-bad-version',
-                '--force-distribution',
-                '--preserve',
-                '--newversion', bp_version,
-                '--distribution', bp_dist,
-                changelog],
-               cwd=srcdir)
+        changelog += " (LP: #%s)" % (close,)
+    check_call(
+        [
+            "dch",
+            "--force-bad-version",
+            "--force-distribution",
+            "--preserve",
+            "--newversion",
+            bp_version,
+            "--distribution",
+            bp_dist,
+            changelog,
+        ],
+        cwd=srcdir,
+    )
 
-    cmd = ['debuild', '--no-lintian', '-S', '-nc', '-uc', '-us']
+    cmd = ["debuild", "--no-lintian", "-S", "-nc", "-uc", "-us"]
     if orig_needed(upload, workdir, pkg):
-        cmd.append('-sa')
+        cmd.append("-sa")
     else:
-        cmd.append('-sd')
+        cmd.append("-sd")
     if old_version:
-        cmd.append('-v%s' % old_version)
+        cmd.append("-v%s" % old_version)
     env = os.environ.copy()
     # An ubuntu.com e-mail address would make dpkg-buildpackage fail if there
     # wasn't an Ubuntu maintainer for an ubuntu-versioned package. LP: #1007042
-    env.pop('DEBEMAIL', None)
+    env.pop("DEBEMAIL", None)
     check_call(cmd, cwd=srcdir, env=env)
 
-    fn_base = pkg.source + '_' + bp_version.split(':', 1)[-1]
-    changes = fn_base + '_source.changes'
+    fn_base = pkg.source + "_" + bp_version.split(":", 1)[-1]
+    changes = fn_base + "_source.changes"
 
     if build:
-        if 0 != do_build(workdir, fn_base + '.dsc', release, builder, update):
+        if 0 != do_build(workdir, fn_base + ".dsc", release, builder, update):
             sys.exit(1)
 
     # None: sign with the default signature. False: don't sign
     if keyid is not False:
-        cmd = ['debsign']
+        cmd = ["debsign"]
         if keyid:
-            cmd.append('-k' + keyid)
+            cmd.append("-k" + keyid)
         cmd.append(changes)
         check_call(cmd, cwd=workdir)
     if upload:
@@ -402,13 +438,13 @@ def main(args):
         if lsb_release:
             distinfo = lsb_release.get_distro_information()
             try:
-                current_distro = distinfo['ID']
+                current_distro = distinfo["ID"]
             except KeyError:
-                error('No destination release specified and unable to guess yours.')
+                error("No destination release specified and unable to guess yours.")
         else:
-            err, current_distro = subprocess.getstatusoutput('lsb_release --id --short')
+            err, current_distro = subprocess.getstatusoutput("lsb_release --id --short")
             if err:
-                error('Could not run lsb_release to retrieve distribution')
+                error("Could not run lsb_release to retrieve distribution")
 
         if current_distro == "Ubuntu":
             opts.dest_releases = [UbuntuDistroInfo().lts()]
@@ -420,34 +456,33 @@ def main(args):
     if opts.workdir:
         workdir = os.path.expanduser(opts.workdir)
     else:
-        workdir = tempfile.mkdtemp(prefix='backportpackage-')
+        workdir = tempfile.mkdtemp(prefix="backportpackage-")
 
     if not os.path.exists(workdir):
         os.makedirs(workdir)
 
     try:
-        pkg = find_package(opts.mirror,
-                           workdir,
-                           package_or_dsc,
-                           opts.version,
-                           opts.source_release,
-                           config)
+        pkg = find_package(
+            opts.mirror, workdir, package_or_dsc, opts.version, opts.source_release, config
+        )
         pkg.pull()
 
         for release in opts.dest_releases:
-            do_backport(workdir,
-                        pkg,
-                        opts.suffix,
-                        opts.message,
-                        opts.close,
-                        release,
-                        opts.release_pocket,
-                        opts.build,
-                        opts.builder,
-                        opts.update,
-                        opts.upload,
-                        opts.keyid,
-                        opts.prompt)
+            do_backport(
+                workdir,
+                pkg,
+                opts.suffix,
+                opts.message,
+                opts.close,
+                release,
+                opts.release_pocket,
+                opts.build,
+                opts.builder,
+                opts.update,
+                opts.upload,
+                opts.keyid,
+                opts.prompt,
+            )
     except DownloadError as e:
         error(str(e))
     finally:
@@ -455,5 +490,5 @@ def main(args):
             shutil.rmtree(workdir)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main(sys.argv))

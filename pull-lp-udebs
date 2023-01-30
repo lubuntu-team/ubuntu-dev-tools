@@ -7,5 +7,5 @@
 
 from ubuntutools.pullpkg import PullPkg
 
-if __name__ == '__main__':
-    PullPkg.main(distro='ubuntu', pull='udebs')
+if __name__ == "__main__":
+    PullPkg.main(distro="ubuntu", pull="udebs")

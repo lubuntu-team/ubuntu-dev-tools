@@ -22,13 +22,12 @@ class RDependsException(Exception):
     pass
 
 
-def query_rdepends(package, release, arch,
-                   server='http://qa.ubuntuwire.org/rdepends'):
+def query_rdepends(package, release, arch, server="http://qa.ubuntuwire.org/rdepends"):
     """Look up a packages reverse-dependencies on the Ubuntuwire
     Reverse- webservice
     """
 
-    url = os.path.join(server, 'v1', release, arch, package)
+    url = os.path.join(server, "v1", release, arch, package)
 
     response, data = httplib2.Http().request(url)
     if response.status != 200:

@@ -36,16 +36,17 @@ from ubuntutools.lp.udtexceptions import PackageNotFoundException
 from ubuntutools.question import confirmation_prompt, YesNoQuestion
 
 import logging
+
 Logger = logging.getLogger(__name__)
 
 
 __all__ = [
-    'get_debian_srcpkg',
-    'get_ubuntu_srcpkg',
-    'need_sponsorship',
-    'check_existing_reports',
-    'get_ubuntu_delta_changelog',
-    'mail_bug',
+    "get_debian_srcpkg",
+    "get_ubuntu_srcpkg",
+    "need_sponsorship",
+    "check_existing_reports",
+    "get_ubuntu_delta_changelog",
+    "mail_bug",
 ]
 
 
@@ -67,73 +68,91 @@ def get_ubuntu_srcpkg(name, release):
 
 
 def need_sponsorship(name, component, release):
-    '''
+    """
     Ask the user if he has upload permissions for the package or the
     component.
-    '''
+    """
 
-    val = YesNoQuestion().ask("Do you have upload permissions for the '%s' component or "
-                              "the package '%s' in Ubuntu %s?\nIf in doubt answer 'n'." %
-                              (component, name, release), 'no')
-    return val == 'no'
+    val = YesNoQuestion().ask(
+        "Do you have upload permissions for the '%s' component or "
+        "the package '%s' in Ubuntu %s?\nIf in doubt answer 'n'." % (component, name, release),
+        "no",
+    )
+    return val == "no"
 
 
 def check_existing_reports(srcpkg):
-    '''
+    """
     Point the user to the URL to manually check for duplicate bug reports.
-    '''
-    print('Please check on '
-          'https://bugs.launchpad.net/ubuntu/+source/%s/+bugs\n'
-          'for duplicate sync requests before continuing.' % srcpkg)
+    """
+    print(
+        "Please check on "
+        "https://bugs.launchpad.net/ubuntu/+source/%s/+bugs\n"
+        "for duplicate sync requests before continuing." % srcpkg
+    )
     confirmation_prompt()
 
 
 def get_ubuntu_delta_changelog(srcpkg):
-    '''
+    """
     Download the Ubuntu changelog and extract the entries since the last sync
     from Debian.
-    '''
+    """
     changelog = Changelog(srcpkg.getChangelog())
     if changelog is None:
-        return ''
+        return ""
     delta = []
     debian_info = DebianDistroInfo()
     for block in changelog:
-        distribution = block.distributions.split()[0].split('-')[0]
+        distribution = block.distributions.split()[0].split("-")[0]
         if debian_info.valid(distribution):
             break
-        delta += [str(change) for change in block.changes()
-                  if change.strip()]
+        delta += [str(change) for change in block.changes() if change.strip()]
 
-    return '\n'.join(delta)
+    return "\n".join(delta)
 
 
-def mail_bug(srcpkg, subscribe, status, bugtitle, bugtext, bug_mail_domain,
-             keyid, myemailaddr, mailserver_host, mailserver_port,
-             mailserver_user, mailserver_pass):
-    '''
+def mail_bug(
+    srcpkg,
+    subscribe,
+    status,
+    bugtitle,
+    bugtext,
+    bug_mail_domain,
+    keyid,
+    myemailaddr,
+    mailserver_host,
+    mailserver_port,
+    mailserver_user,
+    mailserver_pass,
+):
+    """
     Submit the sync request per email.
-    '''
+    """
 
-    to = 'new@' + bug_mail_domain
+    to = "new@" + bug_mail_domain
 
     # generate mailbody
     if srcpkg:
-        mailbody = ' affects ubuntu/%s\n' % srcpkg
+        mailbody = " affects ubuntu/%s\n" % srcpkg
     else:
-        mailbody = ' affects ubuntu\n'
-    mailbody += '''\
+        mailbody = " affects ubuntu\n"
+    mailbody += """\
  status %s
  importance wishlist
  subscribe %s
  done
 
-%s''' % (status, subscribe, bugtext)
+%s""" % (
+        status,
+        subscribe,
+        bugtext,
+    )
 
     # prepare sign command
     gpg_command = None
-    for cmd in ('gnome-gpg', 'gpg2', 'gpg'):
-        if os.access('/usr/bin/%s' % cmd, os.X_OK):
+    for cmd in ("gnome-gpg", "gpg2", "gpg"):
+        if os.access("/usr/bin/%s" % cmd, os.X_OK):
             gpg_command = [cmd]
             break
 
@@ -141,107 +160,135 @@ def mail_bug(srcpkg, subscribe, status, bugtitle, bugtext, bug_mail_domain,
         Logger.error("Cannot locate gpg, please install the 'gnupg' package!")
         sys.exit(1)
 
-    gpg_command.append('--clearsign')
+    gpg_command.append("--clearsign")
     if keyid:
-        gpg_command.extend(('-u', keyid))
+        gpg_command.extend(("-u", keyid))
 
     # sign the mail body
     gpg = subprocess.Popen(
-        gpg_command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-        encoding='utf-8')
+        gpg_command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, encoding="utf-8"
+    )
     signed_report = gpg.communicate(mailbody)[0]
     if gpg.returncode != 0:
         Logger.error("%s failed.", gpg_command[0])
         sys.exit(1)
 
     # generate email
-    mail = '''\
+    mail = """\
 From: %s
 To: %s
 Subject: %s
 Content-Type: text/plain; charset=UTF-8
 
-%s''' % (myemailaddr, to, bugtitle, signed_report)
+%s""" % (
+        myemailaddr,
+        to,
+        bugtitle,
+        signed_report,
+    )
 
-    print('The final report is:\n%s' % mail)
+    print("The final report is:\n%s" % mail)
     confirmation_prompt()
 
     # save mail in temporary file
     backup = tempfile.NamedTemporaryFile(
-        mode='w',
+        mode="w",
         delete=False,
-        prefix='requestsync-' + re.sub(r'[^a-zA-Z0-9_-]', '', bugtitle.replace(' ', '_'))
+        prefix="requestsync-" + re.sub(r"[^a-zA-Z0-9_-]", "", bugtitle.replace(" ", "_")),
     )
     with backup:
         backup.write(mail)
 
-    Logger.info('The e-mail has been saved in %s and will be deleted '
-                'after succesful transmission', backup.name)
+    Logger.info(
+        "The e-mail has been saved in %s and will be deleted after succesful transmission",
+        backup.name,
+    )
 
     # connect to the server
     while True:
         try:
-            Logger.info('Connecting to %s:%s ...', mailserver_host,
-                        mailserver_port)
+            Logger.info("Connecting to %s:%s ...", mailserver_host, mailserver_port)
             s = smtplib.SMTP(mailserver_host, mailserver_port)
             break
         except smtplib.SMTPConnectError as s:
             try:
                 # py2 path
                 # pylint: disable=unsubscriptable-object
-                Logger.error('Could not connect to %s:%s: %s (%i)',
-                             mailserver_host, mailserver_port, s[1], s[0])
+                Logger.error(
+                    "Could not connect to %s:%s: %s (%i)",
+                    mailserver_host,
+                    mailserver_port,
+                    s[1],
+                    s[0],
+                )
             except TypeError:
                 # pylint: disable=no-member
-                Logger.error('Could not connect to %s:%s: %s (%i)',
-                             mailserver_host, mailserver_port, s.strerror, s.errno)
+                Logger.error(
+                    "Could not connect to %s:%s: %s (%i)",
+                    mailserver_host,
+                    mailserver_port,
+                    s.strerror,
+                    s.errno,
+                )
             if s.smtp_code == 421:
-                confirmation_prompt(message='This is a temporary error, press [Enter] '
-                                            'to retry. Press [Ctrl-C] to abort now.')
+                confirmation_prompt(
+                    message="This is a temporary error, press [Enter] "
+                    "to retry. Press [Ctrl-C] to abort now."
+                )
         except socket.error as s:
             try:
                 # py2 path
                 # pylint: disable=unsubscriptable-object
-                Logger.error('Could not connect to %s:%s: %s (%i)',
-                             mailserver_host, mailserver_port, s[1], s[0])
+                Logger.error(
+                    "Could not connect to %s:%s: %s (%i)",
+                    mailserver_host,
+                    mailserver_port,
+                    s[1],
+                    s[0],
+                )
             except TypeError:
                 # pylint: disable=no-member
-                Logger.error('Could not connect to %s:%s: %s (%i)',
-                             mailserver_host, mailserver_port, s.strerror, s.errno)
+                Logger.error(
+                    "Could not connect to %s:%s: %s (%i)",
+                    mailserver_host,
+                    mailserver_port,
+                    s.strerror,
+                    s.errno,
+                )
             return
 
     if mailserver_user and mailserver_pass:
         try:
             s.login(mailserver_user, mailserver_pass)
         except smtplib.SMTPAuthenticationError:
-            Logger.error('Error authenticating to the server: '
-                         'invalid username and password.')
+            Logger.error("Error authenticating to the server: invalid username and password.")
             s.quit()
             return
         except smtplib.SMTPException:
-            Logger.error('Unknown SMTP error.')
+            Logger.error("Unknown SMTP error.")
             s.quit()
             return
 
     while True:
         try:
-            s.sendmail(myemailaddr, to, mail.encode('utf-8'))
+            s.sendmail(myemailaddr, to, mail.encode("utf-8"))
             s.quit()
             os.remove(backup.name)
-            Logger.info('Sync request mailed.')
+            Logger.info("Sync request mailed.")
             break
         except smtplib.SMTPRecipientsRefused as smtperror:
             smtp_code, smtp_message = smtperror.recipients[to]
-            Logger.error('Error while sending: %i, %s', smtp_code, smtp_message)
+            Logger.error("Error while sending: %i, %s", smtp_code, smtp_message)
             if smtp_code == 450:
-                confirmation_prompt(message='This is a temporary error, press [Enter] '
-                                            'to retry. Press [Ctrl-C] to abort now.')
+                confirmation_prompt(
+                    message="This is a temporary error, press [Enter] "
+                    "to retry. Press [Ctrl-C] to abort now."
+                )
             else:
                 return
         except smtplib.SMTPResponseException as e:
-            Logger.error('Error while sending: %i, %s',
-                         e.smtp_code, e.smtp_error)
+            Logger.error("Error while sending: %i, %s", e.smtp_code, e.smtp_error)
             return
         except smtplib.SMTPServerDisconnected:
-            Logger.error('Server disconnected while sending the mail.')
+            Logger.error("Server disconnected while sending the mail.")
             return

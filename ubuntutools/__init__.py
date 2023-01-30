@@ -8,7 +8,7 @@ import sys
 
 
 def getLogger():
-    ''' Get the logger instance for this module
+    """Get the logger instance for this module
 
     Quick guide for using this or not: if you want to call ubuntutools
     module code and have its output print to stdout/stderr ONLY, you can
@@ -33,12 +33,12 @@ def getLogger():
     This should only be used by runnable scripts provided by the
     ubuntu-dev-tools package, or other runnable scripts that want the behavior
     described above.
-    '''
+    """
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.INFO)
     logger.propagate = False
 
-    fmt = logging.Formatter('%(message)s')
+    fmt = logging.Formatter("%(message)s")
 
     stdout_handler = logging.StreamHandler(stream=sys.stdout)
     stdout_handler.setFormatter(fmt)
@@ -47,7 +47,7 @@ def getLogger():
 
     stderr_handler = logging.StreamHandler(stream=sys.stderr)
     stderr_handler.setFormatter(fmt)
-    stderr_handler.setLevel(logging.INFO+1)
+    stderr_handler.setLevel(logging.INFO + 1)
     logger.addHandler(stderr_handler)
 
     return logger

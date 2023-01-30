@@ -39,16 +39,17 @@ from urllib.parse import urlparse
 from ubuntutools.lp.udtexceptions import PocketDoesNotExistError
 
 import logging
+
 Logger = logging.getLogger(__name__)
 
 
-DEFAULT_POCKETS = ('Release', 'Security', 'Updates', 'Proposed')
-POCKETS = DEFAULT_POCKETS + ('Backports',)
+DEFAULT_POCKETS = ("Release", "Security", "Updates", "Proposed")
+POCKETS = DEFAULT_POCKETS + ("Backports",)
 
-DEFAULT_STATUSES = ('Pending', 'Published')
-STATUSES = DEFAULT_STATUSES + ('Superseded', 'Deleted', 'Obsolete')
+DEFAULT_STATUSES = ("Pending", "Published")
+STATUSES = DEFAULT_STATUSES + ("Superseded", "Deleted", "Obsolete")
 
-UPLOAD_QUEUE_STATUSES = ('New', 'Unapproved', 'Accepted', 'Done', 'Rejected')
+UPLOAD_QUEUE_STATUSES = ("New", "Unapproved", "Accepted", "Done", "Rejected")
 
 DOWNLOAD_BLOCKSIZE_DEFAULT = 8192
 
@@ -66,7 +67,7 @@ class NotFoundError(DownloadError):
 
 
 def system_distribution_chain():
-    """ system_distribution_chain() -> [string]
+    """system_distribution_chain() -> [string]
 
     Detect the system's distribution as well as all of its parent
     distributions and return them as a list of strings, with the
@@ -77,18 +78,24 @@ def system_distribution_chain():
     global _system_distribution_chain
     if len(_system_distribution_chain) == 0:
         try:
-            vendor = check_output(('dpkg-vendor', '--query', 'Vendor'),
-                                  encoding='utf-8').strip()
+            vendor = check_output(("dpkg-vendor", "--query", "Vendor"), encoding="utf-8").strip()
             _system_distribution_chain.append(vendor)
         except CalledProcessError:
-            Logger.error('Could not determine what distribution you are running.')
+            Logger.error("Could not determine what distribution you are running.")
             return []
 
         while True:
             try:
-                parent = check_output((
-                    'dpkg-vendor', '--vendor', _system_distribution_chain[-1],
-                    '--query', 'Parent'), encoding='utf-8').strip()
+                parent = check_output(
+                    (
+                        "dpkg-vendor",
+                        "--vendor",
+                        _system_distribution_chain[-1],
+                        "--query",
+                        "Parent",
+                    ),
+                    encoding="utf-8",
+                ).strip()
             except CalledProcessError:
                 # Vendor has no parent
                 break
@@ -98,7 +105,7 @@ def system_distribution_chain():
 
 
 def system_distribution():
-    """ system_distro() -> string
+    """system_distro() -> string
 
     Detect the system's distribution and return it as a string. If the
     name of the distribution can't be determined, print an error message
@@ -108,28 +115,26 @@ def system_distribution():
 
 
 def host_architecture():
-    """ host_architecture -> string
+    """host_architecture -> string
 
     Detect the host's architecture and return it as a string. If the
     architecture can't be determined, print an error message and return None.
     """
 
     try:
-        arch = check_output(('dpkg', '--print-architecture'),
-                            encoding='utf-8').strip()
+        arch = check_output(("dpkg", "--print-architecture"), encoding="utf-8").strip()
     except CalledProcessError:
         arch = None
 
-    if not arch or 'not found' in arch:
-        Logger.error('Not running on a Debian based system; '
-                     'could not detect its architecture.')
+    if not arch or "not found" in arch:
+        Logger.error("Not running on a Debian based system; could not detect its architecture.")
         return None
 
     return arch
 
 
 def readlist(filename, uniq=True):
-    """ readlist(filename, uniq) -> list
+    """readlist(filename, uniq) -> list
 
     Read a list of words from the indicated file. If 'uniq' is True, filter
     out duplicated words.
@@ -137,13 +142,13 @@ def readlist(filename, uniq=True):
     p = Path(filename)
 
     if not p.is_file():
-        Logger.error(f'File {p} does not exist.')
+        Logger.error(f"File {p} does not exist.")
         return False
 
-    content = p.read_text().replace('\n', ' ').replace(',', ' ')
+    content = p.read_text().replace("\n", " ").replace(",", " ")
 
     if not content.strip():
-        Logger.error(f'File {p} is empty.')
+        Logger.error(f"File {p} is empty.")
         return False
 
     items = [item for item in content.split() if item]
@@ -154,21 +159,21 @@ def readlist(filename, uniq=True):
     return items
 
 
-def split_release_pocket(release, default='Release'):
-    '''Splits the release and pocket name.
+def split_release_pocket(release, default="Release"):
+    """Splits the release and pocket name.
 
     If the argument doesn't contain a pocket name then the 'Release' pocket
     is assumed.
 
     Returns the release and pocket name.
-    '''
+    """
     pocket = default
 
     if release is None:
-        raise ValueError('No release name specified')
+        raise ValueError("No release name specified")
 
-    if '-' in release:
-        (release, pocket) = release.rsplit('-', 1)
+    if "-" in release:
+        (release, pocket) = release.rsplit("-", 1)
         pocket = pocket.capitalize()
 
         if pocket not in POCKETS:
@@ -178,18 +183,20 @@ def split_release_pocket(release, default='Release'):
 
 
 def require_utf8():
-    '''Can be called by programs that only function in UTF-8 locales'''
-    if locale.getpreferredencoding() != 'UTF-8':
+    """Can be called by programs that only function in UTF-8 locales"""
+    if locale.getpreferredencoding() != "UTF-8":
         Logger.error("This program only functions in a UTF-8 locale. Aborting.")
         sys.exit(1)
 
 
-_vendor_to_distroinfo = {"Debian": distro_info.DebianDistroInfo,
-                         "Ubuntu": distro_info.UbuntuDistroInfo}
+_vendor_to_distroinfo = {
+    "Debian": distro_info.DebianDistroInfo,
+    "Ubuntu": distro_info.UbuntuDistroInfo,
+}
 
 
 def vendor_to_distroinfo(vendor):
-    """ vendor_to_distroinfo(string) -> DistroInfo class
+    """vendor_to_distroinfo(string) -> DistroInfo class
 
     Convert a string name of a distribution into a DistroInfo subclass
     representing that distribution, or None if the distribution is
@@ -199,7 +206,7 @@ def vendor_to_distroinfo(vendor):
 
 
 def codename_to_distribution(codename):
-    """ codename_to_distribution(string) -> string
+    """codename_to_distribution(string) -> string
 
     Finds a given release codename in your distribution's genaology
     (i.e. looking at the current distribution and its parents), or
@@ -215,7 +222,7 @@ def codename_to_distribution(codename):
 
 
 def verify_file_checksums(pathname, checksums={}, size=0):
-    """ verify checksums of file
+    """verify checksums of file
 
     Any failure will log an error.
 
@@ -231,16 +238,16 @@ def verify_file_checksums(pathname, checksums={}, size=0):
     p = Path(pathname)
 
     if not p.is_file():
-        Logger.error(f'File {p} not found')
+        Logger.error(f"File {p} not found")
         return False
     filesize = p.stat().st_size
     if size and size != filesize:
-        Logger.error(f'File {p} incorrect size, got {filesize} expected {size}')
+        Logger.error(f"File {p} incorrect size, got {filesize} expected {size}")
         return False
 
     for (alg, checksum) in checksums.items():
         h = hashlib.new(alg)
-        with p.open('rb') as f:
+        with p.open("rb") as f:
             while True:
                 block = f.read(h.block_size)
                 if len(block) == 0:
@@ -248,15 +255,15 @@ def verify_file_checksums(pathname, checksums={}, size=0):
                 h.update(block)
         digest = h.hexdigest()
         if digest == checksum:
-            Logger.debug(f'File {p} checksum ({alg}) verified: {checksum}')
+            Logger.debug(f"File {p} checksum ({alg}) verified: {checksum}")
         else:
-            Logger.error(f'File {p} checksum ({alg}) mismatch: got {digest} expected {checksum}')
+            Logger.error(f"File {p} checksum ({alg}) mismatch: got {digest} expected {checksum}")
             return False
     return True
 
 
 def verify_file_checksum(pathname, alg, checksum, size=0):
-    """ verify checksum of file
+    """verify checksum of file
 
     pathname: str or Path
         full path to file
@@ -273,7 +280,7 @@ def verify_file_checksum(pathname, alg, checksum, size=0):
 
 
 def extract_authentication(url):
-    """ Remove plaintext authentication data from a URL
+    """Remove plaintext authentication data from a URL
 
     If the URL has a username:password in its netloc, this removes it
     and returns the remaining URL, along with the username and password
@@ -289,7 +296,7 @@ def extract_authentication(url):
 
 
 def download(src, dst, size=0, *, blocksize=DOWNLOAD_BLOCKSIZE_DEFAULT):
-    """ download/copy a file/url to local file
+    """download/copy a file/url to local file
 
     src: str or Path
         Source to copy from (file path or url)
@@ -315,18 +322,18 @@ def download(src, dst, size=0, *, blocksize=DOWNLOAD_BLOCKSIZE_DEFAULT):
         dst = dst / Path(parsedsrc.path).name
 
     # Copy if src is a local file
-    if parsedsrc.scheme in ['', 'file']:
+    if parsedsrc.scheme in ["", "file"]:
         src = Path(parsedsrc.path).expanduser().resolve()
         if src != parsedsrc.path:
-            Logger.info(f'Parsed {parsedsrc.path} as {src}')
+            Logger.info(f"Parsed {parsedsrc.path} as {src}")
         if not src.exists():
-            raise NotFoundError(f'Source file {src} not found')
+            raise NotFoundError(f"Source file {src} not found")
         if dst.exists():
             if src.samefile(dst):
-                Logger.info(f'Using existing file {dst}')
+                Logger.info(f"Using existing file {dst}")
                 return dst
-            Logger.info(f'Replacing existing file {dst}')
-        Logger.info(f'Copying file {src} to {dst}')
+            Logger.info(f"Replacing existing file {dst}")
+        Logger.info(f"Copying file {src} to {dst}")
         shutil.copyfile(src, dst)
         return dst
 
@@ -334,18 +341,18 @@ def download(src, dst, size=0, *, blocksize=DOWNLOAD_BLOCKSIZE_DEFAULT):
     auth = (username, password) if username or password else None
 
     with tempfile.TemporaryDirectory() as d:
-        tmpdst = Path(d) / 'dst'
+        tmpdst = Path(d) / "dst"
         try:
-            with requests.get(src, stream=True, auth=auth) as fsrc, tmpdst.open('wb') as fdst:
+            with requests.get(src, stream=True, auth=auth) as fsrc, tmpdst.open("wb") as fdst:
                 fsrc.raise_for_status()
                 _download(fsrc, fdst, size, blocksize=blocksize)
         except requests.exceptions.HTTPError as e:
             if e.response is not None and e.response.status_code == 404:
-                raise NotFoundError(f'URL {src} not found: {e}')
+                raise NotFoundError(f"URL {src} not found: {e}")
             raise DownloadError(e)
         except requests.exceptions.ConnectionError as e:
             # This is likely a archive hostname that doesn't resolve, like 'ftpmaster.internal'
-            raise NotFoundError(f'URL {src} not found: {e}')
+            raise NotFoundError(f"URL {src} not found: {e}")
         except requests.exceptions.RequestException as e:
             raise DownloadError(e)
         shutil.move(tmpdst, dst)
@@ -358,60 +365,64 @@ class _StderrProgressBar(object):
 
     def __init__(self, max_width):
         self.full_width = min(max_width, self.BAR_WIDTH_DEFAULT)
-        self.width = self.full_width - len('[] 99%')
+        self.width = self.full_width - len("[] 99%")
         self.show_progress = self.full_width >= self.BAR_WIDTH_MIN
 
     def update(self, progress, total):
         if not self.show_progress:
             return
         pct = progress * 100 // total
-        pctstr = f'{pct:>3}%'
+        pctstr = f"{pct:>3}%"
         barlen = self.width * pct // 100
-        barstr = '=' * barlen
-        barstr = barstr[:-1] + '>'
+        barstr = "=" * barlen
+        barstr = barstr[:-1] + ">"
         barstr = barstr.ljust(self.width)
-        fullstr = f'\r[{barstr}]{pctstr}'
+        fullstr = f"\r[{barstr}]{pctstr}"
         sys.stderr.write(fullstr)
         sys.stderr.flush()
 
     def finish(self):
         if not self.show_progress:
             return
-        sys.stderr.write('\n')
+        sys.stderr.write("\n")
         sys.stderr.flush()
 
 
 def _download(fsrc, fdst, size, *, blocksize):
-    """ helper method to download src to dst using requests library. """
+    """helper method to download src to dst using requests library."""
     url = fsrc.url
-    Logger.debug(f'Using URL: {url}')
+    Logger.debug(f"Using URL: {url}")
 
     if not size:
         with suppress(AttributeError, TypeError, ValueError):
-            size = int(fsrc.headers.get('Content-Length'))
+            size = int(fsrc.headers.get("Content-Length"))
 
     parsed = urlparse(url)
     filename = Path(parsed.path).name
     hostname = parsed.hostname
-    sizemb = ' (%0.3f MiB)' % (size / 1024.0 / 1024) if size else ''
-    Logger.info(f'Downloading {filename} from {hostname}{sizemb}')
+    sizemb = " (%0.3f MiB)" % (size / 1024.0 / 1024) if size else ""
+    Logger.info(f"Downloading {filename} from {hostname}{sizemb}")
 
     # Don't show progress if:
     #   logging INFO is suppressed
     #   stderr isn't a tty
     #   we don't know the total file size
     #   the file is content-encoded (i.e. compressed)
-    show_progress = all((Logger.isEnabledFor(logging.INFO),
-                         sys.stderr.isatty(),
-                         size > 0,
-                         'Content-Encoding' not in fsrc.headers))
+    show_progress = all(
+        (
+            Logger.isEnabledFor(logging.INFO),
+            sys.stderr.isatty(),
+            size > 0,
+            "Content-Encoding" not in fsrc.headers,
+        )
+    )
 
     terminal_width = 0
     if show_progress:
         try:
             terminal_width = os.get_terminal_size(sys.stderr.fileno()).columns
         except Exception as e:
-            Logger.error(f'Error finding stderr width, suppressing progress bar: {e}')
+            Logger.error(f"Error finding stderr width, suppressing progress bar: {e}")
     progress_bar = _StderrProgressBar(max_width=terminal_width)
 
     downloaded = 0
@@ -423,20 +434,21 @@ def _download(fsrc, fdst, size, *, blocksize):
     finally:
         progress_bar.finish()
         if size and size > downloaded:
-            Logger.error('Partial download: %0.3f MiB of %0.3f MiB' %
-                         (downloaded / 1024.0 / 1024,
-                          size / 1024.0 / 1024))
+            Logger.error(
+                "Partial download: %0.3f MiB of %0.3f MiB"
+                % (downloaded / 1024.0 / 1024, size / 1024.0 / 1024)
+            )
 
 
 def _download_text(src, binary, *, blocksize):
     with tempfile.TemporaryDirectory() as d:
-        dst = Path(d) / 'dst'
+        dst = Path(d) / "dst"
         download(src, dst, blocksize=blocksize)
         return dst.read_bytes() if binary else dst.read_text()
 
 
 def download_text(src, mode=None, *, blocksize=DOWNLOAD_BLOCKSIZE_DEFAULT):
-    """ Return the text content of a downloaded file
+    """Return the text content of a downloaded file
 
     src: str or Path
         Source to copy from (file path or url)
@@ -449,9 +461,9 @@ def download_text(src, mode=None, *, blocksize=DOWNLOAD_BLOCKSIZE_DEFAULT):
 
     Returns text content of downloaded file
     """
-    return _download_text(src, binary='b' in (mode or ''), blocksize=blocksize)
+    return _download_text(src, binary="b" in (mode or ""), blocksize=blocksize)
 
 
 def download_bytes(src, *, blocksize=DOWNLOAD_BLOCKSIZE_DEFAULT):
-    """ Same as download_text() but returns bytes """
+    """Same as download_text() but returns bytes"""
     return _download_text(src, binary=True, blocksize=blocksize)

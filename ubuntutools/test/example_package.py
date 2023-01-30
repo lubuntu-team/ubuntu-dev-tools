@@ -23,38 +23,38 @@ from ubuntutools.version import Version
 
 
 class ExamplePackage(object):
-    def __init__(self, source='example', version='1.0-1', destdir='test-data'):
+    def __init__(self, source="example", version="1.0-1", destdir="test-data"):
         self.source = source
         self.version = Version(version)
         self.destdir = Path(destdir)
 
         self.env = dict(os.environ)
-        self.env['DEBFULLNAME'] = 'Example'
-        self.env['DEBEMAIL'] = 'example@example.net'
+        self.env["DEBFULLNAME"] = "Example"
+        self.env["DEBEMAIL"] = "example@example.net"
 
     @property
     def orig(self):
-        return self.destdir / f'{self.source}_{self.version.upstream_version}.orig.tar.xz'
+        return self.destdir / f"{self.source}_{self.version.upstream_version}.orig.tar.xz"
 
     @property
     def debian(self):
-        return self.destdir / f'{self.source}_{self.version}.debian.tar.xz'
+        return self.destdir / f"{self.source}_{self.version}.debian.tar.xz"
 
     @property
     def dsc(self):
-        return self.destdir / f'{self.source}_{self.version}.dsc'
+        return self.destdir / f"{self.source}_{self.version}.dsc"
 
     @property
     def dirname(self):
-        return f'{self.source}-{self.version.upstream_version}'
+        return f"{self.source}-{self.version.upstream_version}"
 
     @property
     def content_filename(self):
-        return 'content'
+        return "content"
 
     @property
     def content_text(self):
-        return 'my content'
+        return "my content"
 
     def create(self):
         with tempfile.TemporaryDirectory() as d:
@@ -66,14 +66,24 @@ class ExamplePackage(object):
         (pkgdir / self.content_filename).write_text(self.content_text)
 
         # run dh_make to create orig tarball
-        subprocess.run('dh_make -sy --createorig'.split(),
-                       check=True, env=self.env, cwd=str(pkgdir),
-                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(
+            "dh_make -sy --createorig".split(),
+            check=True,
+            env=self.env,
+            cwd=str(pkgdir),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
 
         # run dpkg-source -b to create debian tar and dsc
-        subprocess.run(f'dpkg-source -b {self.dirname}'.split(),
-                       check=True, env=self.env, cwd=str(d),
-                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(
+            f"dpkg-source -b {self.dirname}".split(),
+            check=True,
+            env=self.env,
+            cwd=str(d),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
 
         # move tarballs and dsc to destdir
         self.destdir.mkdir(parents=True, exist_ok=True)

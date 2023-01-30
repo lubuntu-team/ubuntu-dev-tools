@@ -25,14 +25,15 @@ import subprocess
 import sys
 
 from ubuntutools import getLogger
+
 Logger = getLogger()
 
 
 def extract(iso, path):
-    command = ['isoinfo', '-R', '-i', iso, '-x', path]
-    pipe = subprocess.run(command, encoding='utf-8',
-                          stdout=subprocess.PIPE,
-                          stderr=subprocess.PIPE)
+    command = ["isoinfo", "-R", "-i", iso, "-x", path]
+    pipe = subprocess.run(
+        command, encoding="utf-8", stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
 
     if pipe.returncode != 0:
         sys.stderr.write(pipe.stderr)
@@ -42,22 +43,21 @@ def extract(iso, path):
 
 
 def main():
-    desc = 'Given an ISO, %prog will display the Ubuntu version information'
-    parser = optparse.OptionParser(usage='%prog [options] iso...',
-                                   description=desc)
+    desc = "Given an ISO, %prog will display the Ubuntu version information"
+    parser = optparse.OptionParser(usage="%prog [options] iso...", description=desc)
     isos = parser.parse_args()[1]
     err = False
 
     for iso in isos:
         if len(isos) > 1:
-            prefix = '%s:' % iso
+            prefix = "%s:" % iso
         else:
-            prefix = ''
+            prefix = ""
 
-        version = extract(iso, '/.disk/info')
+        version = extract(iso, "/.disk/info")
 
         if len(version) == 0:
-            Logger.error('%s does not appear to be an Ubuntu ISO' % iso)
+            Logger.error("%s does not appear to be an Ubuntu ISO" % iso)
             err = True
             continue
 
@@ -67,6 +67,6 @@ def main():
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
     sys.exit(0)

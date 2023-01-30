@@ -23,18 +23,22 @@ import sys
 from debian.changelog import Changelog
 
 from ubuntutools import getLogger
+
 Logger = getLogger()
 
 
 def usage(exit_code=1):
-    Logger.info('''Usage: merge-changelog <left changelog> <right changelog>
+    Logger.info(
+        """Usage: merge-changelog <left changelog> <right changelog>
 
 merge-changelog takes two changelogs that once shared a common source,
 merges them back together, and prints the merged result to stdout.  This
 is useful if you need to manually merge a ubuntu package with a new
 Debian release of the package.
-''')
+"""
+    )
     sys.exit(exit_code)
+
 
 ########################################################################
 # Changelog Management
@@ -67,11 +71,11 @@ def merge_changelog(left_changelog, right_changelog):
 
         assert block.version == version
 
-        Logger.info(str(block).strip() + ('\n' if ci else ''))
+        Logger.info(str(block).strip() + ("\n" if ci else ""))
 
 
 def main():
-    if len(sys.argv) > 1 and sys.argv[1] in ('-h', '--help'):
+    if len(sys.argv) > 1 and sys.argv[1] in ("-h", "--help"):
         usage(0)
     if len(sys.argv) != 3:
         usage(1)
@@ -83,5 +87,5 @@ def main():
     sys.exit(0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

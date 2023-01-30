@@ -29,57 +29,58 @@ import apt
 
 
 def check_support(apt_cache, pkgname, alt=False):
-    '''Check if pkgname is in main or restricted.
+    """Check if pkgname is in main or restricted.
 
     This prints messages if a package is not in main/restricted, or only
     partially (i. e. source in main, but binary in universe).
-    '''
+    """
     if alt:
-        prefix = '  ... alternative ' + pkgname
+        prefix = "  ... alternative " + pkgname
     else:
-        prefix = ' * ' + pkgname
+        prefix = " * " + pkgname
 
     try:
         pkg = apt_cache[pkgname]
     except KeyError:
-        print(prefix, 'does not exist (pure virtual?)', file=sys.stderr)
+        print(prefix, "does not exist (pure virtual?)", file=sys.stderr)
         return False
 
     section = pkg.candidate.section
-    if section.startswith('universe') or section.startswith('multiverse'):
+    if section.startswith("universe") or section.startswith("multiverse"):
         # check if the source package is in main and thus will only need binary
         # promotion
         source_records = apt.apt_pkg.SourceRecords()
         if not source_records.lookup(pkg.candidate.source_name):
-            print('ERROR: Cannot lookup source package for', pkg.name,
-                  file=sys.stderr)
-            print(prefix, 'package is in', section.split('/')[0])
+            print("ERROR: Cannot lookup source package for", pkg.name, file=sys.stderr)
+            print(prefix, "package is in", section.split("/")[0])
             return False
         src = apt.apt_pkg.TagSection(source_records.record)
-        if (src['Section'].startswith('universe') or
-                src['Section'].startswith('multiverse')):
-            print(prefix, 'binary and source package is in',
-                  section.split('/')[0])
+        if src["Section"].startswith("universe") or src["Section"].startswith("multiverse"):
+            print(prefix, "binary and source package is in", section.split("/")[0])
             return False
         else:
-            print(prefix, 'is in', section.split('/')[0] + ', but its source',
-                  pkg.candidate.source_name,
-                  'is already in main; file an ubuntu-archive bug for '
-                  'promoting the current preferred alternative')
+            print(
+                prefix,
+                "is in",
+                section.split("/")[0] + ", but its source",
+                pkg.candidate.source_name,
+                "is already in main; file an ubuntu-archive bug for "
+                "promoting the current preferred alternative",
+            )
             return True
 
     if alt:
-        print(prefix, 'is already in main; consider preferring it')
+        print(prefix, "is already in main; consider preferring it")
 
     return True
 
 
 def check_build_dependencies(apt_cache, control):
-    print('Checking support status of build dependencies...')
+    print("Checking support status of build dependencies...")
 
     any_unsupported = False
 
-    for field in ('Build-Depends', 'Build-Depends-Indep'):
+    for field in ("Build-Depends", "Build-Depends-Indep"):
         if field not in control.section:
             continue
         for or_group in apt.apt_pkg.parse_src_depends(control.section[field]):
@@ -98,20 +99,19 @@ def check_build_dependencies(apt_cache, control):
 def check_binary_dependencies(apt_cache, control):
     any_unsupported = False
 
-    print('\nChecking support status of binary dependencies...')
+    print("\nChecking support status of binary dependencies...")
     while True:
         try:
             next(control)
         except StopIteration:
             break
 
-        for field in ('Depends', 'Pre-Depends', 'Recommends'):
+        for field in ("Depends", "Pre-Depends", "Recommends"):
             if field not in control.section:
                 continue
-            for or_group in apt.apt_pkg.parse_src_depends(
-                    control.section[field]):
+            for or_group in apt.apt_pkg.parse_src_depends(control.section[field]):
                 pkgname = or_group[0][0]
-                if pkgname.startswith('$'):
+                if pkgname.startswith("$"):
                     continue
                 if not check_support(apt_cache, pkgname):
                     # check non-preferred alternatives
@@ -125,32 +125,38 @@ def check_binary_dependencies(apt_cache, control):
 
 
 def main():
-    description = "Check if any of a package's build or binary " + \
-                  "dependencies are in universe or multiverse. " + \
-                  "Run this inside an unpacked source package"
+    description = (
+        "Check if any of a package's build or binary "
+        + "dependencies are in universe or multiverse. "
+        + "Run this inside an unpacked source package"
+    )
     parser = optparse.OptionParser(description=description)
     parser.parse_args()
     apt_cache = apt.Cache()
 
-    if not os.path.exists('debian/control'):
-        print('debian/control not found. You need to run this tool in a '
-              'source package directory', file=sys.stderr)
+    if not os.path.exists("debian/control"):
+        print(
+            "debian/control not found. You need to run this tool in a source package directory",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     # get build dependencies from debian/control
-    control = apt.apt_pkg.TagFile(open('debian/control'))
+    control = apt.apt_pkg.TagFile(open("debian/control"))
     next(control)
 
     unsupported_build_deps = check_build_dependencies(apt_cache, control)
     unsupported_binary_deps = check_binary_dependencies(apt_cache, control)
 
     if unsupported_build_deps or unsupported_binary_deps:
-        print('\nPlease check https://wiki.ubuntu.com/MainInclusionProcess if '
-              'this source package needs to get into in main/restricted, or '
-              'reconsider if the package really needs above dependencies.')
+        print(
+            "\nPlease check https://wiki.ubuntu.com/MainInclusionProcess if "
+            "this source package needs to get into in main/restricted, or "
+            "reconsider if the package really needs above dependencies."
+        )
     else:
-        print('All dependencies are supported in main or restricted.')
+        print("All dependencies are supported in main or restricted.")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

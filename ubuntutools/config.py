@@ -24,6 +24,7 @@ import sys
 import locale
 
 import logging
+
 Logger = logging.getLogger(__name__)
 
 
@@ -31,23 +32,24 @@ class UDTConfig(object):
     """Ubuntu Dev Tools configuration file (devscripts config file) and
     environment variable parsing.
     """
+
     no_conf = False
     # Package wide configuration variables.
     # These are reqired to be used by at least two scripts.
     defaults = {
-        'BUILDER': 'pbuilder',
-        'DEBIAN_MIRROR': 'http://deb.debian.org/debian',
-        'DEBSEC_MIRROR': 'http://security.debian.org',
-        'DEBIAN_DDEBS_MIRROR': 'http://debug.mirrors.debian.org/debian-debug',
-        'LPINSTANCE': 'production',
-        'MIRROR_FALLBACK': True,
-        'UBUNTU_MIRROR': 'http://archive.ubuntu.com/ubuntu',
-        'UBUNTU_PORTS_MIRROR': 'http://ports.ubuntu.com',
-        'UBUNTU_INTERNAL_MIRROR': 'http://ftpmaster.internal/ubuntu',
-        'UBUNTU_DDEBS_MIRROR': 'http://ddebs.ubuntu.com',
-        'UPDATE_BUILDER': False,
-        'WORKDIR': None,
-        'KEYID': None,
+        "BUILDER": "pbuilder",
+        "DEBIAN_MIRROR": "http://deb.debian.org/debian",
+        "DEBSEC_MIRROR": "http://security.debian.org",
+        "DEBIAN_DDEBS_MIRROR": "http://debug.mirrors.debian.org/debian-debug",
+        "LPINSTANCE": "production",
+        "MIRROR_FALLBACK": True,
+        "UBUNTU_MIRROR": "http://archive.ubuntu.com/ubuntu",
+        "UBUNTU_PORTS_MIRROR": "http://ports.ubuntu.com",
+        "UBUNTU_INTERNAL_MIRROR": "http://ftpmaster.internal/ubuntu",
+        "UBUNTU_DDEBS_MIRROR": "http://ddebs.ubuntu.com",
+        "UPDATE_BUILDER": False,
+        "WORKDIR": None,
+        "KEYID": None,
     }
     # Populated from the configuration files:
     config = {}
@@ -55,7 +57,7 @@ class UDTConfig(object):
     def __init__(self, no_conf=False, prefix=None):
         self.no_conf = no_conf
         if prefix is None:
-            prefix = os.path.basename(sys.argv[0]).upper().replace('-', '_')
+            prefix = os.path.basename(sys.argv[0]).upper().replace("-", "_")
         self.prefix = prefix
         if not no_conf:
             self.config = self.parse_devscripts_config()
@@ -65,18 +67,21 @@ class UDTConfig(object):
         dictionary
         """
         config = {}
-        for filename in ('/etc/devscripts.conf', '~/.devscripts'):
+        for filename in ("/etc/devscripts.conf", "~/.devscripts"):
             try:
-                f = open(os.path.expanduser(filename), 'r')
+                f = open(os.path.expanduser(filename), "r")
             except IOError:
                 continue
             for line in f:
                 parsed = shlex.split(line, comments=True)
                 if len(parsed) > 1:
-                    Logger.warning('Cannot parse variable assignment in %s: %s',
-                                   getattr(f, 'name', '<config>'), line)
-                if len(parsed) >= 1 and '=' in parsed[0]:
-                    key, value = parsed[0].split('=', 1)
+                    Logger.warning(
+                        "Cannot parse variable assignment in %s: %s",
+                        getattr(f, "name", "<config>"),
+                        line,
+                    )
+                if len(parsed) >= 1 and "=" in parsed[0]:
+                    key, value = parsed[0].split("=", 1)
                     config[key] = value
             f.close()
         return config
@@ -95,9 +100,9 @@ class UDTConfig(object):
         if default is None and key in self.defaults:
             default = self.defaults[key]
 
-        keys = [self.prefix + '_' + key]
+        keys = [self.prefix + "_" + key]
         if key in self.defaults:
-            keys.append('UBUNTUTOOLS_' + key)
+            keys.append("UBUNTUTOOLS_" + key)
         keys += compat_keys
 
         for k in keys:
@@ -105,16 +110,19 @@ class UDTConfig(object):
                 if k in store:
                     value = store[k]
                     if boolean:
-                        if value in ('yes', 'no'):
-                            value = value == 'yes'
+                        if value in ("yes", "no"):
+                            value = value == "yes"
                         else:
                             continue
                     if k in compat_keys:
-                        replacements = self.prefix + '_' + key
+                        replacements = self.prefix + "_" + key
                         if key in self.defaults:
-                            replacements += 'or UBUNTUTOOLS_' + key
-                        Logger.warning('Using deprecated configuration variable %s. '
-                                       'You should use %s.', k, replacements)
+                            replacements += "or UBUNTUTOOLS_" + key
+                        Logger.warning(
+                            "Using deprecated configuration variable %s. You should use %s.",
+                            k,
+                            replacements,
+                        )
                     return value
         return default
 
@@ -132,7 +140,7 @@ def ubu_email(name=None, email=None, export=True):
 
     Return name, email.
     """
-    name_email_re = re.compile(r'^\s*(.+?)\s*<(.+@.+)>\s*$')
+    name_email_re = re.compile(r"^\s*(.+?)\s*<(.+@.+)>\s*$")
 
     if email:
         match = name_email_re.match(email)
@@ -140,11 +148,16 @@ def ubu_email(name=None, email=None, export=True):
             name = match.group(1)
             email = match.group(2)
 
-    if export and not name and not email and 'UBUMAIL' not in os.environ:
+    if export and not name and not email and "UBUMAIL" not in os.environ:
         export = False
 
-    for var, target in (('UBUMAIL', 'email'), ('DEBFULLNAME', 'name'), ('DEBEMAIL', 'email'),
-                        ('EMAIL', 'email'), ('NAME', 'name')):
+    for var, target in (
+        ("UBUMAIL", "email"),
+        ("DEBFULLNAME", "name"),
+        ("DEBEMAIL", "email"),
+        ("EMAIL", "email"),
+        ("NAME", "name"),
+    ):
         if name and email:
             break
         if var in os.environ:
@@ -154,30 +167,30 @@ def ubu_email(name=None, email=None, export=True):
                     name = match.group(1)
                 if not email:
                     email = match.group(2)
-            elif target == 'name' and not name:
+            elif target == "name" and not name:
                 name = os.environ[var].strip()
-            elif target == 'email' and not email:
+            elif target == "email" and not email:
                 email = os.environ[var].strip()
 
     if not name:
-        gecos_name = pwd.getpwuid(os.getuid()).pw_gecos.split(',')[0].strip()
+        gecos_name = pwd.getpwuid(os.getuid()).pw_gecos.split(",")[0].strip()
         if gecos_name:
             name = gecos_name
 
     if not email:
         mailname = socket.getfqdn()
-        if os.path.isfile('/etc/mailname'):
-            mailname = open('/etc/mailname', 'r').read().strip()
-        email = pwd.getpwuid(os.getuid()).pw_name + '@' + mailname
+        if os.path.isfile("/etc/mailname"):
+            mailname = open("/etc/mailname", "r").read().strip()
+        email = pwd.getpwuid(os.getuid()).pw_name + "@" + mailname
 
     if export:
-        os.environ['DEBFULLNAME'] = name
-        os.environ['DEBEMAIL'] = email
+        os.environ["DEBFULLNAME"] = name
+        os.environ["DEBEMAIL"] = email
 
     # decode env var or gecos raw string with the current locale's encoding
     encoding = locale.getdefaultlocale()[1]
     if not encoding:
-        encoding = 'utf-8'
+        encoding = "utf-8"
     if name and isinstance(name, bytes):
         name = name.decode(encoding)
     return name, email

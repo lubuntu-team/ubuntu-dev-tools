@@ -28,17 +28,19 @@ from httplib2 import Http, HttpLib2Error
 import ubuntutools.misc
 
 from ubuntutools import getLogger
+
 Logger = getLogger()
 
 
 def main():
     parser = optparse.OptionParser(
-        usage='%prog [options] [string]',
-        description='List pending merges from Debian matching string')
+        usage="%prog [options] [string]",
+        description="List pending merges from Debian matching string",
+    )
     args = parser.parse_args()[1]
 
     if len(args) > 1:
-        parser.error('Too many arguments')
+        parser.error("Too many arguments")
     elif len(args) == 1:
         match = args[0]
     else:
@@ -46,36 +48,46 @@ def main():
 
     ubuntutools.misc.require_utf8()
 
-    for component in ('main', 'main-manual',
-                      'restricted', 'restricted-manual',
-                      'universe', 'universe-manual',
-                      'multiverse', 'multiverse-manual'):
+    for component in (
+        "main",
+        "main-manual",
+        "restricted",
+        "restricted-manual",
+        "universe",
+        "universe-manual",
+        "multiverse",
+        "multiverse-manual",
+    ):
 
-        url = 'https://merges.ubuntu.com/%s.json' % component
+        url = "https://merges.ubuntu.com/%s.json" % component
         try:
             headers, page = Http().request(url)
         except HttpLib2Error as e:
             Logger.exception(e)
             sys.exit(1)
         if headers.status != 200:
-            Logger.error("%s: %s %s" % (url, headers.status,
-                                        headers.reason))
+            Logger.error("%s: %s %s" % (url, headers.status, headers.reason))
             sys.exit(1)
 
         for merge in json.loads(page):
-            package = merge['source_package']
-            author, uploader = '', ''
-            if merge.get('user'):
-                author = merge['user']
-            if merge.get('uploader'):
-                uploader = '(%s)' % merge['uploader']
-            teams = merge.get('teams', [])
+            package = merge["source_package"]
+            author, uploader = "", ""
+            if merge.get("user"):
+                author = merge["user"]
+            if merge.get("uploader"):
+                uploader = "(%s)" % merge["uploader"]
+            teams = merge.get("teams", [])
 
-            pretty_uploader = '{} {}'.format(author, uploader)
-            if (match is None or match in package or match in author
-               or match in uploader or match in teams):
-                Logger.info('%s\t%s' % (package, pretty_uploader))
+            pretty_uploader = "{} {}".format(author, uploader)
+            if (
+                match is None
+                or match in package
+                or match in author
+                or match in uploader
+                or match in teams
+            ):
+                Logger.info("%s\t%s" % (package, pretty_uploader))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

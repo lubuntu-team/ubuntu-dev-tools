@@ -24,11 +24,11 @@ from distro_info import UbuntuDistroInfo
 from ubuntutools.config import UDTConfig
 from ubuntutools.lp.lpapicache import Launchpad, Distribution
 from ubuntutools.lp.udtexceptions import PackageNotFoundException
-from ubuntutools.question import (YesNoQuestion, EditBugReport,
-                                  confirmation_prompt)
+from ubuntutools.question import YesNoQuestion, EditBugReport, confirmation_prompt
 from ubuntutools.rdepends import query_rdepends, RDependsException
 
 from ubuntutools import getLogger
+
 Logger = getLogger()
 
 
@@ -44,11 +44,9 @@ def determine_destinations(source, destination):
     if source not in ubuntu_info.all:
         raise DestinationException("Source release %s does not exist" % source)
     if destination not in ubuntu_info.all:
-        raise DestinationException("Destination release %s does not exist"
-                                   % destination)
+        raise DestinationException("Destination release %s does not exist" % destination)
     if destination not in ubuntu_info.supported():
-        raise DestinationException("Destination release %s is not supported"
-                                   % destination)
+        raise DestinationException("Destination release %s is not supported" % destination)
 
     found = False
     destinations = []
@@ -76,30 +74,34 @@ def determine_destinations(source, destination):
 
 
 def disclaimer():
-    print("Ubuntu's backports are not for fixing bugs in stable releases, "
-          "but for bringing new features to older, stable releases.\n"
-          "See https://wiki.ubuntu.com/UbuntuBackports for the Ubuntu "
-          "Backports policy and processes.\n"
-          "See https://wiki.ubuntu.com/StableReleaseUpdates for the process "
-          "for fixing bugs in stable releases.")
+    print(
+        "Ubuntu's backports are not for fixing bugs in stable releases, "
+        "but for bringing new features to older, stable releases.\n"
+        "See https://wiki.ubuntu.com/UbuntuBackports for the Ubuntu "
+        "Backports policy and processes.\n"
+        "See https://wiki.ubuntu.com/StableReleaseUpdates for the process "
+        "for fixing bugs in stable releases."
+    )
     confirmation_prompt()
 
 
 def check_existing(package):
     """Search for possible existing bug reports"""
-    distro = Distribution('ubuntu')
+    distro = Distribution("ubuntu")
     srcpkg = distro.getSourcePackage(name=package.getPackageName())
 
-    bugs = srcpkg.searchTasks(omit_duplicates=True,
-                              search_text="[BPO]",
-                              status=["Incomplete", "New", "Confirmed",
-                                      "Triaged", "In Progress",
-                                      "Fix Committed"])
+    bugs = srcpkg.searchTasks(
+        omit_duplicates=True,
+        search_text="[BPO]",
+        status=["Incomplete", "New", "Confirmed", "Triaged", "In Progress", "Fix Committed"],
+    )
     if not bugs:
         return
 
-    Logger.info("There are existing bug reports that look similar to your "
-                "request. Please check before continuing:")
+    Logger.info(
+        "There are existing bug reports that look similar to your "
+        "request. Please check before continuing:"
+    )
 
     for bug in sorted([bug_task.bug for bug_task in bugs], key=lambda bug: bug.id):
         Logger.info(" * LP: #%-7i: %s  %s", bug.id, bug.title, bug.web_link)
@@ -114,7 +116,7 @@ def find_rdepends(releases, published_binaries):
     for binpkg in published_binaries:
         intermediate[binpkg]
 
-    for arch in ('any', 'source'):
+    for arch in ("any", "source"):
         for release in releases:
             for binpkg in published_binaries:
                 try:
@@ -125,20 +127,20 @@ def find_rdepends(releases, published_binaries):
                 for relationship, rdeps in raw_rdeps.items():
                     for rdep in rdeps:
                         # Ignore circular deps:
-                        if rdep['Package'] in published_binaries:
+                        if rdep["Package"] in published_binaries:
                             continue
                         # arch==any queries return Reverse-Build-Deps:
-                        if arch == 'any' and rdep.get('Architectures', []) == ['source']:
+                        if arch == "any" and rdep.get("Architectures", []) == ["source"]:
                             continue
-                        intermediate[binpkg][rdep['Package']].append((release, relationship))
+                        intermediate[binpkg][rdep["Package"]].append((release, relationship))
 
     output = []
     for binpkg, rdeps in intermediate.items():
-        output += ['', binpkg, '-' * len(binpkg)]
+        output += ["", binpkg, "-" * len(binpkg)]
         for pkg, appearences in rdeps.items():
-            output += ['* %s' % pkg]
+            output += ["* %s" % pkg]
             for release, relationship in appearences:
-                output += ['  [ ] %s (%s)' % (release, relationship)]
+                output += ["  [ ] %s (%s)" % (release, relationship)]
 
     found_any = sum(len(rdeps) for rdeps in intermediate.values())
     if found_any:
@@ -153,8 +155,8 @@ def find_rdepends(releases, published_binaries):
             "package currently in the release still works with the new "
             "%(package)s installed. "
             "Reverse- Recommends, Suggests, and Enhances don't need to be "
-            "tested, and are listed for completeness-sake."
-           ] + output
+            "tested, and are listed for completeness-sake.",
+        ] + output
     else:
         output = ["No reverse dependencies"]
 
@@ -162,8 +164,8 @@ def find_rdepends(releases, published_binaries):
 
 
 def locate_package(package, distribution):
-    archive = Distribution('ubuntu').getArchive()
-    for pass_ in ('source', 'binary'):
+    archive = Distribution("ubuntu").getArchive()
+    for pass_ in ("source", "binary"):
         try:
             package_spph = archive.getSourcePackage(package, distribution)
             return package_spph
@@ -174,8 +176,9 @@ def locate_package(package, distribution):
                 Logger.error(str(e))
                 sys.exit(1)
             package = apt_pkg.candidate.source_name
-            Logger.info("Binary package specified, considering its source "
-                        "package instead: %s", package)
+            Logger.info(
+                "Binary package specified, considering its source package instead: %s", package
+            )
 
 
 def request_backport(package_spph, source, destinations):
@@ -184,67 +187,77 @@ def request_backport(package_spph, source, destinations):
         published_binaries.add(bpph.getPackageName())
 
     if not published_binaries:
-        Logger.error("%s (%s) has no published binaries in %s. ",
-                     package_spph.getPackageName(), package_spph.getVersion(),
-                     source)
-        Logger.info("Is it stuck in bin-NEW? It can't be backported until "
-                    "the binaries have been accepted.")
+        Logger.error(
+            "%s (%s) has no published binaries in %s. ",
+            package_spph.getPackageName(),
+            package_spph.getVersion(),
+            source,
+        )
+        Logger.info(
+            "Is it stuck in bin-NEW? It can't be backported until "
+            "the binaries have been accepted."
+        )
         sys.exit(1)
 
     testing = ["[Testing]", ""]
     for dest in destinations:
         testing += [" * %s:" % dest.capitalize()]
         testing += ["   [ ] Package builds without modification"]
-        testing += ["   [ ] %s installs cleanly and runs" % binary
-                    for binary in published_binaries]
+        testing += [
+            "   [ ] %s installs cleanly and runs" % binary for binary in published_binaries
+        ]
 
     subst = {
-        'package': package_spph.getPackageName(),
-        'version': package_spph.getVersion(),
-        'component': package_spph.getComponent(),
-        'source': package_spph.getSeriesAndPocket(),
-        'destinations': ', '.join(destinations),
+        "package": package_spph.getPackageName(),
+        "version": package_spph.getVersion(),
+        "component": package_spph.getComponent(),
+        "source": package_spph.getSeriesAndPocket(),
+        "destinations": ", ".join(destinations),
     }
     subject = "[BPO] %(package)s %(version)s to %(destinations)s" % subst
-    body = ('\n'.join(
+    body = (
+        "\n".join(
             [
-             "[Impact]",
-             "",
-             " * Justification for backporting the new version to the stable release.",
-             "",
-             "[Scope]",
-             "",
-             " * List the Ubuntu release you will backport from,"
-             " and the specific package version.",
-             "",
-             " * List the Ubuntu release(s) you will backport to.",
-             "",
-             "[Other Info]",
-             "",
-             " * Anything else you think is useful to include",
-             ""
+                "[Impact]",
+                "",
+                " * Justification for backporting the new version to the stable release.",
+                "",
+                "[Scope]",
+                "",
+                " * List the Ubuntu release you will backport from,"
+                " and the specific package version.",
+                "",
+                " * List the Ubuntu release(s) you will backport to.",
+                "",
+                "[Other Info]",
+                "",
+                " * Anything else you think is useful to include",
+                "",
             ]
             + testing
             + [""]
             + find_rdepends(destinations, published_binaries)
-            + [""]) % subst)
+            + [""]
+        )
+        % subst
+    )
 
     editor = EditBugReport(subject, body)
     editor.edit()
     subject, body = editor.get_report()
 
-    Logger.info('The final report is:\nSummary: %s\nDescription:\n%s\n',
-                subject, body)
+    Logger.info("The final report is:\nSummary: %s\nDescription:\n%s\n", subject, body)
     if YesNoQuestion().ask("Request this backport", "yes") == "no":
         sys.exit(1)
 
-    distro = Distribution('ubuntu')
+    distro = Distribution("ubuntu")
     pkgname = package_spph.getPackageName()
 
-    bug = Launchpad.bugs.createBug(title=subject, description=body,
-                                   target=distro.getSourcePackage(name=pkgname))
+    bug = Launchpad.bugs.createBug(
+        title=subject, description=body, target=distro.getSourcePackage(name=pkgname)
+    )
 
-    bug.subscribe(person=Launchpad.people['ubuntu-backporters'])
+    bug.subscribe(person=Launchpad.people["ubuntu-backporters"])
 
     for dest in destinations:
         series = distro.getSeries(dest)
@@ -257,20 +270,35 @@ def request_backport(package_spph, source, destinations):
 
 
 def main():
-    parser = optparse.OptionParser('%prog [options] package')
-    parser.add_option('-d', '--destination', metavar='DEST',
-                      help='Backport to DEST release and necessary '
-                           'intermediate releases '
-                           '(default: current LTS release)')
-    parser.add_option('-s', '--source', metavar='SOURCE',
-                      help='Backport from SOURCE release '
-                           '(default: current devel release)')
-    parser.add_option('-l', '--lpinstance', metavar='INSTANCE', default=None,
-                      help='Launchpad instance to connect to '
-                           '(default: production).')
-    parser.add_option('--no-conf', action='store_true',
-                      dest='no_conf', default=False,
-                      help="Don't read config files or environment variables")
+    parser = optparse.OptionParser("%prog [options] package")
+    parser.add_option(
+        "-d",
+        "--destination",
+        metavar="DEST",
+        help="Backport to DEST release and necessary "
+        "intermediate releases "
+        "(default: current LTS release)",
+    )
+    parser.add_option(
+        "-s",
+        "--source",
+        metavar="SOURCE",
+        help="Backport from SOURCE release (default: current devel release)",
+    )
+    parser.add_option(
+        "-l",
+        "--lpinstance",
+        metavar="INSTANCE",
+        default=None,
+        help="Launchpad instance to connect to (default: production).",
+    )
+    parser.add_option(
+        "--no-conf",
+        action="store_true",
+        dest="no_conf",
+        default=False,
+        help="Don't read config files or environment variables",
+    )
     options, args = parser.parse_args()
 
     if len(args) != 1:
@@ -280,15 +308,14 @@ def main():
     config = UDTConfig(options.no_conf)
 
     if options.lpinstance is None:
-        options.lpinstance = config.get_value('LPINSTANCE')
+        options.lpinstance = config.get_value("LPINSTANCE")
     Launchpad.login(options.lpinstance)
 
     if options.source is None:
-        options.source = Distribution('ubuntu').getDevelopmentSeries().name
+        options.source = Distribution("ubuntu").getDevelopmentSeries().name
 
     try:
-        destinations = determine_destinations(options.source,
-                                              options.destination)
+        destinations = determine_destinations(options.source, options.destination)
     except DestinationException as e:
         Logger.error(str(e))
         sys.exit(1)
@@ -301,5 +328,5 @@ def main():
     request_backport(package_spph, options.source, destinations)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

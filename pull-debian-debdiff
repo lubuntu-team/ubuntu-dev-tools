@@ -27,19 +27,20 @@ from ubuntutools.config import UDTConfig
 from ubuntutools.version import Version
 
 from ubuntutools import getLogger
+
 Logger = getLogger()
 
 
 def previous_version(package, version, distance):
     "Given an (extracted) package, determine the version distance versions ago"
     upver = Version(version).upstream_version
-    filename = '%s-%s/debian/changelog' % (package, upver)
-    changelog_file = open(filename, 'r')
+    filename = "%s-%s/debian/changelog" % (package, upver)
+    changelog_file = open(filename, "r")
     changelog = debian.changelog.Changelog(changelog_file.read())
     changelog_file.close()
     seen = 0
     for entry in changelog:
-        if entry.distributions == 'UNRELEASED':
+        if entry.distributions == "UNRELEASED":
             continue
         if seen == distance:
             return entry.version.full_version
@@ -48,46 +49,60 @@ def previous_version(package, version, distance):
 
 
 def main():
-    parser = optparse.OptionParser('%prog [options] <package> <version> '
-                                   '[distance]')
-    parser.add_option('-f', '--fetch',
-                      dest='fetch_only', default=False, action='store_true',
-                      help="Only fetch the source packages, don't diff.")
-    parser.add_option('-d', '--debian-mirror', metavar='DEBIAN_MIRROR',
-                      dest='debian_mirror',
-                      help='Preferred Debian mirror '
-                           '(default: http://deb.debian.org/debian)')
-    parser.add_option('-s', '--debsec-mirror', metavar='DEBSEC_MIRROR',
-                      dest='debsec_mirror',
-                      help='Preferred Debian Security mirror '
-                           '(default: http://security.debian.org)')
-    parser.add_option('--no-conf',
-                      dest='no_conf', default=False, action='store_true',
-                      help="Don't read config files or environment variables")
+    parser = optparse.OptionParser("%prog [options] <package> <version> [distance]")
+    parser.add_option(
+        "-f",
+        "--fetch",
+        dest="fetch_only",
+        default=False,
+        action="store_true",
+        help="Only fetch the source packages, don't diff.",
+    )
+    parser.add_option(
+        "-d",
+        "--debian-mirror",
+        metavar="DEBIAN_MIRROR",
+        dest="debian_mirror",
+        help="Preferred Debian mirror (default: http://deb.debian.org/debian)",
+    )
+    parser.add_option(
+        "-s",
+        "--debsec-mirror",
+        metavar="DEBSEC_MIRROR",
+        dest="debsec_mirror",
+        help="Preferred Debian Security mirror (default: http://security.debian.org)",
+    )
+    parser.add_option(
+        "--no-conf",
+        dest="no_conf",
+        default=False,
+        action="store_true",
+        help="Don't read config files or environment variables",
+    )
 
     opts, args = parser.parse_args()
     if len(args) < 2:
-        parser.error('Must specify package and version')
+        parser.error("Must specify package and version")
     elif len(args) > 3:
-        parser.error('Too many arguments')
+        parser.error("Too many arguments")
     package = args[0]
     version = args[1]
     distance = int(args[2]) if len(args) > 2 else 1
 
     config = UDTConfig(opts.no_conf)
     if opts.debian_mirror is None:
-        opts.debian_mirror = config.get_value('DEBIAN_MIRROR')
+        opts.debian_mirror = config.get_value("DEBIAN_MIRROR")
     if opts.debsec_mirror is None:
-        opts.debsec_mirror = config.get_value('DEBSEC_MIRROR')
+        opts.debsec_mirror = config.get_value("DEBSEC_MIRROR")
     mirrors = [opts.debsec_mirror, opts.debian_mirror]
 
-    Logger.info('Downloading %s %s', package, version)
+    Logger.info("Downloading %s %s", package, version)
 
     newpkg = DebianSourcePackage(package, version, mirrors=mirrors)
     try:
         newpkg.pull()
     except DownloadError as e:
-        Logger.error('Failed to download: %s', str(e))
+        Logger.error("Failed to download: %s", str(e))
         sys.exit(1)
     newpkg.unpack()
 
@@ -96,21 +111,21 @@ def main():
 
     oldversion = previous_version(package, version, distance)
     if not oldversion:
-        Logger.error('No previous version could be found')
+        Logger.error("No previous version could be found")
         sys.exit(1)
-    Logger.info('Downloading %s %s', package, oldversion)
+    Logger.info("Downloading %s %s", package, oldversion)
 
     oldpkg = DebianSourcePackage(package, oldversion, mirrors=mirrors)
     try:
         oldpkg.pull()
     except DownloadError as e:
-        Logger.error('Failed to download: %s', str(e))
+        Logger.error("Failed to download: %s", str(e))
         sys.exit(1)
-    Logger.info('file://' + oldpkg.debdiff(newpkg, diffstat=True))
+    Logger.info("file://" + oldpkg.debdiff(newpkg, diffstat=True))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        Logger.info('User abort.')
+        Logger.info("User abort.")

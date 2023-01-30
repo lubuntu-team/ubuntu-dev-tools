@@ -41,7 +41,7 @@ class DscVerificationTestCase(BaseVerificationTestCase):
         self.assertTrue(self.dsc.verify_file(self.pkg.debian))
 
     def test_missing(self):
-        self.assertFalse(self.dsc.verify_file(self.pkg.destdir / 'does.not.exist'))
+        self.assertFalse(self.dsc.verify_file(self.pkg.destdir / "does.not.exist"))
 
     def test_bad(self):
         data = self.pkg.orig.read_bytes()
@@ -51,13 +51,13 @@ class DscVerificationTestCase(BaseVerificationTestCase):
         self.assertFalse(self.dsc.verify_file(self.pkg.orig))
 
     def test_sha1(self):
-        del self.dsc['Checksums-Sha256']
+        del self.dsc["Checksums-Sha256"]
         self.test_good()
         self.test_bad()
 
     def test_md5(self):
-        del self.dsc['Checksums-Sha256']
-        del self.dsc['Checksums-Sha1']
+        del self.dsc["Checksums-Sha256"]
+        del self.dsc["Checksums-Sha1"]
         self.test_good()
         self.test_bad()
 
@@ -72,7 +72,7 @@ class LocalSourcePackageTestCase(BaseVerificationTestCase):
         self.workdir = Path(d.name)
 
     def pull(self, **kwargs):
-        ''' Do the pull from pkg dir to the workdir, return the SourcePackage '''
+        """Do the pull from pkg dir to the workdir, return the SourcePackage"""
         srcpkg = self.SourcePackage(dscfile=self.pkg.dsc, workdir=self.workdir, **kwargs)
         srcpkg.pull()
         return srcpkg
@@ -85,11 +85,11 @@ class LocalSourcePackageTestCase(BaseVerificationTestCase):
         return srcpkg
 
     def test_unpack(self, **kwargs):
-        srcpkg = kwargs.get('srcpkg', self.pull(**kwargs))
+        srcpkg = kwargs.get("srcpkg", self.pull(**kwargs))
         srcpkg.unpack()
         content = self.workdir / self.pkg.dirname / self.pkg.content_filename
         self.assertEqual(self.pkg.content_text, content.read_text())
-        debian = self.workdir / self.pkg.dirname / 'debian'
+        debian = self.workdir / self.pkg.dirname / "debian"
         self.assertTrue(debian.exists())
         self.assertTrue(debian.is_dir())
 
@@ -103,12 +103,12 @@ class LocalSourcePackageTestCase(BaseVerificationTestCase):
         self.test_pull_and_unpack(package=self.pkg.source, version=self.pkg.version)
 
     def test_with_package_version_component(self):
-        self.test_pull_and_unpack(package=self.pkg.source,
-                                  version=self.pkg.version,
-                                  componet='main')
+        self.test_pull_and_unpack(
+            package=self.pkg.source, version=self.pkg.version, componet="main"
+        )
 
     def test_verification(self):
-        corruption = b'CORRUPTION'
+        corruption = b"CORRUPTION"
 
         self.pull()
 

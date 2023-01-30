@@ -22,6 +22,7 @@ import re
 import debian.changelog
 
 import logging
+
 Logger = logging.getLogger(__name__)
 
 # Prior May 2009 these Maintainers were used:
@@ -47,16 +48,16 @@ class Control(object):
 
     def get_maintainer(self):
         """Returns the value of the Maintainer field."""
-        maintainer = re.search("^Maintainer: ?(.*)$", self._content,
-                               re.MULTILINE)
+        maintainer = re.search("^Maintainer: ?(.*)$", self._content, re.MULTILINE)
         if maintainer:
             maintainer = maintainer.group(1)
         return maintainer
 
     def get_original_maintainer(self):
         """Returns the value of the XSBC-Original-Maintainer field."""
-        orig_maintainer = re.search("^(?:[XSBC]*-)?Original-Maintainer: ?(.*)$",
-                                    self._content, re.MULTILINE)
+        orig_maintainer = re.search(
+            "^(?:[XSBC]*-)?Original-Maintainer: ?(.*)$", self._content, re.MULTILINE
+        )
         if orig_maintainer:
             orig_maintainer = orig_maintainer.group(1)
         return orig_maintainer
@@ -78,25 +79,23 @@ class Control(object):
         """Sets the value of the XSBC-Original-Maintainer field."""
         original_maintainer = "XSBC-Original-Maintainer: " + original_maintainer
         if self.get_original_maintainer():
-            pattern = re.compile("^(?:[XSBC]*-)?Original-Maintainer:.*$",
-                                 re.MULTILINE)
+            pattern = re.compile("^(?:[XSBC]*-)?Original-Maintainer:.*$", re.MULTILINE)
             self._content = pattern.sub(original_maintainer, self._content)
         else:
             pattern = re.compile("^(Maintainer:.*)$", re.MULTILINE)
-            self._content = pattern.sub(r"\1\n" + original_maintainer,
-                                        self._content)
+            self._content = pattern.sub(r"\1\n" + original_maintainer, self._content)
 
     def remove_original_maintainer(self):
         """Strip out out the XSBC-Original-Maintainer line"""
-        pattern = re.compile("^(?:[XSBC]*-)?Original-Maintainer:.*?$.*?^",
-                             re.MULTILINE | re.DOTALL)
-        self._content = pattern.sub('', self._content)
+        pattern = re.compile(
+            "^(?:[XSBC]*-)?Original-Maintainer:.*?$.*?^", re.MULTILINE | re.DOTALL
+        )
+        self._content = pattern.sub("", self._content)
 
 
 def _get_distribution(changelog_file):
     """get distribution of latest changelog entry"""
-    changelog = debian.changelog.Changelog(open(changelog_file), strict=False,
-                                           max_blocks=1)
+    changelog = debian.changelog.Changelog(open(changelog_file), strict=False, max_blocks=1)
     distribution = changelog.distributions.split()[0]
     # Strip things like "-proposed-updates" or "-security" from distribution
     return distribution.split("-", 1)[0]
@@ -107,25 +106,21 @@ def _find_files(debian_directory, verbose):
     Returns (changelog, control files list)
     Raises an exception if none can be found.
     """
-    possible_contol_files = [os.path.join(debian_directory, f) for
-                             f in ["control.in", "control"]]
+    possible_contol_files = [os.path.join(debian_directory, f) for f in ["control.in", "control"]]
 
     changelog_file = os.path.join(debian_directory, "changelog")
     control_files = [f for f in possible_contol_files if os.path.isfile(f)]
 
     # Make sure that a changelog and control file is available
     if len(control_files) == 0:
-        raise MaintainerUpdateException(
-                "No control file found in %s." % debian_directory)
+        raise MaintainerUpdateException("No control file found in %s." % debian_directory)
     if not os.path.isfile(changelog_file):
-        raise MaintainerUpdateException(
-                "No changelog file found in %s." % debian_directory)
+        raise MaintainerUpdateException("No changelog file found in %s." % debian_directory)
 
     # If the rules file accounts for XSBC-Original-Maintainer, we should not
     # touch it in this package (e.g. the python package).
     rules_file = os.path.join(debian_directory, "rules")
-    if os.path.isfile(rules_file) and \
-       'XSBC-Original-' in open(rules_file).read():
+    if os.path.isfile(rules_file) and "XSBC-Original-" in open(rules_file).read():
         if verbose:
             print("XSBC-Original is managed by 'rules' file. Doing nothing.")
         control_files = []
@@ -178,8 +173,9 @@ def update_maintainer(debian_directory, verbose=False):
             return
 
         if control.get_original_maintainer() is not None:
-            Logger.warning("Overwriting original maintainer: %s",
-                           control.get_original_maintainer())
+            Logger.warning(
+                "Overwriting original maintainer: %s", control.get_original_maintainer()
+            )
 
         if verbose:
             print("The original maintainer is: %s" % original_maintainer)

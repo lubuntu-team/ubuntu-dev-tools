@@ -33,6 +33,7 @@ from launchpadlib.launchpad import Launchpad
 from ubuntutools.config import UDTConfig
 
 from ubuntutools import getLogger
+
 Logger = getLogger()
 
 
@@ -40,19 +41,33 @@ def main():
     bug_re = re.compile(r"bug=(\d+)")
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-b", "--browserless", action="store_true",
-                        help="Don't open the bug in the browser at the end")
-    parser.add_argument("-l", "--lpinstance", metavar="INSTANCE",
-                        help="LP instance to connect to (default: production)")
-    parser.add_argument("-v", "--verbose", action="store_true",
-                        help="Print info about the bug being imported")
-    parser.add_argument("-n", "--dry-run", action="store_true",
-                        help="Don't actually open a bug (also sets verbose)")
-    parser.add_argument("-p", "--package",
-                        help="Launchpad package to file bug against "
-                        "(default: Same as Debian)")
-    parser.add_argument("--no-conf", action="store_true",
-                        help="Don't read config files or environment variables.")
+    parser.add_argument(
+        "-b",
+        "--browserless",
+        action="store_true",
+        help="Don't open the bug in the browser at the end",
+    )
+    parser.add_argument(
+        "-l",
+        "--lpinstance",
+        metavar="INSTANCE",
+        help="LP instance to connect to (default: production)",
+    )
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", help="Print info about the bug being imported"
+    )
+    parser.add_argument(
+        "-n",
+        "--dry-run",
+        action="store_true",
+        help="Don't actually open a bug (also sets verbose)",
+    )
+    parser.add_argument(
+        "-p", "--package", help="Launchpad package to file bug against (default: Same as Debian)"
+    )
+    parser.add_argument(
+        "--no-conf", action="store_true", help="Don't read config files or environment variables."
+    )
     parser.add_argument("bugs", nargs="+", help="Bug number(s) or URL(s)")
     options = parser.parse_args()
 
@@ -69,9 +84,9 @@ def main():
     if options.verbose:
         Logger.setLevel(logging.DEBUG)
 
-    debian = launchpad.distributions['debian']
-    ubuntu = launchpad.distributions['ubuntu']
-    lp_debbugs = launchpad.bug_trackers.getByName(name='debbugs')
+    debian = launchpad.distributions["debian"]
+    ubuntu = launchpad.distributions["ubuntu"]
+    lp_debbugs = launchpad.bug_trackers.getByName(name="debbugs")
 
     bug_nums = []
 
@@ -101,31 +116,34 @@ def main():
         bug_num = bug.bug_num
         subject = bug.subject
         log = debianbts.get_bug_log(bug_num)
-        summary = log[0]['message'].get_payload()
+        summary = log[0]["message"].get_payload()
         target = ubuntu.getSourcePackage(name=ubupackage)
         if target is None:
-            Logger.error("Source package '%s' is not in Ubuntu. Please specify "
-                         "the destination source package with --package",
-                         ubupackage)
+            Logger.error(
+                "Source package '%s' is not in Ubuntu. Please specify "
+                "the destination source package with --package",
+                ubupackage,
+            )
             err = True
             continue
 
-        description = ('Imported from Debian bug http://bugs.debian.org/%d:\n\n%s' %
-                       (bug_num, summary))
+        description = "Imported from Debian bug http://bugs.debian.org/%d:\n\n%s" % (
+            bug_num,
+            summary,
+        )
         # LP limits descriptions to 50K chars
-        description = (description[:49994] + ' [...]') if len(description) > 50000 else description
+        description = (description[:49994] + " [...]") if len(description) > 50000 else description
 
-        Logger.debug('Target: %s' % target)
-        Logger.debug('Subject: %s' % subject)
-        Logger.debug('Description: ')
+        Logger.debug("Target: %s" % target)
+        Logger.debug("Subject: %s" % subject)
+        Logger.debug("Description: ")
         Logger.debug(description)
 
         if options.dry_run:
-            Logger.info('Dry-Run: not creating Ubuntu bug.')
+            Logger.info("Dry-Run: not creating Ubuntu bug.")
             continue
 
-        u_bug = launchpad.bugs.createBug(target=target, title=subject,
-                                         description=description)
+        u_bug = launchpad.bugs.createBug(target=target, title=subject, description=description)
         d_sp = debian.getSourcePackage(name=package)
         if d_sp is None and options.package:
             d_sp = debian.getSourcePackage(name=options.package)
@@ -141,5 +159,5 @@ def main():
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

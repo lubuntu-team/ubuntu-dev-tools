@@ -27,10 +27,12 @@ class HelpTestCase(unittest.TestCase):
     def test_script(self):
         for script in scripts:
             with self.subTest(script=script):
-                result = subprocess.run([f'./{script}', '--help'],
-                                        encoding='UTF-8',
-                                        timeout=10,
-                                        check=True,
-                                        stdout=subprocess.PIPE,
-                                        stderr=subprocess.PIPE)
+                result = subprocess.run(
+                    [f"./{script}", "--help"],
+                    encoding="UTF-8",
+                    timeout=10,
+                    check=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                )
                 self.assertFalse(result.stderr.strip())

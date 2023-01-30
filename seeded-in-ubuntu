@@ -22,43 +22,42 @@ import os
 import time
 import urllib.request
 
-from ubuntutools.lp.lpapicache import (Distribution, Launchpad,
-                                       PackageNotFoundException)
+from ubuntutools.lp.lpapicache import Distribution, Launchpad, PackageNotFoundException
 
 from ubuntutools import getLogger
+
 Logger = getLogger()
 
-DATA_URL = 'http://qa.ubuntuwire.org/ubuntu-seeded-packages/seeded.json.gz'
+DATA_URL = "http://qa.ubuntuwire.org/ubuntu-seeded-packages/seeded.json.gz"
 
 
 def load_index(url):
-    '''Download a new copy of the image contents index, if necessary,
+    """Download a new copy of the image contents index, if necessary,
     and read it.
-    '''
-    cachedir = os.path.expanduser('~/.cache/ubuntu-dev-tools')
-    fn = os.path.join(cachedir, 'seeded.json.gz')
+    """
+    cachedir = os.path.expanduser("~/.cache/ubuntu-dev-tools")
+    fn = os.path.join(cachedir, "seeded.json.gz")
 
-    if (not os.path.isfile(fn)
-            or time.time() - os.path.getmtime(fn) > 60 * 60 * 2):
+    if not os.path.isfile(fn) or time.time() - os.path.getmtime(fn) > 60 * 60 * 2:
         if not os.path.isdir(cachedir):
             os.makedirs(cachedir)
         urllib.request.urlretrieve(url, fn)
 
     try:
-        with gzip.open(fn, 'r') as f:
+        with gzip.open(fn, "r") as f:
             return json.load(f)
     except Exception as e:
-        Logger.error("Unable to parse seed data: %s. "
-                     "Deleting cached data, please try again.",
-                     str(e))
+        Logger.error(
+            "Unable to parse seed data: %s. Deleting cached data, please try again.", str(e)
+        )
         os.unlink(fn)
 
 
 def resolve_binaries(sources):
-    '''Return a dict of source:binaries for all binary packages built by
+    """Return a dict of source:binaries for all binary packages built by
     sources
-    '''
-    archive = Distribution('ubuntu').getArchive()
+    """
+    archive = Distribution("ubuntu").getArchive()
     binaries = {}
     for source in sources:
         try:
@@ -66,28 +65,26 @@ def resolve_binaries(sources):
         except PackageNotFoundException as e:
             Logger.error(str(e))
             continue
-        binaries[source] = sorted(set(bpph.getPackageName()
-                                      for bpph in spph.getBinaries()))
+        binaries[source] = sorted(set(bpph.getPackageName() for bpph in spph.getBinaries()))
 
     return binaries
 
 
 def present_on(appearences):
-    '''Format a list of (flavor, type) tuples into a human-readable string'''
+    """Format a list of (flavor, type) tuples into a human-readable string"""
     present = collections.defaultdict(set)
     for flavor, type_ in appearences:
         present[flavor].add(type_)
     for flavor, types in present.items():
         if len(types) > 1:
-            types.discard('supported')
-    output = ['  %s: %s' % (flavor, ', '.join(sorted(types)))
-              for flavor, types in present.items()]
+            types.discard("supported")
+    output = ["  %s: %s" % (flavor, ", ".join(sorted(types))) for flavor, types in present.items()]
     output.sort()
-    return '\n'.join(output)
+    return "\n".join(output)
 
 
 def output_binaries(index, binaries):
-    '''Print binaries found in index'''
+    """Print binaries found in index"""
     for binary in binaries:
         if binary in index:
             Logger.info("%s is seeded in:" % binary)
@@ -97,13 +94,14 @@ def output_binaries(index, binaries):
 
 
 def output_by_source(index, by_source):
-    '''Logger.Info(binaries found in index. Grouped by source'''
+    """Logger.Info(binaries found in index. Grouped by source"""
     for source, binaries in by_source.items():
         seen = False
         if not binaries:
-            Logger.info("Status unknown: No binary packages built by the latest "
-                        "%s.\nTry again using -b and the expected binary packages."
-                        % source)
+            Logger.info(
+                "Status unknown: No binary packages built by the latest "
+                "%s.\nTry again using -b and the expected binary packages." % source
+            )
             continue
         for binary in binaries:
             if binary in index:
@@ -115,16 +113,22 @@ def output_by_source(index, by_source):
 
 
 def main():
-    '''Query which images the specified packages are on'''
-    parser = optparse.OptionParser('%prog [options] package...')
-    parser.add_option('-b', '--binary',
-                      default=False, action='store_true',
-                      help="Binary packages are being specified, "
-                           "not source packages (fast)")
-    parser.add_option('-u', '--data-url', metavar='URL',
-                      default=DATA_URL,
-                      help='URL for the seeded packages index. '
-                           'Default: UbuntuWire')
+    """Query which images the specified packages are on"""
+    parser = optparse.OptionParser("%prog [options] package...")
+    parser.add_option(
+        "-b",
+        "--binary",
+        default=False,
+        action="store_true",
+        help="Binary packages are being specified, not source packages (fast)",
+    )
+    parser.add_option(
+        "-u",
+        "--data-url",
+        metavar="URL",
+        default=DATA_URL,
+        help="URL for the seeded packages index. Default: UbuntuWire",
+    )
     options, args = parser.parse_args()
 
     if len(args) < 1:
@@ -141,5 +145,5 @@ def main():
         output_by_source(index, binaries)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -37,7 +37,7 @@ import subprocess
 import sys
 import tempfile
 
-from abc import (ABC, abstractmethod)
+from abc import ABC, abstractmethod
 
 from debian.changelog import Changelog
 import debian.deb822
@@ -47,25 +47,32 @@ from contextlib import closing
 from pathlib import Path
 
 from ubuntutools.config import UDTConfig
-from ubuntutools.lp.lpapicache import (Launchpad,
-                                       Distribution,
-                                       PersonTeam,
-                                       Project,
-                                       SourcePackagePublishingHistory,
-                                       HTTPError)
-from ubuntutools.lp.udtexceptions import (PackageNotFoundException,
-                                          SeriesNotFoundException,
-                                          PocketDoesNotExistError,
-                                          InvalidDistroValueError)
-from ubuntutools.misc import (download,
-                              download_bytes,
-                              verify_file_checksum,
-                              verify_file_checksums,
-                              DownloadError,
-                              NotFoundError)
+from ubuntutools.lp.lpapicache import (
+    Launchpad,
+    Distribution,
+    PersonTeam,
+    Project,
+    SourcePackagePublishingHistory,
+    HTTPError,
+)
+from ubuntutools.lp.udtexceptions import (
+    PackageNotFoundException,
+    SeriesNotFoundException,
+    PocketDoesNotExistError,
+    InvalidDistroValueError,
+)
+from ubuntutools.misc import (
+    download,
+    download_bytes,
+    verify_file_checksum,
+    verify_file_checksums,
+    DownloadError,
+    NotFoundError,
+)
 from ubuntutools.version import Version
 
 import logging
+
 Logger = logging.getLogger(__name__)
 
 
@@ -74,17 +81,28 @@ class Dsc(debian.deb822.Dsc):
 
     def get_strongest_checksum(self):
         "Return alg, dict by filename of size, hash_ pairs"
-        if 'Checksums-Sha256' in self:
-            return ('sha256',
-                    dict((entry['name'], (int(entry['size']), entry['sha256']))
-                         for entry in self['Checksums-Sha256']))
-        if 'Checksums-Sha1' in self:
-            return ('sha1',
-                    dict((entry['name'], (int(entry['size']), entry['sha1']))
-                         for entry in self['Checksums-Sha1']))
-        return ('md5',
-                dict((entry['name'], (int(entry['size']), entry['md5sum']))
-                     for entry in self['Files']))
+        if "Checksums-Sha256" in self:
+            return (
+                "sha256",
+                dict(
+                    (entry["name"], (int(entry["size"]), entry["sha256"]))
+                    for entry in self["Checksums-Sha256"]
+                ),
+            )
+        if "Checksums-Sha1" in self:
+            return (
+                "sha1",
+                dict(
+                    (entry["name"], (int(entry["size"]), entry["sha1"]))
+                    for entry in self["Checksums-Sha1"]
+                ),
+            )
+        return (
+            "md5",
+            dict(
+                (entry["name"], (int(entry["size"]), entry["md5sum"])) for entry in self["Files"]
+            ),
+        )
 
     def verify_file(self, pathname):
         "Verify that pathname matches the checksums in the dsc"
@@ -98,17 +116,19 @@ class Dsc(debian.deb822.Dsc):
     def compare_dsc(self, other):
         """Check whether any files in these two dscs that have the same name
         also have the same checksum."""
-        for field, key in (('Checksums-Sha256', 'sha256'),
-                           ('Checksums-Sha1', 'sha1'),
-                           ('Files', 'md5sum')):
+        for field, key in (
+            ("Checksums-Sha256", "sha256"),
+            ("Checksums-Sha1", "sha1"),
+            ("Files", "md5sum"),
+        ):
             if field not in self or field not in other:
                 continue
-            our_checksums = \
-                dict((entry['name'], (int(entry['size']), entry[key]))
-                     for entry in self[field])
-            their_checksums = \
-                dict((entry['name'], (int(entry['size']), entry[key]))
-                     for entry in other[field])
+            our_checksums = dict(
+                (entry["name"], (int(entry["size"]), entry[key])) for entry in self[field]
+            )
+            their_checksums = dict(
+                (entry["name"], (int(entry["size"]), entry[key])) for entry in other[field]
+            )
             for name, (size, checksum) in our_checksums.items():
                 if name not in their_checksums:
                     # file only in one dsc
@@ -134,8 +154,7 @@ class SourcePackage(ABC):
     def spph_class(self):
         return SourcePackagePublishingHistory
 
-    def __init__(self, package=None, version=None, component=None,
-                 *args, **kwargs):
+    def __init__(self, package=None, version=None, component=None, *args, **kwargs):
         """Can be initialised using either package or dscfile.
         If package is specified, either the version or series can also be
         specified; using version will get the specific package version,
@@ -143,28 +162,28 @@ class SourcePackage(ABC):
         Specifying only the package with no version or series will get the
         latest version from the development series.
         """
-        dscfile = kwargs.get('dscfile')
-        mirrors = kwargs.get('mirrors', ())
-        workdir = kwargs.get('workdir')
-        series = kwargs.get('series')
-        pocket = kwargs.get('pocket')
-        status = kwargs.get('status')
-        verify_signature = kwargs.get('verify_signature', False)
-        try_binary = kwargs.get('try_binary', True)
+        dscfile = kwargs.get("dscfile")
+        mirrors = kwargs.get("mirrors", ())
+        workdir = kwargs.get("workdir")
+        series = kwargs.get("series")
+        pocket = kwargs.get("pocket")
+        status = kwargs.get("status")
+        verify_signature = kwargs.get("verify_signature", False)
+        try_binary = kwargs.get("try_binary", True)
 
-        assert (package is not None or dscfile is not None)
+        assert package is not None or dscfile is not None
 
-        if 'lp' in kwargs:
+        if "lp" in kwargs:
             # deprecated - please don't use this; if you want to use an
             # existing lp object, just call login_existing() directly
             Logger.warning("Deprecation warning: please don't pass 'lp' to SourcePackage")
             if not Launchpad.logged_in:
-                Launchpad.login_existing(kwargs['lp'])
+                Launchpad.login_existing(kwargs["lp"])
 
         self.source = package
         self.binary = None
         self.try_binary = try_binary
-        self.workdir = Path(workdir) if workdir else Path('.')
+        self.workdir = Path(workdir) if workdir else Path(".")
         self._series = series
         self._pocket = pocket
         self._status = status
@@ -182,15 +201,21 @@ class SourcePackage(ABC):
 
         # Mirrors
         self.mirrors = list(filter(None, mirrors))
-        self.masters = list(filter(None,
-                                   [UDTConfig.defaults.get(f'{self.distribution.upper()}_{suffix}')
-                                    for suffix in ["MIRROR", "PORTS_MIRROR", "INTERNAL_MIRROR"]]))
+        self.masters = list(
+            filter(
+                None,
+                [
+                    UDTConfig.defaults.get(f"{self.distribution.upper()}_{suffix}")
+                    for suffix in ["MIRROR", "PORTS_MIRROR", "INTERNAL_MIRROR"]
+                ],
+            )
+        )
 
         # If provided a dscfile, process it now to set our source and version
         if self._dsc_source:
             self._dsc = Dsc(download_bytes(self._dsc_source))
-            self.source = self._dsc['Source']
-            self._version = Version(self._dsc['Version'])
+            self.source = self._dsc["Source"]
+            self._version = Version(self._dsc["Version"])
             self._check_dsc_signature()
 
     @property
@@ -203,23 +228,21 @@ class SourcePackage(ABC):
         params = {}
         if self._version:
             # if version was specified, use that
-            params['version'] = self._version.full_version
+            params["version"] = self._version.full_version
         elif self._series:
             # if version not specified, get the latest from this series
-            params['series'] = self._series
+            params["series"] = self._series
             # note that if not specified, pocket defaults to all EXCEPT -backports
             if self._pocket:
-                params['pocket'] = self._pocket
+                params["pocket"] = self._pocket
         else:
             # We always want to search all series, if not specified
-            params['search_all_series'] = True
+            params["search_all_series"] = True
 
-        params['status'] = self._status
+        params["status"] = self._status
 
         try:
-            self._spph = archive.getSourcePackage(self.source,
-                                                  wrapper=self.spph_class,
-                                                  **params)
+            self._spph = archive.getSourcePackage(self.source, wrapper=self.spph_class, **params)
             return self._spph
         except PackageNotFoundException as pnfe:
             if not self.try_binary or self.binary:
@@ -227,8 +250,9 @@ class SourcePackage(ABC):
                 # or we've already tried
                 raise pnfe
 
-            Logger.info('Source package lookup failed, '
-                        'trying lookup of binary package %s' % self.source)
+            Logger.info(
+                "Source package lookup failed, trying lookup of binary package %s" % self.source
+            )
 
             try:
                 bpph = archive.getBinaryPackage(self.source, **params)
@@ -240,8 +264,11 @@ class SourcePackage(ABC):
 
             self.binary = self.source
             self.source = bpph.getSourcePackageName()
-            Logger.info("Using source package '{}' for binary package '{}'"
-                        .format(self.source, self.binary))
+            Logger.info(
+                "Using source package '{}' for binary package '{}'".format(
+                    self.source, self.binary
+                )
+            )
 
             spph = bpph.getBuild().getSourcePackagePublishingHistory()
             if spph:
@@ -268,14 +295,14 @@ class SourcePackage(ABC):
     def component(self):
         "Cached archive component, in available"
         if not self._component:
-            Logger.debug('Determining component from Launchpad')
+            Logger.debug("Determining component from Launchpad")
             self._component = self.lp_spph.getComponent()
         return self._component
 
     @property
     def dsc_name(self):
         "Return the source package dsc filename for the given package"
-        return f'{self.source}_{self.version.strip_epoch()}.dsc'
+        return f"{self.source}_{self.version.strip_epoch()}.dsc"
 
     @property
     def dsc_pathname(self):
@@ -287,7 +314,7 @@ class SourcePackage(ABC):
         "Return the Dsc"
         if not self._dsc:
             if self._dsc_source:
-                raise RuntimeError('Internal error: we have a dsc file but dsc not set')
+                raise RuntimeError("Internal error: we have a dsc file but dsc not set")
             urls = self._source_urls(self.dsc_name)
             with tempfile.TemporaryDirectory() as d:
                 tmpdsc = Path(d) / self.dsc_name
@@ -306,12 +333,11 @@ class SourcePackage(ABC):
 
     def _mirror_url(self, mirror, component, filename):
         "Build a source package URL on a mirror"
-        if self.source.startswith('lib'):
+        if self.source.startswith("lib"):
             group = self.source[:4]
         else:
             group = self.source[0]
-        return os.path.join(mirror, 'pool', component, group,
-                            self.source, filename)
+        return os.path.join(mirror, "pool", component, group, self.source, filename)
 
     def _archive_servers(self):
         "Generator for mirror and master servers"
@@ -350,28 +376,33 @@ class SourcePackage(ABC):
         if not self._verify_signature:
             return
         try:
-            gpg_info = self.dsc.get_gpg_info((
-                '/usr/share/keyrings/debian-keyring.gpg',
-                '/usr/share/keyrings/debian-maintainers.gpg',
-            ))
+            gpg_info = self.dsc.get_gpg_info(
+                (
+                    "/usr/share/keyrings/debian-keyring.gpg",
+                    "/usr/share/keyrings/debian-maintainers.gpg",
+                )
+            )
         except IOError:
-            Logger.debug('Signature on %s could not be verified, install '
-                         'debian-keyring' % self.dsc_name)
+            Logger.debug(
+                "Signature on %s could not be verified, install debian-keyring" % self.dsc_name
+            )
             return
         if gpg_info.valid():
-            if 'GOODSIG' in gpg_info:
-                Logger.info('Good signature by %s (0x%s)'
-                            % (gpg_info['GOODSIG'][1], gpg_info['GOODSIG'][0]))
-            elif 'VALIDSIG' in gpg_info:
-                Logger.info('Valid signature by 0x%s' % gpg_info['VALIDSIG'][0])
+            if "GOODSIG" in gpg_info:
+                Logger.info(
+                    "Good signature by %s (0x%s)"
+                    % (gpg_info["GOODSIG"][1], gpg_info["GOODSIG"][0])
+                )
+            elif "VALIDSIG" in gpg_info:
+                Logger.info("Valid signature by 0x%s" % gpg_info["VALIDSIG"][0])
             else:
-                Logger.info('Valid signature')
-        elif 'NO_PUBKEY' in gpg_info:
-            Logger.warning('Public key not found, could not verify signature')
-        elif 'NODATA' in gpg_info:
-            Logger.warning('Package is not signed')
+                Logger.info("Valid signature")
+        elif "NO_PUBKEY" in gpg_info:
+            Logger.warning("Public key not found, could not verify signature")
+        elif "NODATA" in gpg_info:
+            Logger.warning("Package is not signed")
         else:
-            Logger.warning('Signature on %s could not be verified' % self.dsc_name)
+            Logger.warning("Signature on %s could not be verified" % self.dsc_name)
 
     def _verify_file(self, pathname, dscverify=False, sha1sum=None, sha256sum=None, size=0):
         p = Path(pathname)
@@ -381,9 +412,9 @@ class SourcePackage(ABC):
             return False
         checksums = {}
         if sha1sum:
-            checksums['SHA1'] = sha1sum
+            checksums["SHA1"] = sha1sum
         if sha256sum:
-            checksums['SHA256'] = sha256sum
+            checksums["SHA256"] = sha256sum
         if not verify_file_checksums(p, checksums, size):
             return False
         return True
@@ -397,30 +428,32 @@ class SourcePackage(ABC):
 
         can_verify = any((dscverify, sha1sum, sha256sum))
         if can_verify and self._verify_file(p, dscverify, sha1sum, sha256sum, size):
-            Logger.info(f'Using existing file {p}')
+            Logger.info(f"Using existing file {p}")
             return True
 
         download(url, p, size)
 
         return self._verify_file(p, dscverify, sha1sum, sha256sum, size)
 
-    def _download_file_from_urls(self, urls, filename, size=0, dscverify=False,
-                                 sha1sum=None, sha256sum=None):
+    def _download_file_from_urls(
+        self, urls, filename, size=0, dscverify=False, sha1sum=None, sha256sum=None
+    ):
         "Try to download a file from a list of urls."
         for url in urls:
             try:
-                if self._download_file(url, filename, size, dscverify=dscverify,
-                                       sha1sum=sha1sum, sha256sum=sha256sum):
+                if self._download_file(
+                    url, filename, size, dscverify=dscverify, sha1sum=sha1sum, sha256sum=sha256sum
+                ):
                     return
             except NotFoundError:
                 # It's ok if the file isn't found, just try the next url
-                Logger.debug(f'File not found at {url}')
+                Logger.debug(f"File not found at {url}")
             except DownloadError as e:
-                Logger.error(f'Download Error: {e}')
-        raise DownloadError(f'Failed to download {filename}')
+                Logger.error(f"Download Error: {e}")
+        raise DownloadError(f"Failed to download {filename}")
 
     def pull_dsc(self):
-        '''DEPRECATED
+        """DEPRECATED
 
         This method is badly named and historically has only 'pulled' the
         dsc into memory, not actually to a file. Since the other 'pull' methods
@@ -430,16 +463,16 @@ class SourcePackage(ABC):
 
         This method no longer does anything at all and should not be used by
         anyone.
-        '''
+        """
         Logger.debug('Please fix your program: the "pull_dsc" method is deprecated')
 
     def pull(self):
         "Pull into workdir"
         Path(self.dsc_pathname).write_bytes(self.dsc.raw_text)
-        for entry in self.dsc['Files']:
-            name = entry['name']
+        for entry in self.dsc["Files"]:
+            name = entry["name"]
             urls = self._source_urls(name)
-            self._download_file_from_urls(urls, name, int(entry['size']), dscverify=True)
+            self._download_file_from_urls(urls, name, int(entry["size"]), dscverify=True)
 
     def pull_binaries(self, arch=None, name=None, ext=None):
         """Pull binary debs into workdir.
@@ -454,7 +487,7 @@ class SourcePackage(ABC):
         """
         Logger.debug("pull_binaries(arch=%s, name=%s, ext=%s)" % (arch, name, ext))
 
-        if arch == 'all':
+        if arch == "all":
             arch = None
 
         total = 0
@@ -465,8 +498,7 @@ class SourcePackage(ABC):
             fsize = bpph.binaryFileSize(fname)
             urls = self._binary_urls(fname, bpph)
             try:
-                self._download_file_from_urls(urls, fname, fsize,
-                                              sha1sum=fsha1, sha256sum=fsha256)
+                self._download_file_from_urls(urls, fname, fsize, sha1sum=fsha1, sha256sum=fsha256)
                 total += 1
             except DownloadError as e:
                 # log/print the error, but continue to get the rest of the files
@@ -477,28 +509,36 @@ class SourcePackage(ABC):
         """Verify that the source package in workdir matches the dsc.
         Return boolean
         """
-        return all(self.dsc.verify_file(self.workdir / entry['name'])
-                   for entry in self.dsc['Files'])
+        return all(
+            self.dsc.verify_file(self.workdir / entry["name"]) for entry in self.dsc["Files"]
+        )
 
     def verify_orig(self):
         """Verify that the .orig files in workdir match the dsc.
         Return boolean
         """
-        orig_re = re.compile(r'.*\.orig(-[^.]+)?\.tar\.[^.]+$')
-        return all(self.dsc.verify_file(self.workdir / entry['name'])
-                   for entry in self.dsc['Files']
-                   if orig_re.match(entry['name']))
+        orig_re = re.compile(r".*\.orig(-[^.]+)?\.tar\.[^.]+$")
+        return all(
+            self.dsc.verify_file(self.workdir / entry["name"])
+            for entry in self.dsc["Files"]
+            if orig_re.match(entry["name"])
+        )
 
     def unpack(self, destdir=None):
         "Unpack in workdir"
-        cmd = ['dpkg-source', '-x', self.dsc_name]
+        cmd = ["dpkg-source", "-x", self.dsc_name]
         if destdir:
             cmd.append(destdir)
-        Logger.debug(' '.join(cmd))
-        result = subprocess.run(cmd, cwd=str(self.workdir), encoding='utf-8',
-                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        Logger.debug(" ".join(cmd))
+        result = subprocess.run(
+            cmd,
+            cwd=str(self.workdir),
+            encoding="utf-8",
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        )
         if result.returncode != 0:
-            Logger.error('Source unpack failed.')
+            Logger.error("Source unpack failed.")
             Logger.debug(result.stdout)
 
     def debdiff(self, newpkg, diffstat=False):
@@ -506,18 +546,18 @@ class SourcePackage(ABC):
         Optionally print diffstat.
         Return the debdiff filename.
         """
-        cmd = ['debdiff', self.dsc_name, newpkg.dsc_name]
-        difffn = newpkg.dsc_name[:-3] + 'debdiff'
-        Logger.debug(' '.join(cmd) + ('> %s' % difffn))
-        with open(difffn, 'w') as f:
+        cmd = ["debdiff", self.dsc_name, newpkg.dsc_name]
+        difffn = newpkg.dsc_name[:-3] + "debdiff"
+        Logger.debug(" ".join(cmd) + ("> %s" % difffn))
+        with open(difffn, "w") as f:
             if subprocess.call(cmd, stdout=f, cwd=str(self.workdir)) > 2:
-                Logger.error('Debdiff failed.')
+                Logger.error("Debdiff failed.")
                 sys.exit(1)
         if diffstat:
-            cmd = ('diffstat', '-p1', difffn)
-            Logger.debug(' '.join(cmd))
+            cmd = ("diffstat", "-p1", difffn)
+            Logger.debug(" ".join(cmd))
             if subprocess.call(cmd):
-                Logger.error('diffstat failed.')
+                Logger.error("diffstat failed.")
                 sys.exit(1)
         return os.path.abspath(difffn)
 
@@ -526,7 +566,8 @@ class DebianSPPH(SourcePackagePublishingHistory):
     """SPPH with getBinaries() overridden,
     as LP doesn't have Debian binaries
     """
-    resource_type = 'source_package_publishing_history'
+
+    resource_type = "source_package_publishing_history"
 
     def __init__(self, *args, **kwargs):
         super(DebianSPPH, self).__init__(*args, **kwargs)
@@ -534,9 +575,10 @@ class DebianSPPH(SourcePackagePublishingHistory):
 
     def getBinaries(self, arch=None, name=None, ext=None):
         if not self._srcpkg:
-            Logger.info('Using Snapshot to find binary packages')
-            self._srcpkg = Snapshot.getSourcePackage(self.getPackageName(),
-                                                     version=self.getVersion())
+            Logger.info("Using Snapshot to find binary packages")
+            self._srcpkg = Snapshot.getSourcePackage(
+                self.getPackageName(), version=self.getVersion()
+            )
         return self._srcpkg.getSPPH().getBinaries(arch=arch, name=name, ext=ext)
 
 
@@ -545,7 +587,7 @@ class DebianSourcePackage(SourcePackage):
 
     @property
     def distribution(self):
-        return 'debian'
+        return "debian"
 
     @property
     def spph_class(self):
@@ -553,7 +595,7 @@ class DebianSourcePackage(SourcePackage):
 
     def __init__(self, *args, **kwargs):
         super(DebianSourcePackage, self).__init__(*args, **kwargs)
-        self.masters.append(UDTConfig.defaults['DEBSEC_MIRROR'])
+        self.masters.append(UDTConfig.defaults["DEBSEC_MIRROR"])
 
         # Cached values:
         self._snapshot_package = None
@@ -563,9 +605,8 @@ class DebianSourcePackage(SourcePackage):
 
         # Debian doesn't have 'pockets'
         if self._pocket:
-            if self._pocket.lower() != 'release':
-                Logger.error("Debian does not use 'pockets', ignoring pocket '%s'",
-                             self._pocket)
+            if self._pocket.lower() != "release":
+                Logger.error("Debian does not use 'pockets', ignoring pocket '%s'", self._pocket)
             self._pocket = None
 
     # Overridden properties/methods:
@@ -581,7 +622,7 @@ class DebianSourcePackage(SourcePackage):
             except SeriesNotFoundException:
                 pass
 
-            Logger.info('Package not found in Launchpad, using Snapshot')
+            Logger.info("Package not found in Launchpad, using Snapshot")
             self._spph = self.snapshot_package.getSPPH()
         return self._spph
 
@@ -589,7 +630,7 @@ class DebianSourcePackage(SourcePackage):
     def component(self):
         "Cached archive component, in available"
         if not self._component:
-            Logger.debug('Determining component from Snapshot')
+            Logger.debug("Determining component from Snapshot")
             self._component = Snapshot.getComponent(self.source, self.version)
         return self._component
 
@@ -615,9 +656,9 @@ class DebianSourcePackage(SourcePackage):
                 self._snapshot_package = srcpkg
             else:
                 # we have neither version nor spph, so look up our version using madison
-                Logger.info('Using madison to find latest version number')
+                Logger.info("Using madison to find latest version number")
                 series = self._series
-                params = {'series': series} if series else {}
+                params = {"series": series} if series else {}
                 srcpkg = Madison(self.distribution).getSourcePackage(self.source, **params)
                 if not srcpkg:
                     raise PackageNotFoundException("Package {} not found".format(self.source))
@@ -640,18 +681,18 @@ class UbuntuSourcePackage(SourcePackage):
 
     @property
     def distribution(self):
-        return 'ubuntu'
+        return "ubuntu"
 
 
 class PersonalPackageArchiveSourcePackage(UbuntuSourcePackage):
     "Download / unpack an Ubuntu Personal Package Archive source package"
+
     def __init__(self, *args, **kwargs):
         super(PersonalPackageArchiveSourcePackage, self).__init__(*args, **kwargs)
-        assert 'ppa' in kwargs
-        ppa = kwargs['ppa'].split('/')
+        assert "ppa" in kwargs
+        ppa = kwargs["ppa"].split("/")
         if len(ppa) != 2:
-            raise ValueError('Invalid PPA value "%s",'
-                             'must be "<USER>/<PPA>"' % kwargs['ppa'])
+            raise ValueError('Invalid PPA value "%s",' 'must be "<USER>/<PPA>"' % kwargs["ppa"])
         self._teamname = ppa[0]
         self._ppaname = ppa[1]
         self.masters = []
@@ -674,8 +715,8 @@ class PersonalPackageArchiveSourcePackage(UbuntuSourcePackage):
         "Format the URL for a filename using the private PPA server"
         url = self.getArchive().getMySubscriptionURL()
         pkg = self.source
-        subdir = pkg[:4] if pkg.startswith('lib') else pkg[:1]
-        return f'{url}/pool/main/{subdir}/{pkg}/{filename}'
+        subdir = pkg[:4] if pkg.startswith("lib") else pkg[:1]
+        return f"{url}/pool/main/{subdir}/{pkg}/{filename}"
 
     def _source_urls(self, name):
         "Generator of sources for name"
@@ -694,28 +735,32 @@ class PersonalPackageArchiveSourcePackage(UbuntuSourcePackage):
 
 class UbuntuCloudArchiveSourcePackage(PersonalPackageArchiveSourcePackage):
     "Download / unpack an Ubuntu Cloud Archive source package"
-    TEAM = 'ubuntu-cloud-archive'
-    PROJECT = 'cloud-archive'
-    VALID_POCKETS = ['updates', 'proposed', 'staging']
+    TEAM = "ubuntu-cloud-archive"
+    PROJECT = "cloud-archive"
+    VALID_POCKETS = ["updates", "proposed", "staging"]
 
     def __init__(self, *args, **kwargs):
         # Need to determine actual series/pocket ppa now, as it affects getArchive()
-        (series, pocket) = self._findReleaseAndPocketForPackage(kwargs.get('series'),
-                                                                kwargs.get('pocket'),
-                                                                kwargs.get('package'),
-                                                                kwargs.get('version'))
+        (series, pocket) = self._findReleaseAndPocketForPackage(
+            kwargs.get("series"),
+            kwargs.get("pocket"),
+            kwargs.get("package"),
+            kwargs.get("version"),
+        )
         # Drop series/pocket from kwargs, as UCA handles them completely different and we
         # don't want to pass them up to the superclass
-        kwargs.pop('series', None)
-        orig_pocket = kwargs.pop('pocket', None)
-        if orig_pocket and orig_pocket != pocket and pocket == 'staging':
-            Logger.info(f"Ubuntu Cloud Archive release '{series}' pocket '{orig_pocket}'"
-                        " PPA is not public, using 'staging' pocket instead")
+        kwargs.pop("series", None)
+        orig_pocket = kwargs.pop("pocket", None)
+        if orig_pocket and orig_pocket != pocket and pocket == "staging":
+            Logger.info(
+                f"Ubuntu Cloud Archive release '{series}' pocket '{orig_pocket}'"
+                " PPA is not public, using 'staging' pocket instead"
+            )
 
-        kwargs['ppa'] = f"{self.TEAM}/{series}-{pocket}"
+        kwargs["ppa"] = f"{self.TEAM}/{series}-{pocket}"
         super(UbuntuCloudArchiveSourcePackage, self).__init__(*args, **kwargs)
 
-        if pocket == 'staging':
+        if pocket == "staging":
             # Don't bother with the archive; just get directly from the staging ppa, since
             # none of the binaries from the archive will match the staging checksums
             self.masters = []
@@ -729,9 +774,11 @@ class UbuntuCloudArchiveSourcePackage(PersonalPackageArchiveSourcePackage):
         pulling binaries when using a 'staging' ppa, since the published binaries
         will not match the 'staging' binaries.
         """
-        if self._ppaname.endswith('-staging'):
-            Logger.warning("Binaries from 'staging' pocket will not match published binaries; "
-                           "see https://bugs.launchpad.net/cloud-archive/+bug/1649979")
+        if self._ppaname.endswith("-staging"):
+            Logger.warning(
+                "Binaries from 'staging' pocket will not match published binaries; "
+                "see https://bugs.launchpad.net/cloud-archive/+bug/1649979"
+            )
         return super(UbuntuCloudArchiveSourcePackage, self).pull_binaries(arch, name, ext)
 
     @classmethod
@@ -769,7 +816,7 @@ class UbuntuCloudArchiveSourcePackage(PersonalPackageArchiveSourcePackage):
     @classmethod
     @functools.lru_cache()
     def getUbuntuCloudArchivePPAs(cls, release=None, pocket=None):
-        """ Get sorted list of UCA ppa Archive objects
+        """Get sorted list of UCA ppa Archive objects
 
         If release and/or pocket are specified, the list will be
         filtered to return only matching ppa(s).
@@ -790,12 +837,12 @@ class UbuntuCloudArchiveSourcePackage(PersonalPackageArchiveSourcePackage):
         # Use recursive call without params to get the lru-cached list of ppas returned above
         ppas = cls.getUbuntuCloudArchivePPAs()
         if release:
-            ppas = list(filter(lambda p: p.name.partition('-')[0] == release, ppas))
+            ppas = list(filter(lambda p: p.name.partition("-")[0] == release, ppas))
         if pocket:
-            ppas = list(filter(lambda p: p.name.partition('-')[2] == pocket, ppas))
+            ppas = list(filter(lambda p: p.name.partition("-")[2] == pocket, ppas))
         if not ppas:
-            rname = release or '*'
-            pname = pocket or '*'
+            rname = release or "*"
+            pname = pocket or "*"
             raise SeriesNotFoundException(f"UCA release '{rname}-{pname}' not found")
         return ppas
 
@@ -825,23 +872,25 @@ class UbuntuCloudArchiveSourcePackage(PersonalPackageArchiveSourcePackage):
         release = release.lower().strip()
 
         # Cases 1 and 2
-        PATTERN1 = r'^(?P<ucarelease>[a-z]+)(?:-(?P<pocket>[a-z]+))?$'
+        PATTERN1 = r"^(?P<ucarelease>[a-z]+)(?:-(?P<pocket>[a-z]+))?$"
         # Cases 3 and 4
-        PATTERN2 = r'^(?P<ubunturelease>[a-z]+)-(?P<ucarelease>[a-z]+)(?:-(?P<pocket>[a-z]+))?$'
+        PATTERN2 = r"^(?P<ubunturelease>[a-z]+)-(?P<ucarelease>[a-z]+)(?:-(?P<pocket>[a-z]+))?$"
         # Case 5
-        PATTERN3 = r'^(?P<ubunturelease>[a-z]+)-(?P<pocket>[a-z]+)/(?P<ucarelease>[a-z]+)$'
+        PATTERN3 = r"^(?P<ubunturelease>[a-z]+)-(?P<pocket>[a-z]+)/(?P<ucarelease>[a-z]+)$"
 
         for pattern in [PATTERN1, PATTERN2, PATTERN3]:
             match = re.match(pattern, release)
             if match:
-                r = match.group('ucarelease')
-                p = match.group('pocket')
+                r = match.group("ucarelease")
+                p = match.group("pocket")
                 # For UCA, there is no 'release' pocket, the default is 'updates'
-                if p and p == 'release':
-                    Logger.warning("Ubuntu Cloud Archive does not use 'release' pocket,"
-                                   " using 'updates' instead")
-                    p = 'updates'
-                if (cls.isValidRelease(r) and (not p or p in cls.VALID_POCKETS)):
+                if p and p == "release":
+                    Logger.warning(
+                        "Ubuntu Cloud Archive does not use 'release' pocket,"
+                        " using 'updates' instead"
+                    )
+                    p = "updates"
+                if cls.isValidRelease(r) and (not p or p in cls.VALID_POCKETS):
                     Logger.debug(f"Using Ubuntu Cloud Archive release '{r}'")
                     return (r, p)
         raise SeriesNotFoundException(f"Ubuntu Cloud Archive release '{release}' not found")
@@ -852,25 +901,28 @@ class UbuntuCloudArchiveSourcePackage(PersonalPackageArchiveSourcePackage):
             raise SeriesNotFoundException(f"Ubuntu Cloud Archive release '{release}' not found")
         if pocket and pocket not in cls.VALID_POCKETS:
             raise PocketDoesNotExistError(f"Ubuntu Cloud Archive pocket '{pocket}' is invalid")
-        DEFAULT = tuple(cls.getUbuntuCloudArchivePPAs(release=release or cls.getDevelSeries())[0]
-                        .name.split('-', maxsplit=1))
+        DEFAULT = tuple(
+            cls.getUbuntuCloudArchivePPAs(release=release or cls.getDevelSeries())[0].name.split(
+                "-", maxsplit=1
+            )
+        )
         if not package:
             # not much we can do without a package name
             return DEFAULT
         checked_pocket = False
         for ppa in cls.getUbuntuCloudArchivePPAs(release=release):
-            if pocket and pocket != ppa.name.partition('-')[2]:
+            if pocket and pocket != ppa.name.partition("-")[2]:
                 # If pocket is specified, only look at the requested pocket, or 'later'
                 # This allows using the 'staging' pocket for old releases that do not
                 # provide any 'updates' or 'proposed' pockets
                 if not checked_pocket:
                     continue
             checked_pocket = True
-            params = {'exact_match': True, 'source_name': package}
+            params = {"exact_match": True, "source_name": package}
             if version:
-                params['version'] = version
+                params["version"] = version
             if ppa.getPublishedSources(**params):
-                (r, _, p) = ppa.name.partition('-')
+                (r, _, p) = ppa.name.partition("-")
                 return (r, p)
         # package/version not found in any ppa
         return DEFAULT
@@ -880,8 +932,8 @@ class _WebJSON(object):
     def getHostUrl(self):
         raise Exception("Not implemented")
 
-    def load(self, path=''):
-        reader = codecs.getreader('utf-8')
+    def load(self, path=""):
+        reader = codecs.getreader("utf-8")
         url = self.getHostUrl() + path
         Logger.debug("Loading %s" % url)
         with closing(urlopen(url)) as data:
@@ -895,21 +947,21 @@ class _WebJSON(object):
 # any details at all for older-than-latest package versions.
 class Madison(_WebJSON):
     urls = {
-        'debian': 'https://api.ftp-master.debian.org/madison',
-        'ubuntu': 'http://people.canonical.com/~ubuntu-archive/madison.cgi',
+        "debian": "https://api.ftp-master.debian.org/madison",
+        "ubuntu": "http://people.canonical.com/~ubuntu-archive/madison.cgi",
     }
 
-    def __init__(self, distro='debian'):
+    def __init__(self, distro="debian"):
         super(Madison, self).__init__()
         self._distro = distro
         # This currently will NOT work with ubuntu; it doesn't support f=json
-        if distro != 'debian':
+        if distro != "debian":
             raise InvalidDistroValueError("Madison currently only supports Debian")
 
     def getHostUrl(self):
         return self.urls[self._distro]
 
-    def getSourcePackage(self, name, series='unstable'):
+    def getSourcePackage(self, name, series="unstable"):
         url = "?f=json&package={name}&s={series}".format(name=name, series=series)
         try:
             result = self.load(url)
@@ -920,8 +972,7 @@ class Madison(_WebJSON):
             raise PackageNotFoundException(msg)
         versions = list(result[0][name].values())[0]
         latest = versions[sorted(versions.keys(), reverse=True)[0]]
-        return Snapshot.getSourcePackage(name=latest['source'],
-                                         version=latest['source_version'])
+        return Snapshot.getSourcePackage(name=latest["source"], version=latest["source_version"])
 
 
 # Snapshot API
@@ -942,20 +993,20 @@ class _Snapshot(_WebJSON):
         except HTTPError:
             msg = "Package {} version {} not found"
             raise PackageNotFoundException(msg.format(name, version))
-        result = response.get('result')
-        info = response.get('fileinfo')
+        result = response.get("result")
+        info = response.get("fileinfo")
         if len(result) < 1:
             msg = "No source files for package {} version {}"
             raise PackageNotFoundException(msg.format(name, version))
-        path = info[result[0]['hash']][0]['path']
+        path = info[result[0]["hash"]][0]["path"]
         # this expects the 'component' to follow 'pool[-*]' in the path
         found_pool = False
         component = None
-        for s in path.split('/'):
+        for s in path.split("/"):
             if found_pool:
                 component = s
                 break
-            if s.startswith('pool'):
+            if s.startswith("pool"):
                 found_pool = True
         if not component:
             Logger.warning("could not determine component from path %s" % path)
@@ -966,29 +1017,29 @@ class _Snapshot(_WebJSON):
 
     def _get_package(self, name, url, pkginit, version, sort_key):
         try:
-            results = self.load("/mr/{}/{}/".format(url, name))['result']
+            results = self.load("/mr/{}/{}/".format(url, name))["result"]
         except HTTPError:
             raise PackageNotFoundException("Package {} not found.".format(name))
 
         results = sorted(results, key=lambda r: r[sort_key], reverse=True)
-        results = [pkginit(r) for r in results if version == r['version']]
+        results = [pkginit(r) for r in results if version == r["version"]]
         if not results:
             msg = "Package {name} version {version} not found."
             raise PackageNotFoundException(msg.format(name=name, version=version))
         return results
 
     def getSourcePackages(self, name, version):
-        return self._get_package(name, "package",
-                                 lambda obj: SnapshotSourcePackage(obj, name),
-                                 version, "version")
+        return self._get_package(
+            name, "package", lambda obj: SnapshotSourcePackage(obj, name), version, "version"
+        )
 
     def getSourcePackage(self, name, version):
         return self.getSourcePackages(name, version)[0]
 
     def getBinaryPackages(self, name, version):
-        return self._get_package(name, "binary",
-                                 lambda obj: SnapshotBinaryPackage(obj),
-                                 version, "binary_version")
+        return self._get_package(
+            name, "binary", lambda obj: SnapshotBinaryPackage(obj), version, "binary_version"
+        )
 
     def getBinaryPackage(self, name, version):
         return self.getBinaryPackages(name, version)[0]
@@ -1005,7 +1056,7 @@ class SnapshotPackage(object):
 
     @property
     def version(self):
-        return self._obj['version']
+        return self._obj["version"]
 
     @property
     def component(self):
@@ -1034,11 +1085,20 @@ class SnapshotSourcePackage(SnapshotPackage):
         if not self._binary_files:
             url = "/mr/package/{}/{}/allfiles".format(self.name, self.version)
             response = Snapshot.load("{}?fileinfo=1".format(url))
-            info = response['fileinfo']
-            files = [SnapshotBinaryFile(b['name'], b['version'], self.component,
-                                        info[r['hash']][0], r['hash'],
-                                        r['architecture'], self.name)
-                     for b in response['result']['binaries'] for r in b['files']]
+            info = response["fileinfo"]
+            files = [
+                SnapshotBinaryFile(
+                    b["name"],
+                    b["version"],
+                    self.component,
+                    info[r["hash"]][0],
+                    r["hash"],
+                    r["architecture"],
+                    self.name,
+                )
+                for b in response["result"]["binaries"]
+                for r in b["files"]
+            ]
             self._binary_files = files
         bins = list(self._binary_files)
         if arch:
@@ -1053,10 +1113,13 @@ class SnapshotSourcePackage(SnapshotPackage):
         if not self._files:
             url = "/mr/package/{}/{}/srcfiles".format(self.name, self.version)
             response = Snapshot.load("{}?fileinfo=1".format(url))
-            info = response['fileinfo']
-            self._files = [SnapshotSourceFile(self.name, self.version, self.component,
-                                              info[r['hash']][0], r['hash'])
-                           for r in response['result']]
+            info = response["fileinfo"]
+            self._files = [
+                SnapshotSourceFile(
+                    self.name, self.version, self.component, info[r["hash"]][0], r["hash"]
+                )
+                for r in response["result"]
+            ]
         return list(self._files)
 
 
@@ -1067,15 +1130,15 @@ class SnapshotBinaryPackage(SnapshotPackage):
 
     @property
     def name(self):
-        return self._obj['name']
+        return self._obj["name"]
 
     @property
     def binary_version(self):
-        return self._obj['binary_version']
+        return self._obj["binary_version"]
 
     @property
     def source(self):
-        return self._obj['source']
+        return self._obj["source"]
 
     def getBPPH(self, arch):
         f = self.getFiles(arch)
@@ -1090,11 +1153,19 @@ class SnapshotBinaryPackage(SnapshotPackage):
         if not self._files:
             url = "/mr/binary/{}/{}/binfiles".format(self.name, self.version)
             response = Snapshot.load("{}?fileinfo=1".format(url))
-            info = response['fileinfo']
-            self._files = [SnapshotBinaryFile(self.name, self.version, self.component,
-                                              info[r['hash']][0], r['hash'],
-                                              r['architecture'], self.source)
-                           for r in response['result']]
+            info = response["fileinfo"]
+            self._files = [
+                SnapshotBinaryFile(
+                    self.name,
+                    self.version,
+                    self.component,
+                    info[r["hash"]][0],
+                    r["hash"],
+                    r["architecture"],
+                    self.source,
+                )
+                for r in response["result"]
+            ]
         if not arch:
             return list(self._files)
         return [f for f in self._files if f.isArch(arch)]
@@ -1114,33 +1185,33 @@ class SnapshotFile(object):
 
     @property
     def archive_name(self):
-        return self._obj['archive_name']
+        return self._obj["archive_name"]
 
     @property
     def name(self):
-        return self._obj['name']
+        return self._obj["name"]
 
     @property
     def ext(self):
-        return self.name.rpartition('.')[2]
+        return self.name.rpartition(".")[2]
 
     @property
     def path(self):
-        return self._obj['path']
+        return self._obj["path"]
 
     @property
     def size(self):
-        return int(self._obj['size'])
+        return int(self._obj["size"])
 
     @property
     def date(self):
-        if 'run' in self._obj:
-            return self._obj['run']
-        elif 'first_seen' in self._obj:
-            return self._obj['first_seen']
+        if "run" in self._obj:
+            return self._obj["run"]
+        elif "first_seen" in self._obj:
+            return self._obj["first_seen"]
         else:
-            Logger.error('File {} has no date information', self.name)
-            return 'unknown'
+            Logger.error("File {} has no date information", self.name)
+            return "unknown"
 
     def getHash(self):
         return self._hash
@@ -1157,7 +1228,7 @@ class SnapshotSourceFile(SnapshotFile):
         super(SnapshotSourceFile, self).__init__(name, version, component, obj, h)
 
     def getType(self):
-        return 'source'
+        return "source"
 
 
 class SnapshotBinaryFile(SnapshotFile):
@@ -1170,12 +1241,12 @@ class SnapshotBinaryFile(SnapshotFile):
     def isArch(self, arch):
         if not arch:
             return True
-        if self.arch == 'all':
+        if self.arch == "all":
             return True
         return arch == self.arch
 
     def getType(self):
-        return 'binary'
+        return "binary"
 
     def getBPPH(self):
         if not self._bpph:
@@ -1185,6 +1256,7 @@ class SnapshotBinaryFile(SnapshotFile):
 
 class SnapshotSPPH(object):
     """Provide the same interface as SourcePackagePublishingHistory"""
+
     def __init__(self, snapshot_pkg):
         self._pkg = snapshot_pkg
 
@@ -1196,14 +1268,12 @@ class SnapshotSPPH(object):
 
     @property
     def display_name(self):
-        return ("{name} {version}"
-                .format(name=self.getPackageName(),
-                        version=self.getVersion()))
+        return "{name} {version}".format(name=self.getPackageName(), version=self.getVersion())
 
     @property
     def pocket(self):
         # Debian does not use 'pockets'
-        return 'Release'
+        return "Release"
 
     @property
     def source_package_name(self):
@@ -1226,24 +1296,28 @@ class SnapshotSPPH(object):
 
     def sourceFileUrls(self, include_meta=False):
         if include_meta:
-            return [{'url': f.getUrl(),
-                     'filename': f.name,
-                     'sha1': f.getHash(),
-                     'sha256': None,
-                     'size': f.size}
-                    for f in self._pkg.getFiles()]
+            return [
+                {
+                    "url": f.getUrl(),
+                    "filename": f.name,
+                    "sha1": f.getHash(),
+                    "sha256": None,
+                    "size": f.size,
+                }
+                for f in self._pkg.getFiles()
+            ]
         return [f.getUrl() for f in self._pkg.getFiles()]
 
     def sourceFileUrl(self, filename):
         for f in self.sourceFileUrls(include_meta=True):
-            if filename == f['filename']:
-                return f['url']
+            if filename == f["filename"]:
+                return f["url"]
         return None
 
     def sourceFileSha1(self, url_or_filename):
         for f in self.sourceFileUrls(include_meta=True):
-            if url_or_filename in [f['url'], f['filename']]:
-                return f['sha1']
+            if url_or_filename in [f["url"], f["filename"]]:
+                return f["sha1"]
         return None
 
     def sourceFileSha256(self, url_or_filename):
@@ -1251,33 +1325,39 @@ class SnapshotSPPH(object):
 
     def sourceFileSize(self, url_or_filename):
         for f in self.sourceFileUrls(include_meta=True):
-            if url_or_filename in [f['url'], f['filename']]:
-                return int(f['size'])
+            if url_or_filename in [f["url"], f["filename"]]:
+                return int(f["size"])
         return 0
 
     def getChangelog(self, since_version=None):
-        '''
+        """
         Return the changelog, optionally since a particular version
         May return None if the changelog isn't available
-        '''
+        """
         if self._changelog is None:
             name = self.getPackageName()
-            if name.startswith('lib'):
-                subdir = 'lib%s' % name[3]
+            if name.startswith("lib"):
+                subdir = "lib%s" % name[3]
             else:
                 subdir = name[0]
             pkgversion = Version(self.getVersion()).strip_epoch()
-            base = 'http://packages.debian.org/'
+            base = "http://packages.debian.org/"
 
-            url = os.path.join(base, 'changelogs', 'pool',
-                               self.getComponent(), subdir, name,
-                               name + '_' + pkgversion,
-                               'changelog.txt')
+            url = os.path.join(
+                base,
+                "changelogs",
+                "pool",
+                self.getComponent(),
+                subdir,
+                name,
+                name + "_" + pkgversion,
+                "changelog.txt",
+            )
             try:
                 with closing(urlopen(url)) as f:
                     self._changelog = f.read()
             except HTTPError as error:
-                Logger.error('{}: {}'.format(url, error))
+                Logger.error("{}: {}".format(url, error))
                 return None
 
         if since_version is None:
@@ -1291,22 +1371,22 @@ class SnapshotSPPH(object):
             if block.version <= since_version:
                 break
             new_entries.append(str(block))
-        return ''.join(new_entries)
+        return "".join(new_entries)
 
     def getBinaries(self, arch=None, name=None, ext=None):
-        return [b.getBPPH()
-                for b in self._pkg.getBinaryFiles(arch=arch, name=name, ext=ext)]
+        return [b.getBPPH() for b in self._pkg.getBinaryFiles(arch=arch, name=name, ext=ext)]
 
 
 class SnapshotBPPH(object):
     """Provide the same interface as BinaryPackagePublishingHistory"""
+
     def __init__(self, snapshot_binfile):
         self._file = snapshot_binfile
 
     # LP API defined fields
     @property
     def architecture_specific(self):
-        return self._file.arch != 'all'
+        return self._file.arch != "all"
 
     @property
     def binary_package_name(self):
@@ -1322,14 +1402,12 @@ class SnapshotBPPH(object):
 
     @property
     def display_name(self):
-        return ("{name} {version}"
-                .format(name=self.getPackageName(),
-                        version=self.getVersion()))
+        return "{name} {version}".format(name=self.getPackageName(), version=self.getVersion())
 
     @property
     def pocket(self):
         # Debian does not use 'pockets'
-        return 'Release'
+        return "Release"
 
     # BPPH functions
 
@@ -1351,11 +1429,15 @@ class SnapshotBPPH(object):
 
     def binaryFileUrls(self, include_meta=False):
         if include_meta:
-            return [{'url': self.getUrl(),
-                     'filename': self.getFileName(),
-                     'sha1': self._file.getHash(),
-                     'sha256': None,
-                     'size': self._file.size}]
+            return [
+                {
+                    "url": self.getUrl(),
+                    "filename": self.getFileName(),
+                    "sha1": self._file.getHash(),
+                    "sha256": None,
+                    "size": self._file.size,
+                }
+            ]
         return [self.getUrl()]
 
     def binaryFileUrl(self, filename):

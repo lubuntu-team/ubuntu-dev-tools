@@ -30,33 +30,33 @@ from ubuntutools.question import EditFile
 
 
 def main():
-    parser = optparse.OptionParser('%prog [options] filename')
+    parser = optparse.OptionParser("%prog [options] filename")
     options, args = parser.parse_args()
 
     if len(args) != 1:
-        parser.error('A filename must be specified')
+        parser.error("A filename must be specified")
     body = args[0]
     if not os.path.isfile(body):
-        parser.error('File %s does not exist' % body)
+        parser.error("File %s does not exist" % body)
 
-    if 'UDT_EDIT_WRAPPER_EDITOR' in os.environ:
-        os.environ['EDITOR'] = os.environ['UDT_EDIT_WRAPPER_EDITOR']
+    if "UDT_EDIT_WRAPPER_EDITOR" in os.environ:
+        os.environ["EDITOR"] = os.environ["UDT_EDIT_WRAPPER_EDITOR"]
     else:
-        del os.environ['EDITOR']
+        del os.environ["EDITOR"]
 
-    if 'UDT_EDIT_WRAPPER_VISUAL' in os.environ:
-        os.environ['VISUAL'] = os.environ['UDT_EDIT_WRAPPER_VISUAL']
+    if "UDT_EDIT_WRAPPER_VISUAL" in os.environ:
+        os.environ["VISUAL"] = os.environ["UDT_EDIT_WRAPPER_VISUAL"]
     else:
-        del os.environ['VISUAL']
+        del os.environ["VISUAL"]
 
     placeholders = []
-    if 'UDT_EDIT_WRAPPER_TEMPLATE_RE' in os.environ:
-        placeholders.append(re.compile(
-            os.environ['UDT_EDIT_WRAPPER_TEMPLATE_RE']))
+    if "UDT_EDIT_WRAPPER_TEMPLATE_RE" in os.environ:
+        placeholders.append(re.compile(os.environ["UDT_EDIT_WRAPPER_TEMPLATE_RE"]))
 
-    description = os.environ.get('UDT_EDIT_WRAPPER_FILE_DESCRIPTION', 'file')
+    description = os.environ.get("UDT_EDIT_WRAPPER_FILE_DESCRIPTION", "file")
 
     EditFile(body, description, placeholders).edit()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

@@ -26,14 +26,17 @@
 import sys
 from optparse import OptionGroup
 from optparse import OptionParser
-from ubuntutools.lp.udtexceptions import (SeriesNotFoundException,
-                                          PackageNotFoundException,
-                                          PocketDoesNotExistError,)
+from ubuntutools.lp.udtexceptions import (
+    SeriesNotFoundException,
+    PackageNotFoundException,
+    PocketDoesNotExistError,
+)
 from ubuntutools.lp.lpapicache import Distribution, Launchpad, PersonTeam
 from launchpadlib.credentials import TokenAuthorizationException
 from ubuntutools.misc import split_release_pocket
 
 from ubuntutools import getLogger
+
 Logger = getLogger()
 
 
@@ -44,48 +47,84 @@ def main():
     usage += "Only Launchpad Buildd Admins may rescore package builds."
 
     # Valid architectures.
-    valid_archs = set([
-        "armel", "armhf", "arm64", "amd64", "hppa", "i386", "ia64",
-        "lpia", "powerpc", "ppc64el", "riscv64", "s390x", "sparc",
-    ])
+    valid_archs = set(
+        [
+            "armel",
+            "armhf",
+            "arm64",
+            "amd64",
+            "hppa",
+            "i386",
+            "ia64",
+            "lpia",
+            "powerpc",
+            "ppc64el",
+            "riscv64",
+            "s390x",
+            "sparc",
+        ]
+    )
 
     # Prepare our option parser.
     opt_parser = OptionParser(usage)
 
     # Retry options
-    retry_rescore_options = OptionGroup(opt_parser, "Retry and rescore options",
-                                        "These options may only be used with "
-                                        "the 'retry' and 'rescore' operations.")
-    retry_rescore_options.add_option("-a", "--arch", type="string",
-                                     action="append", dest="architecture",
-                                     help="Rebuild or rescore a specific "
-                                          "architecture. Valid architectures "
-                                          "include: %s." %
-                                          ", ".join(valid_archs))
+    retry_rescore_options = OptionGroup(
+        opt_parser,
+        "Retry and rescore options",
+        "These options may only be used with the 'retry' and 'rescore' operations.",
+    )
+    retry_rescore_options.add_option(
+        "-a",
+        "--arch",
+        type="string",
+        action="append",
+        dest="architecture",
+        help="Rebuild or rescore a specific "
+        "architecture. Valid architectures "
+        "include: %s." % ", ".join(valid_archs),
+    )
 
     # Batch processing options
-    batch_options = OptionGroup(opt_parser, "Batch processing",
-                                "These options and parameter ordering is only "
-                                "available in --batch mode.\nUsage: "
-                                "ubuntu-build --batch [options] <package>...")
-    batch_options.add_option('--batch',
-                             action='store_true', dest='batch', default=False,
-                             help='Enable batch mode')
-    batch_options.add_option('--series',
-                             action='store', dest='series', type='string',
-                             help='Selects the Ubuntu series to operate on '
-                                  '(default: current development series)')
-    batch_options.add_option('--retry',
-                             action='store_true', dest='retry', default=False,
-                             help='Retry builds (give-back).')
-    batch_options.add_option('--rescore',
-                             action='store', dest='priority', type='int',
-                             help='Rescore builds to <priority>.')
-    batch_options.add_option('--arch2', action='append', dest='architecture',
-                             type='string',
-                             help="Affect only 'architecture' (can be used "
-                                  "several times). Valid architectures are: %s."
-                                  % ', '.join(valid_archs))
+    batch_options = OptionGroup(
+        opt_parser,
+        "Batch processing",
+        "These options and parameter ordering is only "
+        "available in --batch mode.\nUsage: "
+        "ubuntu-build --batch [options] <package>...",
+    )
+    batch_options.add_option(
+        "--batch", action="store_true", dest="batch", default=False, help="Enable batch mode"
+    )
+    batch_options.add_option(
+        "--series",
+        action="store",
+        dest="series",
+        type="string",
+        help="Selects the Ubuntu series to operate on (default: current development series)",
+    )
+    batch_options.add_option(
+        "--retry",
+        action="store_true",
+        dest="retry",
+        default=False,
+        help="Retry builds (give-back).",
+    )
+    batch_options.add_option(
+        "--rescore",
+        action="store",
+        dest="priority",
+        type="int",
+        help="Rescore builds to <priority>.",
+    )
+    batch_options.add_option(
+        "--arch2",
+        action="append",
+        dest="architecture",
+        type="string",
+        help="Affect only 'architecture' (can be used "
+        "several times). Valid architectures are: %s." % ", ".join(valid_archs),
+    )
 
     # Add the retry options to the main group.
     opt_parser.add_option_group(retry_rescore_options)
@@ -121,8 +160,7 @@ def main():
         # rebuild it and nothing else.
         if options.architecture:
             if options.architecture[0] not in valid_archs:
-                Logger.error("Invalid architecture specified: %s."
-                             % options.architecture[0])
+                Logger.error("Invalid architecture specified: %s." % options.architecture[0])
                 sys.exit(1)
             else:
                 one_arch = True
@@ -143,11 +181,11 @@ def main():
             sys.exit(1)
 
         # Get the ubuntu archive
-        ubuntu_archive = Distribution('ubuntu').getArchive()
+        ubuntu_archive = Distribution("ubuntu").getArchive()
         # Get list of published sources for package in question.
         try:
             sources = ubuntu_archive.getSourcePackage(package, release, pocket)
-            distroseries = Distribution('ubuntu').getSeries(release)
+            distroseries = Distribution("ubuntu").getSeries(release)
         except (SeriesNotFoundException, PackageNotFoundException) as error:
             Logger.error(error)
             sys.exit(1)
@@ -163,22 +201,29 @@ def main():
         # are in place.
         me = PersonTeam.me
         if op == "rescore":
-            necessary_privs = me.isLpTeamMember('launchpad-buildd-admins')
+            necessary_privs = me.isLpTeamMember("launchpad-buildd-admins")
         if op == "retry":
-            necessary_privs = me.canUploadPackage(ubuntu_archive, distroseries,
-                                                  sources.getPackageName(),
-                                                  sources.getComponent(),
-                                                  pocket=pocket)
+            necessary_privs = me.canUploadPackage(
+                ubuntu_archive,
+                distroseries,
+                sources.getPackageName(),
+                sources.getComponent(),
+                pocket=pocket,
+            )
 
-        if op in ('rescore', 'retry') and not necessary_privs:
-            Logger.error("You cannot perform the %s operation on a %s "
-                         "package as you do not have the permissions "
-                         "to do this action." % (op, component))
+        if op in ("rescore", "retry") and not necessary_privs:
+            Logger.error(
+                "You cannot perform the %s operation on a %s "
+                "package as you do not have the permissions "
+                "to do this action." % (op, component)
+            )
             sys.exit(1)
 
         # Output details.
-        Logger.info("The source version for '%s' in %s (%s) is at %s." %
-                    (package, release.capitalize(), component, version))
+        Logger.info(
+            "The source version for '%s' in %s (%s) is at %s."
+            % (package, release.capitalize(), component, version)
+        )
 
         Logger.info("Current build status for this package:")
 
@@ -191,20 +236,20 @@ def main():
 
             done = True
             Logger.info("%s: %s." % (build.arch_tag, build.buildstate))
-            if op == 'rescore':
+            if op == "rescore":
                 if build.can_be_rescored:
                     # FIXME: make priority an option
                     priority = 5000
-                    Logger.info('Rescoring build %s to %d...' % (build.arch_tag, priority))
+                    Logger.info("Rescoring build %s to %d..." % (build.arch_tag, priority))
                     build.rescore(score=priority)
                 else:
-                    Logger.info('Cannot rescore build on %s.' % build.arch_tag)
-            if op == 'retry':
+                    Logger.info("Cannot rescore build on %s." % build.arch_tag)
+            if op == "retry":
                 if build.can_be_retried:
-                    Logger.info('Retrying build on %s...' % build.arch_tag)
+                    Logger.info("Retrying build on %s..." % build.arch_tag)
                     build.retry()
                 else:
-                    Logger.info('Cannot retry build on %s.' % build.arch_tag)
+                    Logger.info("Cannot retry build on %s." % build.arch_tag)
 
         # We are done
         if done:
@@ -227,29 +272,27 @@ def main():
 
     release = options.series
     if not release:
-        release = (Distribution('ubuntu').getDevelopmentSeries().name
-                   + '-proposed')
+        release = Distribution("ubuntu").getDevelopmentSeries().name + "-proposed"
     try:
         (release, pocket) = split_release_pocket(release)
     except PocketDoesNotExistError as error:
         Logger.error(error)
         sys.exit(1)
 
-    ubuntu_archive = Distribution('ubuntu').getArchive()
+    ubuntu_archive = Distribution("ubuntu").getArchive()
     try:
-        distroseries = Distribution('ubuntu').getSeries(release)
+        distroseries = Distribution("ubuntu").getSeries(release)
     except SeriesNotFoundException as error:
         Logger.error(error)
         sys.exit(1)
     me = PersonTeam.me
 
     # Check permisions (part 1): Rescoring can only be done by buildd admins
-    can_rescore = ((options.priority
-                    and me.isLpTeamMember('launchpad-buildd-admins'))
-                   or False)
+    can_rescore = (options.priority and me.isLpTeamMember("launchpad-buildd-admins")) or False
     if options.priority and not can_rescore:
-        Logger.error("You don't have the permissions to rescore "
-                     "builds. Ignoring your rescore request.")
+        Logger.error(
+            "You don't have the permissions to rescore builds. Ignoring your rescore request."
+        )
 
     for pkg in args:
         try:
@@ -260,17 +303,19 @@ def main():
 
         # Check permissions (part 2): check upload permissions for the source
         # package
-        can_retry = options.retry and me.canUploadPackage(ubuntu_archive,
-                                                          distroseries,
-                                                          pkg.getPackageName(),
-                                                          pkg.getComponent())
+        can_retry = options.retry and me.canUploadPackage(
+            ubuntu_archive, distroseries, pkg.getPackageName(), pkg.getComponent()
+        )
         if options.retry and not can_retry:
-            Logger.error("You don't have the permissions to retry the "
-                         "build of '%s'. Ignoring your request."
-                         % pkg.getPackageName())
+            Logger.error(
+                "You don't have the permissions to retry the "
+                "build of '%s'. Ignoring your request." % pkg.getPackageName()
+            )
 
-        Logger.info("The source version for '%s' in '%s' (%s) is: %s" %
-                    (pkg.getPackageName(), release, pocket, pkg.getVersion()))
+        Logger.info(
+            "The source version for '%s' in '%s' (%s) is: %s"
+            % (pkg.getPackageName(), release, pocket, pkg.getVersion())
+        )
 
         Logger.info(pkg.getBuildStates(archs))
         if can_retry:
@@ -278,8 +323,8 @@ def main():
         if options.priority and can_rescore:
             Logger.info(pkg.rescoreBuilds(archs, options.priority))
 
-        Logger.info('')
+        Logger.info("")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -26,45 +26,103 @@ from ubuntutools.config import UDTConfig
 from ubuntutools.sponsor_patch.sponsor_patch import sponsor_patch, check_dependencies
 
 from ubuntutools import getLogger
+
 Logger = getLogger()
 
 
 def parse(script_name):
     """Parse the command line parameters."""
-    usage = ("%s [options] <bug number>\n" % (script_name)
-             + "One of --upload, --workdir, or --sponsor must be specified.")
+    usage = (
+        "%s [options] <bug number>\n" % (script_name)
+        + "One of --upload, --workdir, or --sponsor must be specified."
+    )
     epilog = "See %s(1) for more info." % (script_name)
     parser = optparse.OptionParser(usage=usage, epilog=epilog)
 
-    parser.add_option("-b", "--build", dest="build",
-                      help="Build the package with the specified builder.",
-                      action="store_true", default=False)
-    parser.add_option("-B", "--builder", dest="builder", default=None,
-                      help="Specify the package builder (default pbuilder)")
-    parser.add_option("-e", "--edit",
-                      help="launch sub-shell to allow editing of the patch",
-                      dest="edit", action="store_true", default=False)
-    parser.add_option("-k", "--key", dest="keyid", default=None,
-                      help="Specify the key ID to be used for signing.")
-    parser.add_option("-l", "--lpinstance", dest="lpinstance", default=None,
-                      help="Launchpad instance to connect to "
-                           "(default: production)",
-                      metavar="INSTANCE")
-    parser.add_option("--no-conf", dest="no_conf", default=False,
-                      help="Don't read config files or environment variables.",
-                      action="store_true")
-    parser.add_option("-s", "--sponsor", help="sponsoring; equals -b -u ubuntu",
-                      dest="sponsoring", action="store_true", default=False)
-    parser.add_option("-u", "--upload", dest="upload", default=None,
-                      help="Specify an upload destination (default none).")
-    parser.add_option("-U", "--update", dest="update", default=False,
-                      action="store_true",
-                      help="Update the build environment before building.")
-    parser.add_option("-v", "--verbose", help="print more information",
-                      dest="verbose", action="store_true", default=False)
-    parser.add_option("-w", "--workdir", dest="workdir", default=None,
-                      help="Specify a working directory (default is a "
-                           "temporary directory, deleted afterwards).")
+    parser.add_option(
+        "-b",
+        "--build",
+        dest="build",
+        help="Build the package with the specified builder.",
+        action="store_true",
+        default=False,
+    )
+    parser.add_option(
+        "-B",
+        "--builder",
+        dest="builder",
+        default=None,
+        help="Specify the package builder (default pbuilder)",
+    )
+    parser.add_option(
+        "-e",
+        "--edit",
+        help="launch sub-shell to allow editing of the patch",
+        dest="edit",
+        action="store_true",
+        default=False,
+    )
+    parser.add_option(
+        "-k",
+        "--key",
+        dest="keyid",
+        default=None,
+        help="Specify the key ID to be used for signing.",
+    )
+    parser.add_option(
+        "-l",
+        "--lpinstance",
+        dest="lpinstance",
+        default=None,
+        help="Launchpad instance to connect to (default: production)",
+        metavar="INSTANCE",
+    )
+    parser.add_option(
+        "--no-conf",
+        dest="no_conf",
+        default=False,
+        help="Don't read config files or environment variables.",
+        action="store_true",
+    )
+    parser.add_option(
+        "-s",
+        "--sponsor",
+        help="sponsoring; equals -b -u ubuntu",
+        dest="sponsoring",
+        action="store_true",
+        default=False,
+    )
+    parser.add_option(
+        "-u",
+        "--upload",
+        dest="upload",
+        default=None,
+        help="Specify an upload destination (default none).",
+    )
+    parser.add_option(
+        "-U",
+        "--update",
+        dest="update",
+        default=False,
+        action="store_true",
+        help="Update the build environment before building.",
+    )
+    parser.add_option(
+        "-v",
+        "--verbose",
+        help="print more information",
+        dest="verbose",
+        action="store_true",
+        default=False,
+    )
+    parser.add_option(
+        "-w",
+        "--workdir",
+        dest="workdir",
+        default=None,
+        help="Specify a working directory (default is a "
+        "temporary directory, deleted afterwards).",
+    )
 
     (options, args) = parser.parse_args()
     if options.verbose:
@@ -113,19 +171,26 @@ def main():
         sys.exit(1)
 
     if not options.upload and not options.workdir:
-        Logger.error("Please specify either a working directory or an upload "
-                     "target!")
+        Logger.error("Please specify either a working directory or an upload target!")
         sys.exit(1)
 
     if options.workdir is None:
-        workdir = tempfile.mkdtemp(prefix=script_name+"-")
+        workdir = tempfile.mkdtemp(prefix=script_name + "-")
     else:
         workdir = options.workdir
 
     try:
-        sponsor_patch(bug_number, options.build, builder, options.edit,
-                      options.keyid, options.lpinstance, options.update,
-                      options.upload, workdir)
+        sponsor_patch(
+            bug_number,
+            options.build,
+            builder,
+            options.edit,
+            options.keyid,
+            options.lpinstance,
+            options.update,
+            options.upload,
+            workdir,
+        )
     except KeyboardInterrupt:
         Logger.error("User abort.")
         sys.exit(2)

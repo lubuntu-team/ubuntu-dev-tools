@@ -23,6 +23,7 @@ from ubuntutools.sponsor_patch.question import ask_for_manual_fixing
 from functools import reduce
 
 import logging
+
 Logger = logging.getLogger(__name__)
 
 
@@ -32,10 +33,10 @@ class Patch(object):
     def __init__(self, patch):
         self._patch = patch
         self._patch_file = re.sub(" |/", "_", patch.title)
-        if not reduce(lambda r, x: r or self._patch.title.endswith(x),
-                      (".debdiff", ".diff", ".patch"), False):
-            Logger.debug("Patch %s does not have a proper file extension." %
-                         (self._patch.title))
+        if not reduce(
+            lambda r, x: r or self._patch.title.endswith(x), (".debdiff", ".diff", ".patch"), False
+        ):
+            Logger.debug("Patch %s does not have a proper file extension." % (self._patch.title))
             self._patch_file += ".patch"
         self._full_path = os.path.realpath(self._patch_file)
         self._changed_files = None
@@ -45,21 +46,36 @@ class Patch(object):
         assert self._changed_files is not None, "You forgot to download the patch."
         edit = False
         if self.is_debdiff():
-            cmd = ["patch", "--merge", "--force", "-p",
-                   str(self.get_strip_level()), "-i", self._full_path]
-            Logger.debug(' '.join(cmd))
+            cmd = [
+                "patch",
+                "--merge",
+                "--force",
+                "-p",
+                str(self.get_strip_level()),
+                "-i",
+                self._full_path,
+            ]
+            Logger.debug(" ".join(cmd))
             if subprocess.call(cmd) != 0:
-                Logger.error("Failed to apply debdiff %s to %s %s.",
-                             self._patch_file, task.package, task.get_version())
+                Logger.error(
+                    "Failed to apply debdiff %s to %s %s.",
+                    self._patch_file,
+                    task.package,
+                    task.get_version(),
+                )
                 if not edit:
                     ask_for_manual_fixing()
                     edit = True
         else:
             cmd = ["add-patch", self._full_path]
-            Logger.debug(' '.join(cmd))
+            Logger.debug(" ".join(cmd))
             if subprocess.call(cmd) != 0:
-                Logger.error("Failed to apply diff %s to %s %s.",
-                             self._patch_file, task.package, task.get_version())
+                Logger.error(
+                    "Failed to apply diff %s to %s %s.",
+                    self._patch_file,
+                    task.package,
+                    task.get_version(),
+                )
                 if not edit:
                     ask_for_manual_fixing()
                     edit = True
@@ -73,7 +89,7 @@ class Patch(object):
         patch_f.close()
 
         cmd = ["diffstat", "-l", "-p0", self._full_path]
-        changed_files = subprocess.check_output(cmd, encoding='utf-8')
+        changed_files = subprocess.check_output(cmd, encoding="utf-8")
         self._changed_files = [f for f in changed_files.split("\n") if f != ""]
 
     def get_strip_level(self):
@@ -81,13 +97,11 @@ class Patch(object):
         assert self._changed_files is not None, "You forgot to download the patch."
         strip_level = None
         if self.is_debdiff():
-            changelog = [f for f in self._changed_files
-                         if f.endswith("debian/changelog")][0]
+            changelog = [f for f in self._changed_files if f.endswith("debian/changelog")][0]
             strip_level = len(changelog.split(os.sep)) - 2
         return strip_level
 
     def is_debdiff(self):
         """Checks if the patch is a debdiff (= modifies debian/changelog)."""
         assert self._changed_files is not None, "You forgot to download the patch."
-        return len([f for f in self._changed_files
-                    if f.endswith("debian/changelog")]) > 0
+        return len([f for f in self._changed_files if f.endswith("debian/changelog")]) > 0

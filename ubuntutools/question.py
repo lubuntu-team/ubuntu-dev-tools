@@ -57,7 +57,7 @@ class Question(object):
             try:
                 selected = input(question).strip().lower()
             except (EOFError, KeyboardInterrupt):
-                print('\nAborting as requested.')
+                print("\nAborting as requested.")
                 sys.exit(1)
             if selected == "":
                 selected = default
@@ -86,7 +86,7 @@ def input_number(question, min_number, max_number, default=None):
         try:
             selected = input(question).strip()
         except (EOFError, KeyboardInterrupt):
-            print('\nAborting as requested.')
+            print("\nAborting as requested.")
             sys.exit(1)
         if default and selected == "":
             selected = default
@@ -102,17 +102,17 @@ def input_number(question, min_number, max_number, default=None):
 
 
 def confirmation_prompt(message=None, action=None):
-    '''Display message, or a stock message including action, and wait for the
-       user to press Enter
-    '''
+    """Display message, or a stock message including action, and wait for the
+    user to press Enter
+    """
     if message is None:
         if action is None:
-            action = 'continue'
-        message = 'Press [Enter] to %s. Press [Ctrl-C] to abort now.' % action
+            action = "continue"
+        message = "Press [Enter] to %s. Press [Ctrl-C] to abort now." % action
     try:
         input(message)
     except (EOFError, KeyboardInterrupt):
-        print('\nAborting as requested.')
+        print("\nAborting as requested.")
         sys.exit(1)
 
 
@@ -121,13 +121,13 @@ class EditFile(object):
         self.filename = filename
         self.description = description
         if placeholders is None:
-            placeholders = (re.compile(r'^>>>.*<<<$', re.UNICODE),)
+            placeholders = (re.compile(r"^>>>.*<<<$", re.UNICODE),)
         self.placeholders = placeholders
 
     def edit(self, optional=False):
         if optional:
             print("\n\nCurrently the %s looks like:" % self.description)
-            with open(self.filename, 'r', encoding='utf-8') as f:
+            with open(self.filename, "r", encoding="utf-8") as f:
                 print(f.read())
             if YesNoQuestion().ask("Edit", "no") == "no":
                 return
@@ -135,21 +135,22 @@ class EditFile(object):
         done = False
         while not done:
             old_mtime = os.stat(self.filename).st_mtime
-            subprocess.check_call(['sensible-editor', self.filename])
+            subprocess.check_call(["sensible-editor", self.filename])
             modified = old_mtime != os.stat(self.filename).st_mtime
             placeholders_present = False
             if self.placeholders:
-                with open(self.filename, 'r', encoding='utf-8') as f:
+                with open(self.filename, "r", encoding="utf-8") as f:
                     for line in f:
                         for placeholder in self.placeholders:
                             if placeholder.search(line.strip()):
                                 placeholders_present = True
 
             if placeholders_present:
-                print("Placeholders still present in the %s. "
-                      "Please replace them with useful information."
-                      % self.description)
-                confirmation_prompt(action='edit again')
+                print(
+                    "Placeholders still present in the %s. "
+                    "Please replace them with useful information." % self.description
+                )
+                confirmation_prompt(action="edit again")
             elif not modified:
                 print("The %s was not modified" % self.description)
                 if YesNoQuestion().ask("Edit again", "yes") == "no":
@@ -158,45 +159,44 @@ class EditFile(object):
                 done = True
 
     def check_edit(self):
-        '''Override this to implement extra checks on the edited report.
+        """Override this to implement extra checks on the edited report.
         Should return False if another round of editing is needed,
         and should prompt the user to confirm that, if necessary.
-        '''
+        """
         return True
 
 
 class EditBugReport(EditFile):
-    split_re = re.compile(r'^Summary.*?:\s+(.*?)\s+'
-                          r'Description:\s+(.*)$',
-                          re.DOTALL | re.UNICODE)
+    split_re = re.compile(r"^Summary.*?:\s+(.*?)\s+Description:\s+(.*)$", re.DOTALL | re.UNICODE)
 
     def __init__(self, subject, body, placeholders=None):
-        prefix = os.path.basename(sys.argv[0]) + '_'
-        tmpfile = tempfile.NamedTemporaryFile(prefix=prefix, suffix='.txt',
-                                              delete=False)
-        tmpfile.write((u'Summary (one line):\n%s\n\nDescription:\n%s'
-                       % (subject, body)).encode('utf-8'))
+        prefix = os.path.basename(sys.argv[0]) + "_"
+        tmpfile = tempfile.NamedTemporaryFile(prefix=prefix, suffix=".txt", delete=False)
+        tmpfile.write(
+            ("Summary (one line):\n%s\n\nDescription:\n%s" % (subject, body)).encode("utf-8")
+        )
         tmpfile.close()
-        super(EditBugReport, self).__init__(tmpfile.name, 'bug report',
-                                            placeholders)
+        super(EditBugReport, self).__init__(tmpfile.name, "bug report", placeholders)
 
     def check_edit(self):
-        with open(self.filename, 'r', encoding='utf-8') as f:
+        with open(self.filename, "r", encoding="utf-8") as f:
             report = f.read()
 
         if self.split_re.match(report) is None:
-            print("The %s doesn't start with 'Summary:' and 'Description:' "
-                  "blocks" % self.description)
-            confirmation_prompt('edit again')
+            print(
+                "The %s doesn't start with 'Summary:' and 'Description:' "
+                "blocks" % self.description
+            )
+            confirmation_prompt("edit again")
             return False
         return True
 
     def get_report(self):
-        with open(self.filename, 'r', encoding='utf-8') as f:
+        with open(self.filename, "r", encoding="utf-8") as f:
             report = f.read()
 
         match = self.split_re.match(report)
-        title = match.group(1).replace(u'\n', u' ')
+        title = match.group(1).replace("\n", " ")
         report = (title, match.group(2))
         os.unlink(self.filename)
         return report

@@ -22,6 +22,7 @@ import os
 import subprocess
 
 import logging
+
 Logger = logging.getLogger(__name__)
 
 
@@ -35,16 +36,17 @@ class Builder(object):
     def __init__(self, name):
         self.name = name
         cmd = ["dpkg-architecture", "-qDEB_BUILD_ARCH_CPU"]
-        self.architecture = subprocess.check_output(cmd, encoding='utf-8').strip()
+        self.architecture = subprocess.check_output(cmd, encoding="utf-8").strip()
 
     def _build_failure(self, returncode, dsc_file):
         if returncode != 0:
-            Logger.error("Failed to build %s from source with %s." %
-                         (os.path.basename(dsc_file), self.name))
+            Logger.error(
+                "Failed to build %s from source with %s." % (os.path.basename(dsc_file), self.name)
+            )
         return returncode
 
     def exists_in_path(self):
-        for path in os.environ.get('PATH', os.defpath).split(os.pathsep):
+        for path in os.environ.get("PATH", os.defpath).split(os.pathsep):
             if os.path.isfile(os.path.join(path, self.name)):
                 return True
         return False
@@ -57,8 +59,7 @@ class Builder(object):
 
     def _update_failure(self, returncode, dist):
         if returncode != 0:
-            Logger.error("Failed to update %s chroot for %s." %
-                         (dist, self.name))
+            Logger.error("Failed to update %s chroot for %s." % (dist, self.name))
         return returncode
 
 
@@ -68,19 +69,39 @@ class Pbuilder(Builder):
 
     def build(self, dsc_file, dist, result_directory):
         _build_preparation(result_directory)
-        cmd = ["sudo", "-E", "ARCH=" + self.architecture, "DIST=" + dist,
-               self.name, "--build",
-               "--architecture", self.architecture, "--distribution", dist,
-               "--buildresult", result_directory, dsc_file]
-        Logger.debug(' '.join(cmd))
+        cmd = [
+            "sudo",
+            "-E",
+            "ARCH=" + self.architecture,
+            "DIST=" + dist,
+            self.name,
+            "--build",
+            "--architecture",
+            self.architecture,
+            "--distribution",
+            dist,
+            "--buildresult",
+            result_directory,
+            dsc_file,
+        ]
+        Logger.debug(" ".join(cmd))
         returncode = subprocess.call(cmd)
         return self._build_failure(returncode, dsc_file)
 
     def update(self, dist):
-        cmd = ["sudo", "-E", "ARCH=" + self.architecture, "DIST=" + dist,
-               self.name, "--update",
-               "--architecture", self.architecture, "--distribution", dist]
-        Logger.debug(' '.join(cmd))
+        cmd = [
+            "sudo",
+            "-E",
+            "ARCH=" + self.architecture,
+            "DIST=" + dist,
+            self.name,
+            "--update",
+            "--architecture",
+            self.architecture,
+            "--distribution",
+            dist,
+        ]
+        Logger.debug(" ".join(cmd))
         returncode = subprocess.call(cmd)
         return self._update_failure(returncode, dist)
 
@@ -91,15 +112,22 @@ class Pbuilderdist(Builder):
 
     def build(self, dsc_file, dist, result_directory):
         _build_preparation(result_directory)
-        cmd = [self.name, dist, self.architecture,
-               "build", dsc_file, "--buildresult", result_directory]
-        Logger.debug(' '.join(cmd))
+        cmd = [
+            self.name,
+            dist,
+            self.architecture,
+            "build",
+            dsc_file,
+            "--buildresult",
+            result_directory,
+        ]
+        Logger.debug(" ".join(cmd))
         returncode = subprocess.call(cmd)
         return self._build_failure(returncode, dsc_file)
 
     def update(self, dist):
         cmd = [self.name, dist, self.architecture, "update"]
-        Logger.debug(' '.join(cmd))
+        Logger.debug(" ".join(cmd))
         returncode = subprocess.call(cmd)
         return self._update_failure(returncode, dist)
 
@@ -113,9 +141,8 @@ class Sbuild(Builder):
         workdir = os.getcwd()
         Logger.debug("cd " + result_directory)
         os.chdir(result_directory)
-        cmd = ["sbuild", "--arch-all", "--dist=" + dist,
-               "--arch=" + self.architecture, dsc_file]
-        Logger.debug(' '.join(cmd))
+        cmd = ["sbuild", "--arch-all", "--dist=" + dist, "--arch=" + self.architecture, dsc_file]
+        Logger.debug(" ".join(cmd))
         returncode = subprocess.call(cmd)
         Logger.debug("cd " + workdir)
         os.chdir(workdir)
@@ -123,29 +150,29 @@ class Sbuild(Builder):
 
     def update(self, dist):
         cmd = ["schroot", "--list"]
-        Logger.debug(' '.join(cmd))
-        process = subprocess.run(cmd, stdout=subprocess.PIPE, encoding='utf-8')
+        Logger.debug(" ".join(cmd))
+        process = subprocess.run(cmd, stdout=subprocess.PIPE, encoding="utf-8")
         chroots, _ = process.stdout.strip().split()
         if process.returncode != 0:
             return process.returncode
 
         params = {"dist": dist, "arch": self.architecture}
-        for chroot in ("%(dist)s-%(arch)s-sbuild-source",
-                       "%(dist)s-sbuild-source",
-                       "%(dist)s-%(arch)s-source",
-                       "%(dist)s-source"):
+        for chroot in (
+            "%(dist)s-%(arch)s-sbuild-source",
+            "%(dist)s-sbuild-source",
+            "%(dist)s-%(arch)s-source",
+            "%(dist)s-source",
+        ):
             chroot = chroot % params
             if chroot in chroots:
                 break
         else:
             return 1
 
-        commands = [["sbuild-update"],
-                    ["sbuild-distupgrade"],
-                    ["sbuild-clean", "-a", "-c"]]
+        commands = [["sbuild-update"], ["sbuild-distupgrade"], ["sbuild-clean", "-a", "-c"]]
         for cmd in commands:
             # pylint: disable=W0631
-            Logger.debug(' '.join(cmd) + " " + chroot)
+            Logger.debug(" ".join(cmd) + " " + chroot)
             ret = subprocess.call(cmd + [chroot])
             # pylint: enable=W0631
             if ret != 0:
@@ -170,5 +197,4 @@ def get_builder(name):
         Logger.error("Builder doesn't appear to be installed: %s", name)
     else:
         Logger.error("Unsupported builder specified: %s.", name)
-        Logger.error("Supported builders: %s",
-                     ", ".join(sorted(_SUPPORTED_BUILDERS.keys())))
+        Logger.error("Supported builders: %s", ", ".join(sorted(_SUPPORTED_BUILDERS.keys())))

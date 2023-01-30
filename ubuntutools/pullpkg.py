@@ -34,42 +34,50 @@ from distro_info import DebianDistroInfo
 
 from urllib.parse import urlparse
 
-from ubuntutools.archive import (UbuntuSourcePackage, DebianSourcePackage,
-                                 UbuntuCloudArchiveSourcePackage,
-                                 PersonalPackageArchiveSourcePackage)
+from ubuntutools.archive import (
+    UbuntuSourcePackage,
+    DebianSourcePackage,
+    UbuntuCloudArchiveSourcePackage,
+    PersonalPackageArchiveSourcePackage,
+)
 from ubuntutools.config import UDTConfig
-from ubuntutools.lp.lpapicache import (Distribution, Launchpad)
-from ubuntutools.lp.udtexceptions import (AlreadyLoggedInError,
-                                          SeriesNotFoundException,
-                                          PackageNotFoundException,
-                                          PocketDoesNotExistError,
-                                          InvalidDistroValueError)
-from ubuntutools.misc import (split_release_pocket,
-                              host_architecture,
-                              download,
-                              UPLOAD_QUEUE_STATUSES,
-                              STATUSES)
+from ubuntutools.lp.lpapicache import Distribution, Launchpad
+from ubuntutools.lp.udtexceptions import (
+    AlreadyLoggedInError,
+    SeriesNotFoundException,
+    PackageNotFoundException,
+    PocketDoesNotExistError,
+    InvalidDistroValueError,
+)
+from ubuntutools.misc import (
+    split_release_pocket,
+    host_architecture,
+    download,
+    UPLOAD_QUEUE_STATUSES,
+    STATUSES,
+)
 
 
 # by default we use standard logging.getLogger() and only use
 # ubuntutools.getLogger() in PullPkg().main()
 from ubuntutools import getLogger as ubuntutools_getLogger
 import logging
+
 Logger = logging.getLogger(__name__)
 
-PULL_SOURCE = 'source'
-PULL_DEBS = 'debs'
-PULL_DDEBS = 'ddebs'
-PULL_UDEBS = 'udebs'
-PULL_LIST = 'list'
+PULL_SOURCE = "source"
+PULL_DEBS = "debs"
+PULL_DDEBS = "ddebs"
+PULL_UDEBS = "udebs"
+PULL_LIST = "list"
 
 VALID_PULLS = [PULL_SOURCE, PULL_DEBS, PULL_DDEBS, PULL_UDEBS, PULL_LIST]
 VALID_BINARY_PULLS = [PULL_DEBS, PULL_DDEBS, PULL_UDEBS]
 
-DISTRO_DEBIAN = 'debian'
-DISTRO_UBUNTU = 'ubuntu'
-DISTRO_UCA = 'uca'
-DISTRO_PPA = 'ppa'
+DISTRO_DEBIAN = "debian"
+DISTRO_UBUNTU = "ubuntu"
+DISTRO_UCA = "uca"
+DISTRO_PPA = "ppa"
 
 DISTRO_PKG_CLASS = {
     DISTRO_DEBIAN: DebianSourcePackage,
@@ -81,12 +89,14 @@ VALID_DISTROS = DISTRO_PKG_CLASS.keys()
 
 
 class InvalidPullValueError(ValueError):
-    """ Thrown when --pull value is invalid """
+    """Thrown when --pull value is invalid"""
+
     pass
 
 
 class PullPkg(object):
     """Class used to pull file(s) associated with a specific package"""
+
     @classmethod
     def main(cls, *args, **kwargs):
         """For use by stand-alone cmdline scripts.
@@ -107,53 +117,67 @@ class PullPkg(object):
             cls(*args, **kwargs).pull()
             return
         except KeyboardInterrupt:
-            Logger.info('User abort.')
-        except (PackageNotFoundException, SeriesNotFoundException,
-                PocketDoesNotExistError, InvalidDistroValueError,
-                InvalidPullValueError) as e:
+            Logger.info("User abort.")
+        except (
+            PackageNotFoundException,
+            SeriesNotFoundException,
+            PocketDoesNotExistError,
+            InvalidDistroValueError,
+            InvalidPullValueError,
+        ) as e:
             Logger.error(str(e))
             sys.exit(errno.ENOENT)
 
     def __init__(self, *args, **kwargs):
-        self._default_pull = kwargs.get('pull')
-        self._default_distro = kwargs.get('distro')
-        self._default_arch = kwargs.get('arch', host_architecture())
+        self._default_pull = kwargs.get("pull")
+        self._default_distro = kwargs.get("distro")
+        self._default_arch = kwargs.get("arch", host_architecture())
 
     def parse_args(self, args):
         args = args[:]
 
         help_default_pull = "What to pull: " + ", ".join(VALID_PULLS)
         if self._default_pull:
-            help_default_pull += (" (default: %s)" % self._default_pull)
+            help_default_pull += " (default: %s)" % self._default_pull
         help_default_distro = "Pull from: " + ", ".join(VALID_DISTROS)
         if self._default_distro:
-            help_default_distro += (" (default: %s)" % self._default_distro)
-        help_default_arch = ("Get binary packages for arch")
-        help_default_arch += ("(default: %s)" % self._default_arch)
+            help_default_distro += " (default: %s)" % self._default_distro
+        help_default_arch = "Get binary packages for arch"
+        help_default_arch += "(default: %s)" % self._default_arch
 
         # use add_help=False because we do parse_known_args() below, and if
         # that sees --help then it exits immediately
         parser = ArgumentParser(add_help=False)
-        parser.add_argument('-L', '--login', action='store_true',
-                            help="Login to Launchpad")
-        parser.add_argument('-v', '--verbose', action='count', default=0,
-                            help="Increase verbosity/debug")
-        parser.add_argument('-d', '--download-only', action='store_true',
-                            help="Do not extract the source package")
-        parser.add_argument('-m', '--mirror', action='append',
-                            help='Preferred mirror(s)')
-        parser.add_argument('--no-conf', action='store_true',
-                            help="Don't read config files or environment variables")
-        parser.add_argument('--no-verify-signature', action='store_true',
-                            help="Don't fail if dsc signature can't be verified")
-        parser.add_argument('-s', '--status', action='append', default=[],
-                            help="Search for packages with specific status(es)")
-        parser.add_argument('-a', '--arch', default=self._default_arch,
-                            help=help_default_arch)
-        parser.add_argument('-p', '--pull', default=self._default_pull,
-                            help=help_default_pull)
-        parser.add_argument('-D', '--distro', default=self._default_distro,
-                            help=help_default_distro)
+        parser.add_argument("-L", "--login", action="store_true", help="Login to Launchpad")
+        parser.add_argument(
+            "-v", "--verbose", action="count", default=0, help="Increase verbosity/debug"
+        )
+        parser.add_argument(
+            "-d", "--download-only", action="store_true", help="Do not extract the source package"
+        )
+        parser.add_argument("-m", "--mirror", action="append", help="Preferred mirror(s)")
+        parser.add_argument(
+            "--no-conf",
+            action="store_true",
+            help="Don't read config files or environment variables",
+        )
+        parser.add_argument(
+            "--no-verify-signature",
+            action="store_true",
+            help="Don't fail if dsc signature can't be verified",
+        )
+        parser.add_argument(
+            "-s",
+            "--status",
+            action="append",
+            default=[],
+            help="Search for packages with specific status(es)",
+        )
+        parser.add_argument("-a", "--arch", default=self._default_arch, help=help_default_arch)
+        parser.add_argument("-p", "--pull", default=self._default_pull, help=help_default_pull)
+        parser.add_argument(
+            "-D", "--distro", default=self._default_distro, help=help_default_distro
+        )
 
         # add distro-specific params
         try:
@@ -163,30 +187,36 @@ class PullPkg(object):
             distro = None
 
         if distro == DISTRO_UBUNTU:
-            parser.add_argument('--security', action='store_true',
-                                help='Pull from the Ubuntu Security Team (proposed) PPA')
-            parser.add_argument('--upload-queue', action='store_true',
-                                help='Pull from the Ubuntu upload queue')
+            parser.add_argument(
+                "--security",
+                action="store_true",
+                help="Pull from the Ubuntu Security Team (proposed) PPA",
+            )
+            parser.add_argument(
+                "--upload-queue", action="store_true", help="Pull from the Ubuntu upload queue"
+            )
         if distro == DISTRO_PPA:
-            parser.add_argument('--ppa', help='PPA to pull from')
+            parser.add_argument("--ppa", help="PPA to pull from")
             if parser.parse_known_args(args)[0].ppa is None:
                 # check for any param starting with "ppa:"
                 # if found, move it to a --ppa param
                 for param in args:
-                    if param.startswith('ppa:'):
+                    if param.startswith("ppa:"):
                         args.remove(param)
                         args.insert(0, param)
-                        args.insert(0, '--ppa')
+                        args.insert(0, "--ppa")
                         break
 
         # add the positional params
-        parser.add_argument('package', help="Package name to pull")
-        parser.add_argument('release', nargs='?', help="Release to pull from")
-        parser.add_argument('version', nargs='?', help="Package version to pull")
+        parser.add_argument("package", help="Package name to pull")
+        parser.add_argument("release", nargs="?", help="Release to pull from")
+        parser.add_argument("version", nargs="?", help="Package version to pull")
 
-        epilog = ("Note on --status: if a version is provided, all status types "
-                  "will be searched; if no version is provided, by default only "
-                  "'Pending' and 'Published' status will be searched.")
+        epilog = (
+            "Note on --status: if a version is provided, all status types "
+            "will be searched; if no version is provided, by default only "
+            "'Pending' and 'Published' status will be searched."
+        )
 
         # since parser has no --help handler, create a new parser that does
         newparser = ArgumentParser(parents=[parser], epilog=epilog)
@@ -198,11 +228,11 @@ class PullPkg(object):
             raise InvalidPullValueError("Must specify --pull")
 
         # allow 'dbgsym' as alias for 'ddebs'
-        if pull == 'dbgsym':
+        if pull == "dbgsym":
             Logger.debug("Pulling '%s' for '%s'", PULL_DDEBS, pull)
             pull = PULL_DDEBS
         # assume anything starting with 'bin' means 'debs'
-        if str(pull).startswith('bin'):
+        if str(pull).startswith("bin"):
             Logger.debug("Pulling '%s' for '%s'", PULL_DEBS, pull)
             pull = PULL_DEBS
         # verify pull action is valid
@@ -218,11 +248,11 @@ class PullPkg(object):
         distro = distro.lower()
 
         # allow 'lp' for 'ubuntu'
-        if distro == 'lp':
+        if distro == "lp":
             Logger.debug("Using distro '%s' for '%s'", DISTRO_UBUNTU, distro)
             distro = DISTRO_UBUNTU
         # assume anything with 'cloud' is UCA
-        if re.match(r'.*cloud.*', distro):
+        if re.match(r".*cloud.*", distro):
             Logger.debug("Using distro '%s' for '%s'", DISTRO_UCA, distro)
             distro = DISTRO_UCA
         # verify distro is valid
@@ -256,8 +286,7 @@ class PullPkg(object):
         # let SeriesNotFoundException flow up
         d.getSeries(release)
 
-        Logger.debug("Using distro '%s' release '%s' pocket '%s'",
-                     distro, release, pocket)
+        Logger.debug("Using distro '%s' release '%s' pocket '%s'", distro, release, pocket)
         return (release, pocket)
 
     def parse_release_and_version(self, distro, release, version, try_swap=True):
@@ -281,95 +310,99 @@ class PullPkg(object):
         # they should all be provided, though the optional ones may be None
 
         # type bool
-        assert 'verbose' in options
-        assert 'download_only' in options
-        assert 'no_conf' in options
-        assert 'no_verify_signature' in options
-        assert 'status' in options
+        assert "verbose" in options
+        assert "download_only" in options
+        assert "no_conf" in options
+        assert "no_verify_signature" in options
+        assert "status" in options
         # type string
-        assert 'pull' in options
-        assert 'distro' in options
-        assert 'arch' in options
-        assert 'package' in options
+        assert "pull" in options
+        assert "distro" in options
+        assert "arch" in options
+        assert "package" in options
         # type string, optional
-        assert 'release' in options
-        assert 'version' in options
+        assert "release" in options
+        assert "version" in options
         # type list of strings, optional
-        assert 'mirror' in options
+        assert "mirror" in options
 
-        options['pull'] = self.parse_pull(options['pull'])
-        options['distro'] = self.parse_distro(options['distro'])
+        options["pull"] = self.parse_pull(options["pull"])
+        options["distro"] = self.parse_distro(options["distro"])
 
         # ensure these are always included so we can just check for None/False later
-        options['ppa'] = options.get('ppa', None)
-        options['security'] = options.get('security', False)
-        options['upload_queue'] = options.get('upload_queue', False)
+        options["ppa"] = options.get("ppa", None)
+        options["security"] = options.get("security", False)
+        options["upload_queue"] = options.get("upload_queue", False)
 
         return options
 
     def _get_params(self, options):
-        distro = options['distro']
-        pull = options['pull']
+        distro = options["distro"]
+        pull = options["pull"]
 
         params = {}
-        params['package'] = options['package']
+        params["package"] = options["package"]
 
-        if options['release']:
-            (r, v, p) = self.parse_release_and_version(distro, options['release'],
-                                                       options['version'])
-            params['series'] = r
-            params['version'] = v
-            params['pocket'] = p
+        if options["release"]:
+            (r, v, p) = self.parse_release_and_version(
+                distro, options["release"], options["version"]
+            )
+            params["series"] = r
+            params["version"] = v
+            params["pocket"] = p
 
-        if (params['package'].endswith('.dsc') and not params['series'] and not params['version']):
-            params['dscfile'] = params['package']
-            params.pop('package')
+        if params["package"].endswith(".dsc") and not params["series"] and not params["version"]:
+            params["dscfile"] = params["package"]
+            params.pop("package")
 
-        if options['security']:
-            if options['ppa']:
-                Logger.warning('Both --security and --ppa specified, ignoring --ppa')
-            Logger.debug('Checking Ubuntu Security PPA')
+        if options["security"]:
+            if options["ppa"]:
+                Logger.warning("Both --security and --ppa specified, ignoring --ppa")
+            Logger.debug("Checking Ubuntu Security PPA")
             # --security is just a shortcut for --ppa ppa:ubuntu-security-proposed/ppa
-            options['ppa'] = 'ubuntu-security-proposed/ppa'
+            options["ppa"] = "ubuntu-security-proposed/ppa"
 
-        if options['ppa']:
-            if options['ppa'].startswith('ppa:'):
-                params['ppa'] = options['ppa'][4:]
+        if options["ppa"]:
+            if options["ppa"].startswith("ppa:"):
+                params["ppa"] = options["ppa"][4:]
             else:
-                params['ppa'] = options['ppa']
+                params["ppa"] = options["ppa"]
         elif distro == DISTRO_PPA:
-            raise ValueError('Must specify PPA to pull from')
+            raise ValueError("Must specify PPA to pull from")
 
         mirrors = []
-        if options['mirror']:
-            mirrors.extend(options['mirror'])
+        if options["mirror"]:
+            mirrors.extend(options["mirror"])
         if pull == PULL_DDEBS:
-            config = UDTConfig(options['no_conf'])
-            ddebs_mirror = config.get_value(distro.upper() + '_DDEBS_MIRROR')
+            config = UDTConfig(options["no_conf"])
+            ddebs_mirror = config.get_value(distro.upper() + "_DDEBS_MIRROR")
             if ddebs_mirror:
                 mirrors.append(ddebs_mirror)
         if mirrors:
             Logger.debug("using mirrors %s", ", ".join(mirrors))
-            params['mirrors'] = mirrors
+            params["mirrors"] = mirrors
 
-        params['verify_signature'] = not options['no_verify_signature']
+        params["verify_signature"] = not options["no_verify_signature"]
 
-        params['status'] = STATUSES if 'all' in options['status'] else options['status']
+        params["status"] = STATUSES if "all" in options["status"] else options["status"]
 
         # special handling for upload queue
-        if options['upload_queue']:
-            if len(options['status']) > 1:
-                raise ValueError("Too many --status provided, "
-                                 "can only search for a single status or 'all'")
-            if not options['status']:
-                params['status'] = None
-            elif options['status'][0].lower() == 'all':
-                params['status'] = 'all'
-            elif options['status'][0].capitalize() in UPLOAD_QUEUE_STATUSES:
-                params['status'] = options['status'][0].capitalize()
+        if options["upload_queue"]:
+            if len(options["status"]) > 1:
+                raise ValueError(
+                    "Too many --status provided, can only search for a single status or 'all'"
+                )
+            if not options["status"]:
+                params["status"] = None
+            elif options["status"][0].lower() == "all":
+                params["status"] = "all"
+            elif options["status"][0].capitalize() in UPLOAD_QUEUE_STATUSES:
+                params["status"] = options["status"][0].capitalize()
             else:
-                msg = ("Invalid upload queue status '%s': valid values are %s" %
-                       (options['status'][0], ', '.join(UPLOAD_QUEUE_STATUSES)))
+                msg = "Invalid upload queue status '%s': valid values are %s" % (
+                    options["status"][0],
+                    ", ".join(UPLOAD_QUEUE_STATUSES),
+                )
                 raise ValueError(msg)
 
         return params
@@ -378,56 +411,58 @@ class PullPkg(object):
         """Pull (download) specified package file(s)"""
         options = self.parse_args(args)
 
-        if options['verbose']:
+        if options["verbose"]:
             Logger.setLevel(logging.DEBUG)
-            if options['verbose'] > 1:
+            if options["verbose"] > 1:
                 logging.getLogger(__package__).setLevel(logging.DEBUG)
 
         Logger.debug("pullpkg options: %s", options)
 
-        pull = options['pull']
-        distro = options['distro']
+        pull = options["pull"]
+        distro = options["distro"]
 
-        if options['login']:
+        if options["login"]:
             Logger.debug("Logging in to Launchpad:")
             try:
                 Launchpad.login()
             except AlreadyLoggedInError:
-                Logger.error("Launchpad singleton has already performed a login, "
-                             "and its design prevents another login")
+                Logger.error(
+                    "Launchpad singleton has already performed a login, "
+                    "and its design prevents another login"
+                )
                 Logger.warning("Continuing anyway, with existing Launchpad instance")
 
         params = self._get_params(options)
-        package = params['package']
+        package = params["package"]
 
-        if options['upload_queue']:
+        if options["upload_queue"]:
             # upload queue API is different/simpler
-            self.pull_upload_queue(pull, arch=options['arch'],
-                                   download_only=options['download_only'],
-                                   **params)
+            self.pull_upload_queue(
+                pull, arch=options["arch"], download_only=options["download_only"], **params
+            )
             return
 
         # call implementation, and allow exceptions to flow up to caller
         srcpkg = DISTRO_PKG_CLASS[distro](**params)
         spph = srcpkg.lp_spph
 
-        Logger.info('Found %s', spph.display_name)
+        Logger.info("Found %s", spph.display_name)
 
         if pull == PULL_LIST:
             Logger.info("Source files:")
-            for f in srcpkg.dsc['Files']:
-                Logger.info("  %s", f['name'])
+            for f in srcpkg.dsc["Files"]:
+                Logger.info("  %s", f["name"])
             Logger.info("Binary files:")
-            for f in spph.getBinaries(options['arch']):
-                archtext = ''
+            for f in spph.getBinaries(options["arch"]):
+                archtext = ""
                 name = f.getFileName()
-                if name.rpartition('.')[0].endswith('all'):
+                if name.rpartition(".")[0].endswith("all"):
                     archtext = f" ({f.arch})"
                 Logger.info(f"  {name}{archtext}")
         elif pull == PULL_SOURCE:
             # allow DownloadError to flow up to caller
             srcpkg.pull()
-            if options['download_only']:
+            if options["download_only"]:
                 Logger.debug("--download-only specified, not extracting")
             else:
                 srcpkg.unpack()
@@ -435,70 +470,86 @@ class PullPkg(object):
             name = None
             if package != spph.getPackageName():
                 Logger.info("Pulling only binary package '%s'", package)
-                Logger.info("Use package name '%s' to pull all binary packages",
-                            spph.getPackageName())
+                Logger.info(
+                    "Use package name '%s' to pull all binary packages", spph.getPackageName()
+                )
                 name = package
 
             # e.g. 'debs' -> 'deb'
-            ext = pull.rstrip('s')
+            ext = pull.rstrip("s")
 
             if distro == DISTRO_DEBIAN:
                 # Debian ddebs don't use .ddeb extension, unfortunately :(
                 if pull in [PULL_DEBS, PULL_DDEBS]:
-                    name = name or '.*'
-                    ext = 'deb'
+                    name = name or ".*"
+                    ext = "deb"
                 if pull == PULL_DEBS:
-                    name += r'(?<!-dbgsym)$'
+                    name += r"(?<!-dbgsym)$"
                 if pull == PULL_DDEBS:
-                    name += r'-dbgsym$'
+                    name += r"-dbgsym$"
 
             # allow DownloadError to flow up to caller
-            total = srcpkg.pull_binaries(name=name, ext=ext, arch=options['arch'])
+            total = srcpkg.pull_binaries(name=name, ext=ext, arch=options["arch"])
             if total < 1:
-                Logger.error("No %s found for %s %s", pull,
-                             package, spph.getVersion())
+                Logger.error("No %s found for %s %s", pull, package, spph.getVersion())
         else:
             Logger.error("Internal error: invalid pull value after parse_pull()")
             raise InvalidPullValueError("Invalid pull value '%s'" % pull)
 
-    def pull_upload_queue(self, pull, *,
-                          package, version=None, arch=None, series=None, pocket=None,
-                          status=None, download_only=None, **kwargs):
+    def pull_upload_queue(
+        self,
+        pull,
+        *,
+        package,
+        version=None,
+        arch=None,
+        series=None,
+        pocket=None,
+        status=None,
+        download_only=None,
+        **kwargs,
+    ):
         if not series:
             Logger.error("Using --upload-queue requires specifying series")
             return
 
-        series = Distribution('ubuntu').getSeries(series)
+        series = Distribution("ubuntu").getSeries(series)
 
-        queueparams = {'name': package}
+        queueparams = {"name": package}
         if pocket:
-            queueparams['pocket'] = pocket
+            queueparams["pocket"] = pocket
 
-        if status == 'all':
-            queueparams['status'] = None
-            queuetype = 'any'
+        if status == "all":
+            queueparams["status"] = None
+            queuetype = "any"
         elif status:
-            queueparams['status'] = status
+            queueparams["status"] = status
             queuetype = status
         else:
-            queuetype = 'Unapproved'
+            queuetype = "Unapproved"
 
-        packages = [p for p in series.getPackageUploads(**queueparams) if
-                    p.package_version == version or
-                    str(p.id) == version or
-                    not version]
+        packages = [
+            p
+            for p in series.getPackageUploads(**queueparams)
+            if p.package_version == version or str(p.id) == version or not version
+        ]
 
         if pull == PULL_SOURCE:
             packages = [p for p in packages if p.contains_source]
         elif pull in VALID_BINARY_PULLS:
-            packages = [p for p in packages if
-                        p.contains_build and
-                        (arch in ['all', 'any'] or
-                         arch in p.display_arches.replace(',', '').split())]
+            packages = [
+                p
+                for p in packages
+                if p.contains_build
+                and (arch in ["all", "any"] or arch in p.display_arches.replace(",", "").split())
+            ]
 
         if not packages:
-            msg = ("Package %s not found in %s upload queue for %s" %
-                   (package, queuetype, series.name))
+            msg = "Package %s not found in %s upload queue for %s" % (
+                package,
+                queuetype,
+                series.name,
+            )
             if version:
                 msg += " with version/id %s" % version
             if pull in VALID_BINARY_PULLS:
@@ -563,28 +614,29 @@ class PullPkg(object):
             dscfile = None
             for url in urls:
                 dst = download(url, os.getcwd())
-                if dst.name.endswith('.dsc'):
+                if dst.name.endswith(".dsc"):
                     dscfile = dst
             if download_only:
                 Logger.debug("--download-only specified, not extracting")
             elif not dscfile:
                 Logger.error("No source dsc file found, cannot extract")
             else:
-                cmd = ['dpkg-source', '-x', dscfile.name]
-                Logger.debug(' '.join(cmd))
-                result = subprocess.run(cmd, encoding='utf-8',
-                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                cmd = ["dpkg-source", "-x", dscfile.name]
+                Logger.debug(" ".join(cmd))
+                result = subprocess.run(
+                    cmd, encoding="utf-8", stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+                )
                 if result.returncode != 0:
-                    Logger.error('Source unpack failed.')
+                    Logger.error("Source unpack failed.")
                     Logger.debug(result.stdout)
         else:
-            name = '.*'
+            name = ".*"
             if pull == PULL_DEBS:
-                name = r'{}(?<!-di)(?<!-dbgsym)$'.format(name)
+                name = r"{}(?<!-di)(?<!-dbgsym)$".format(name)
             elif pull == PULL_DDEBS:
-                name += '-dbgsym$'
+                name += "-dbgsym$"
             elif pull == PULL_UDEBS:
-                name += '-di$'
+                name += "-di$"
             else:
                 raise InvalidPullValueError("Invalid pull value %s" % pull)
 

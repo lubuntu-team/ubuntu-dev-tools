@@ -39,6 +39,7 @@ from ubuntutools.question import confirmation_prompt, EditBugReport
 from ubuntutools.version import Version
 
 from ubuntutools import getLogger
+
 Logger = getLogger()
 
 #
@@ -48,46 +49,78 @@ Logger = getLogger()
 
 def main():
     # Our usage options.
-    usage = ('Usage: %prog [options] '
-             '<source package> [<target release> [base version]]')
+    usage = "Usage: %prog [options] <source package> [<target release> [base version]]"
     parser = optparse.OptionParser(usage)
 
-    parser.add_option('-d', type='string',
-                      dest='dist', default='unstable',
-                      help='Debian distribution to sync from.')
-    parser.add_option('-k', type='string',
-                      dest='keyid', default=None,
-                      help='GnuPG key ID to use for signing report '
-                           '(only used when emailing the sync request).')
-    parser.add_option('-n', action='store_true',
-                      dest='newpkg', default=False,
-                      help='Whether package to sync is a new package in '
-                           'Ubuntu.')
-    parser.add_option('--email', action='store_true', default=False,
-                      help='Use a PGP-signed email for filing the sync '
-                           'request, rather than the LP API.')
-    parser.add_option('--lp', dest='deprecated_lp_flag',
-                      action='store_true', default=False,
-                      help=optparse.SUPPRESS_HELP)
-    parser.add_option('-l', '--lpinstance', metavar='INSTANCE',
-                      dest='lpinstance', default=None,
-                      help='Launchpad instance to connect to '
-                           '(default: production).')
-    parser.add_option('-s', action='store_true',
-                      dest='sponsorship', default=False,
-                      help='Force sponsorship')
-    parser.add_option('-C', action='store_true',
-                      dest='missing_changelog_ok', default=False,
-                      help='Allow changelog to be manually filled in '
-                           'when missing')
-    parser.add_option('-e', action='store_true',
-                      dest='ffe', default=False,
-                      help='Use this after FeatureFreeze for non-bug fix '
-                           'syncs, changes default subscription to the '
-                           'appropriate release team.')
-    parser.add_option('--no-conf', action='store_true',
-                      dest='no_conf', default=False,
-                      help="Don't read config files or environment variables")
+    parser.add_option(
+        "-d",
+        type="string",
+        dest="dist",
+        default="unstable",
+        help="Debian distribution to sync from.",
+    )
+    parser.add_option(
+        "-k",
+        type="string",
+        dest="keyid",
+        default=None,
+        help="GnuPG key ID to use for signing report "
+        "(only used when emailing the sync request).",
+    )
+    parser.add_option(
+        "-n",
+        action="store_true",
+        dest="newpkg",
+        default=False,
+        help="Whether package to sync is a new package in Ubuntu.",
+    )
+    parser.add_option(
+        "--email",
+        action="store_true",
+        default=False,
+        help="Use a PGP-signed email for filing the sync request, rather than the LP API.",
+    )
+    parser.add_option(
+        "--lp",
+        dest="deprecated_lp_flag",
+        action="store_true",
+        default=False,
+        help=optparse.SUPPRESS_HELP,
+    )
+    parser.add_option(
+        "-l",
+        "--lpinstance",
+        metavar="INSTANCE",
+        dest="lpinstance",
+        default=None,
+        help="Launchpad instance to connect to (default: production).",
+    )
+    parser.add_option(
+        "-s", action="store_true", dest="sponsorship", default=False, help="Force sponsorship"
+    )
+    parser.add_option(
+        "-C",
+        action="store_true",
+        dest="missing_changelog_ok",
+        default=False,
+        help="Allow changelog to be manually filled in when missing",
+    )
+    parser.add_option(
+        "-e",
+        action="store_true",
+        dest="ffe",
+        default=False,
+        help="Use this after FeatureFreeze for non-bug fix "
+        "syncs, changes default subscription to the "
+        "appropriate release team.",
+    )
+    parser.add_option(
+        "--no-conf",
+        action="store_true",
+        dest="no_conf",
+        default=False,
+        help="Don't read config files or environment variables",
+    )
 
     (options, args) = parser.parse_args()
 
@@ -104,74 +137,78 @@ def main():
     if options.email:
         options.lpapi = False
     else:
-        options.lpapi = config.get_value('USE_LPAPI', default=True,
-                                         boolean=True)
+        options.lpapi = config.get_value("USE_LPAPI", default=True, boolean=True)
     if options.lpinstance is None:
-        options.lpinstance = config.get_value('LPINSTANCE')
+        options.lpinstance = config.get_value("LPINSTANCE")
 
     if options.keyid is None:
-        options.keyid = config.get_value('KEYID')
+        options.keyid = config.get_value("KEYID")
 
     if not options.lpapi:
-        if options.lpinstance == 'production':
-            bug_mail_domain = 'bugs.launchpad.net'
-        elif options.lpinstance == 'staging':
-            bug_mail_domain = 'bugs.staging.launchpad.net'
+        if options.lpinstance == "production":
+            bug_mail_domain = "bugs.launchpad.net"
+        elif options.lpinstance == "staging":
+            bug_mail_domain = "bugs.staging.launchpad.net"
         else:
-            Logger.error('Error: Unknown launchpad instance: %s'
-                         % options.lpinstance)
+            Logger.error("Error: Unknown launchpad instance: %s" % options.lpinstance)
             sys.exit(1)
 
-    mailserver_host = config.get_value('SMTP_SERVER',
-                                       default=None,
-                                       compat_keys=['UBUSMTP', 'DEBSMTP'])
+    mailserver_host = config.get_value(
+        "SMTP_SERVER", default=None, compat_keys=["UBUSMTP", "DEBSMTP"]
+    )
     if not options.lpapi and not mailserver_host:
         try:
             import DNS
+
             DNS.DiscoverNameServers()
             mxlist = DNS.mxlookup(bug_mail_domain)
             firstmx = mxlist[0]
             mailserver_host = firstmx[1]
         except ImportError:
-            Logger.error('Please install python-dns to support '
-                         'Launchpad mail server lookup.')
+            Logger.error("Please install python-dns to support Launchpad mail server lookup.")
             sys.exit(1)
 
-    mailserver_port = config.get_value('SMTP_PORT', default=25,
-                                       compat_keys=['UBUSMTP_PORT',
-                                                    'DEBSMTP_PORT'])
-    mailserver_user = config.get_value('SMTP_USER',
-                                       compat_keys=['UBUSMTP_USER',
-                                                    'DEBSMTP_USER'])
-    mailserver_pass = config.get_value('SMTP_PASS',
-                                       compat_keys=['UBUSMTP_PASS',
-                                                    'DEBSMTP_PASS'])
+    mailserver_port = config.get_value(
+        "SMTP_PORT", default=25, compat_keys=["UBUSMTP_PORT", "DEBSMTP_PORT"]
+    )
+    mailserver_user = config.get_value("SMTP_USER", compat_keys=["UBUSMTP_USER", "DEBSMTP_USER"])
+    mailserver_pass = config.get_value("SMTP_PASS", compat_keys=["UBUSMTP_PASS", "DEBSMTP_PASS"])
 
     # import the needed requestsync module
     if options.lpapi:
-        from ubuntutools.requestsync.lp import (check_existing_reports,
-                                                get_debian_srcpkg,
-                                                get_ubuntu_srcpkg,
-                                                get_ubuntu_delta_changelog,
-                                                need_sponsorship, post_bug)
+        from ubuntutools.requestsync.lp import (
+            check_existing_reports,
+            get_debian_srcpkg,
+            get_ubuntu_srcpkg,
+            get_ubuntu_delta_changelog,
+            need_sponsorship,
+            post_bug,
+        )
         from ubuntutools.lp.lpapicache import Distribution, Launchpad
+
         # See if we have LP credentials and exit if we don't -
         # cannot continue in this case
 
         try:
             # devel for changelogUrl()
-            Launchpad.login(service=options.lpinstance, api_version='devel')
+            Launchpad.login(service=options.lpinstance, api_version="devel")
         except IOError:
             sys.exit(1)
     else:
-        from ubuntutools.requestsync.mail import (check_existing_reports,
-                                                  get_debian_srcpkg,
-                                                  get_ubuntu_srcpkg,
-                                                  get_ubuntu_delta_changelog,
-                                                  mail_bug, need_sponsorship)
-        if not any(x in os.environ for x in ('UBUMAIL', 'DEBEMAIL', 'EMAIL')):
-            Logger.error('The environment variable UBUMAIL, DEBEMAIL or EMAIL needs '
-                         'to be set to let this script mail the sync request.')
+        from ubuntutools.requestsync.mail import (
+            check_existing_reports,
+            get_debian_srcpkg,
+            get_ubuntu_srcpkg,
+            get_ubuntu_delta_changelog,
+            mail_bug,
+            need_sponsorship,
+        )
+
+        if not any(x in os.environ for x in ("UBUMAIL", "DEBEMAIL", "EMAIL")):
+            Logger.error(
+                "The environment variable UBUMAIL, DEBEMAIL or EMAIL needs "
+                "to be set to let this script mail the sync request."
+            )
             sys.exit(1)
 
     newsource = options.newpkg
@@ -185,30 +222,30 @@ def main():
 
     if len(args) == 1:
         if lpapi:
-            release = Distribution('ubuntu').getDevelopmentSeries().name
+            release = Distribution("ubuntu").getDevelopmentSeries().name
         else:
             ubu_info = UbuntuDistroInfo()
             release = ubu_info.devel()
-        Logger.warning('Target release missing - assuming %s' % release)
+        Logger.warning("Target release missing - assuming %s" % release)
     elif len(args) == 2:
         release = args[1]
     elif len(args) == 3:
         release = args[1]
         force_base_version = Version(args[2])
     else:
-        Logger.error('Too many arguments.')
+        Logger.error("Too many arguments.")
         parser.print_help()
         sys.exit(1)
 
     # Get the current Ubuntu source package
     try:
-        ubuntu_srcpkg = get_ubuntu_srcpkg(srcpkg, release, 'Proposed')
+        ubuntu_srcpkg = get_ubuntu_srcpkg(srcpkg, release, "Proposed")
         ubuntu_version = Version(ubuntu_srcpkg.getVersion())
         ubuntu_component = ubuntu_srcpkg.getComponent()
         newsource = False  # override the -n flag
     except udtexceptions.PackageNotFoundException:
         ubuntu_srcpkg = None
-        ubuntu_version = Version('~')
+        ubuntu_version = Version("~")
         ubuntu_component = None  # Set after getting the Debian info
         if not newsource:
             Logger.info("'%s' doesn't exist in 'Ubuntu %s'." % (srcpkg, release))
@@ -232,15 +269,16 @@ def main():
         sys.exit(1)
 
     if ubuntu_component is None:
-        if debian_component == 'main':
-            ubuntu_component = 'universe'
+        if debian_component == "main":
+            ubuntu_component = "universe"
         else:
-            ubuntu_component = 'multiverse'
+            ubuntu_component = "multiverse"
 
     # Stop if Ubuntu has already the version from Debian or a newer version
     if (ubuntu_version >= debian_version) and options.lpapi:
         # try rmadison
         import ubuntutools.requestsync.mail
+
         try:
             debian_srcpkg = ubuntutools.requestsync.mail.get_debian_srcpkg(srcpkg, distro)
             debian_version = Version(debian_srcpkg.getVersion())
@@ -250,13 +288,16 @@ def main():
             sys.exit(1)
 
     if ubuntu_version == debian_version:
-        Logger.error('The versions in Debian and Ubuntu are the '
-                     'same already (%s). Aborting.' % ubuntu_version)
+        Logger.error(
+            "The versions in Debian and Ubuntu are the "
+            "same already (%s). Aborting." % ubuntu_version
+        )
         sys.exit(1)
     if ubuntu_version > debian_version:
-        Logger.error('The version in Ubuntu (%s) is newer than '
-                     'the version in Debian (%s). Aborting.'
-                     % (ubuntu_version, debian_version))
+        Logger.error(
+            "The version in Ubuntu (%s) is newer than "
+            "the version in Debian (%s). Aborting." % (ubuntu_version, debian_version)
+        )
         sys.exit(1)
 
     # -s flag not specified - check if we do need sponsorship
@@ -264,40 +305,47 @@ def main():
         sponsorship = need_sponsorship(srcpkg, ubuntu_component, release)
 
     if not sponsorship and not ffe:
-        Logger.error('Consider using syncpackage(1) for syncs that '
-                     'do not require feature freeze exceptions.')
+        Logger.error(
+            "Consider using syncpackage(1) for syncs that "
+            "do not require feature freeze exceptions."
+        )
 
     # Check for existing package reports
     if not newsource:
         check_existing_reports(srcpkg)
 
     # Generate bug report
-    pkg_to_sync = ('%s %s (%s) from Debian %s (%s)'
-                   % (srcpkg, debian_version, ubuntu_component,
-                      distro, debian_component))
+    pkg_to_sync = "%s %s (%s) from Debian %s (%s)" % (
+        srcpkg,
+        debian_version,
+        ubuntu_component,
+        distro,
+        debian_component,
+    )
     title = "Sync %s" % pkg_to_sync
     if ffe:
         title = "FFe: " + title
     report = "Please sync %s\n\n" % pkg_to_sync
 
-    if 'ubuntu' in str(ubuntu_version):
+    if "ubuntu" in str(ubuntu_version):
         need_interaction = True
 
-        Logger.info('Changes have been made to the package in Ubuntu.')
-        Logger.info('Please edit the report and give an explanation.')
-        Logger.info('Not saving the report file will abort the request.')
-        report += ('Explanation of the Ubuntu delta and why it can be '
-                   'dropped:\n%s\n>>> ENTER_EXPLANATION_HERE <<<\n\n'
-                   % get_ubuntu_delta_changelog(ubuntu_srcpkg))
+        Logger.info("Changes have been made to the package in Ubuntu.")
+        Logger.info("Please edit the report and give an explanation.")
+        Logger.info("Not saving the report file will abort the request.")
+        report += (
+            "Explanation of the Ubuntu delta and why it can be "
+            "dropped:\n%s\n>>> ENTER_EXPLANATION_HERE <<<\n\n"
+            % get_ubuntu_delta_changelog(ubuntu_srcpkg)
+        )
 
     if ffe:
         need_interaction = True
 
-        Logger.info('To approve FeatureFreeze exception, you need to state')
-        Logger.info('the reason why you feel it is necessary.')
-        Logger.info('Not saving the report file will abort the request.')
-        report += ('Explanation of FeatureFreeze exception:\n'
-                   '>>> ENTER_EXPLANATION_HERE <<<\n\n')
+        Logger.info("To approve FeatureFreeze exception, you need to state")
+        Logger.info("the reason why you feel it is necessary.")
+        Logger.info("Not saving the report file will abort the request.")
+        report += "Explanation of FeatureFreeze exception:\n>>> ENTER_EXPLANATION_HERE <<<\n\n"
 
     if need_interaction:
         confirmation_prompt()
@@ -305,17 +353,18 @@ def main():
     base_version = force_base_version or ubuntu_version
 
     if newsource:
-        report += 'All changelog entries:\n\n'
+        report += "All changelog entries:\n\n"
     else:
-        report += ('Changelog entries since current %s version %s:\n\n'
-                   % (release, ubuntu_version))
+        report += "Changelog entries since current %s version %s:\n\n" % (release, ubuntu_version)
     changelog = debian_srcpkg.getChangelog(since_version=base_version)
     if not changelog:
         if not options.missing_changelog_ok:
-            Logger.error("Did not retrieve any changelog entries. "
-                         "Do you need to specify '-C'? "
-                         "Was the package recently uploaded? (check "
-                         "http://packages.debian.org/changelogs/)")
+            Logger.error(
+                "Did not retrieve any changelog entries. "
+                "Do you need to specify '-C'? "
+                "Was the package recently uploaded? (check "
+                "http://packages.debian.org/changelogs/)"
+            )
             sys.exit(1)
         else:
             need_interaction = True
@@ -326,36 +375,49 @@ def main():
     editor.edit(optional=not need_interaction)
     title, report = editor.get_report()
 
-    if 'XXX FIXME' in report:
-        Logger.error("changelog boilerplate found in report, "
-                     "please manually add changelog when using '-C'")
+    if "XXX FIXME" in report:
+        Logger.error(
+            "changelog boilerplate found in report, "
+            "please manually add changelog when using '-C'"
+        )
         sys.exit(1)
 
     # bug status and bug subscriber
-    status = 'confirmed'
-    subscribe = 'ubuntu-archive'
+    status = "confirmed"
+    subscribe = "ubuntu-archive"
     if sponsorship:
-        status = 'new'
-        subscribe = 'ubuntu-sponsors'
+        status = "new"
+        subscribe = "ubuntu-sponsors"
     if ffe:
-        status = 'new'
-        subscribe = 'ubuntu-release'
+        status = "new"
+        subscribe = "ubuntu-release"
 
     srcpkg = not newsource and srcpkg or None
     if lpapi:
         # Map status to the values expected by LP API
-        mapping = {'new': 'New', 'confirmed': 'Confirmed'}
+        mapping = {"new": "New", "confirmed": "Confirmed"}
         # Post sync request using LP API
         post_bug(srcpkg, subscribe, mapping[status], title, report)
     else:
         email_from = ubu_email(export=False)[1]
         # Mail sync request
-        mail_bug(srcpkg, subscribe, status, title, report, bug_mail_domain,
-                 options.keyid, email_from, mailserver_host, mailserver_port,
-                 mailserver_user, mailserver_pass)
+        mail_bug(
+            srcpkg,
+            subscribe,
+            status,
+            title,
+            report,
+            bug_mail_domain,
+            options.keyid,
+            email_from,
+            mailserver_host,
+            mailserver_port,
+            mailserver_user,
+            mailserver_pass,
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:

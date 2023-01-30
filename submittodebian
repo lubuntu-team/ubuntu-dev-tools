@@ -40,13 +40,14 @@ from ubuntutools.question import YesNoQuestion, EditFile
 from ubuntutools.update_maintainer import update_maintainer, restore_maintainer
 
 from ubuntutools import getLogger
+
 Logger = getLogger()
 
 
 def get_most_recent_debian_version(changelog):
     for block in changelog:
         version = block.version.full_version
-        if not re.search('(ubuntu|build)', version):
+        if not re.search("(ubuntu|build)", version):
             return version
 
 
@@ -65,19 +66,20 @@ In Ubuntu, the attached patch was applied to achieve the following:
 %s
 
 Thanks for considering the patch.
-""" % ("\n".join([a for a in entry.changes()]))
+""" % (
+        "\n".join([a for a in entry.changes()])
+    )
     return msg
 
 
 def build_source_package():
-    if os.path.isdir('.bzr'):
-        cmd = ['bzr', 'bd', '--builder=dpkg-buildpackage', '-S',
-               '--', '-uc', '-us', '-nc']
+    if os.path.isdir(".bzr"):
+        cmd = ["bzr", "bd", "--builder=dpkg-buildpackage", "-S", "--", "-uc", "-us", "-nc"]
     else:
-        cmd = ['dpkg-buildpackage', '-S', '-uc', '-us', '-nc']
+        cmd = ["dpkg-buildpackage", "-S", "-uc", "-us", "-nc"]
     env = os.environ.copy()
     # Unset DEBEMAIL in case there's an @ubuntu.com e-mail address
-    env.pop('DEBEMAIL', None)
+    env.pop("DEBEMAIL", None)
     check_call(cmd, env=env)
 
 
@@ -88,30 +90,34 @@ def gen_debdiff(tmpdir, changelog):
     newver = next(changelog_it).version
     oldver = next(changelog_it).version
 
-    debdiff = os.path.join(tmpdir, '%s_%s.debdiff' % (pkg, newver))
+    debdiff = os.path.join(tmpdir, "%s_%s.debdiff" % (pkg, newver))
 
-    diff_cmd = ['bzr', 'diff', '-r', 'tag:' + str(oldver)]
+    diff_cmd = ["bzr", "diff", "-r", "tag:" + str(oldver)]
     if call(diff_cmd, stdout=DEVNULL, stderr=DEVNULL) == 1:
         Logger.info("Extracting bzr diff between %s and %s" % (oldver, newver))
     else:
         if oldver.epoch is not None:
-            oldver = str(oldver)[str(oldver).index(":") + 1:]
+            oldver = str(oldver)[str(oldver).index(":") + 1 :]
         if newver.epoch is not None:
-            newver = str(newver)[str(newver).index(":") + 1:]
+            newver = str(newver)[str(newver).index(":") + 1 :]
 
-        olddsc = '../%s_%s.dsc' % (pkg, oldver)
-        newdsc = '../%s_%s.dsc' % (pkg, newver)
+        olddsc = "../%s_%s.dsc" % (pkg, oldver)
+        newdsc = "../%s_%s.dsc" % (pkg, newver)
 
         check_file(olddsc)
         check_file(newdsc)
 
         Logger.info("Generating debdiff between %s and %s" % (oldver, newver))
-        diff_cmd = ['debdiff', olddsc, newdsc]
+        diff_cmd = ["debdiff", olddsc, newdsc]
 
-    with Popen(diff_cmd, stdout=PIPE, encoding='utf-8') as diff:
-        with open(debdiff, 'w', encoding='utf-8') as debdiff_f:
-            run(['filterdiff', '-x', '*changelog*'],
-                stdin=diff.stdout, stdout=debdiff_f, encoding='utf-8')
+    with Popen(diff_cmd, stdout=PIPE, encoding="utf-8") as diff:
+        with open(debdiff, "w", encoding="utf-8") as debdiff_f:
+            run(
+                ["filterdiff", "-x", "*changelog*"],
+                stdin=diff.stdout,
+                stdout=debdiff_f,
+                encoding="utf-8",
+            )
 
     return debdiff
 
@@ -131,57 +137,65 @@ def submit_bugreport(body, debdiff, deb_version, changelog):
         devel = UbuntuDistroInfo().devel()
     except DistroDataOutdated as e:
         Logger.info(str(e))
-        devel = ''
+        devel = ""
 
-    if os.path.dirname(sys.argv[0]).startswith('/usr/bin'):
-        editor_path = '/usr/share/ubuntu-dev-tools'
+    if os.path.dirname(sys.argv[0]).startswith("/usr/bin"):
+        editor_path = "/usr/share/ubuntu-dev-tools"
     else:
         editor_path = os.path.dirname(sys.argv[0])
     env = dict(os.environ.items())
-    if 'EDITOR' in env:
-        env['UDT_EDIT_WRAPPER_EDITOR'] = env['EDITOR']
-    if 'VISUAL' in env:
-        env['UDT_EDIT_WRAPPER_VISUAL'] = env['VISUAL']
-    env['EDITOR'] = os.path.join(editor_path, 'enforced-editing-wrapper')
-    env['VISUAL'] = os.path.join(editor_path, 'enforced-editing-wrapper')
-    env['UDT_EDIT_WRAPPER_TEMPLATE_RE'] = (
-            '.*REPLACE THIS WITH ACTUAL INFORMATION.*')
-    env['UDT_EDIT_WRAPPER_FILE_DESCRIPTION'] = 'bug report'
+    if "EDITOR" in env:
+        env["UDT_EDIT_WRAPPER_EDITOR"] = env["EDITOR"]
+    if "VISUAL" in env:
+        env["UDT_EDIT_WRAPPER_VISUAL"] = env["VISUAL"]
+    env["EDITOR"] = os.path.join(editor_path, "enforced-editing-wrapper")
+    env["VISUAL"] = os.path.join(editor_path, "enforced-editing-wrapper")
+    env["UDT_EDIT_WRAPPER_TEMPLATE_RE"] = ".*REPLACE THIS WITH ACTUAL INFORMATION.*"
+    env["UDT_EDIT_WRAPPER_FILE_DESCRIPTION"] = "bug report"
 
     # In external mua mode, attachments are lost (Reportbug bug: #679907)
     internal_mua = True
-    for cfgfile in ('/etc/reportbug.conf', '~/.reportbugrc'):
+    for cfgfile in ("/etc/reportbug.conf", "~/.reportbugrc"):
         cfgfile = os.path.expanduser(cfgfile)
         if not os.path.exists(cfgfile):
             continue
-        with open(cfgfile, 'r') as f:
+        with open(cfgfile, "r") as f:
             for line in f:
                 line = line.strip()
-                if line in ('gnus', 'mutt', 'nmh') or line.startswith('mua '):
+                if line in ("gnus", "mutt", "nmh") or line.startswith("mua "):
                     internal_mua = False
                     break
 
-    cmd = ('reportbug',
-           '--no-check-available',
-           '--no-check-installed',
-           '--pseudo-header', 'User: ubuntu-devel@lists.ubuntu.com',
-           '--pseudo-header', 'Usertags: origin-ubuntu %s ubuntu-patch'
-                              % devel,
-           '--tag', 'patch',
-           '--bts', 'debian',
-           '--include', body,
-           '--attach' if internal_mua else '--include', debdiff,
-           '--package-version', deb_version,
-           changelog.package)
+    cmd = (
+        "reportbug",
+        "--no-check-available",
+        "--no-check-installed",
+        "--pseudo-header",
+        "User: ubuntu-devel@lists.ubuntu.com",
+        "--pseudo-header",
+        "Usertags: origin-ubuntu %s ubuntu-patch" % devel,
+        "--tag",
+        "patch",
+        "--bts",
+        "debian",
+        "--include",
+        body,
+        "--attach" if internal_mua else "--include",
+        debdiff,
+        "--package-version",
+        deb_version,
+        changelog.package,
+    )
     check_call(cmd, env=env)
 
 
 def check_reportbug_config():
-    fn = os.path.expanduser('~/.reportbugrc')
+    fn = os.path.expanduser("~/.reportbugrc")
     if os.path.exists(fn):
         return
     email = ubu_email()[1]
-    reportbugrc = """# Reportbug configuration generated by submittodebian(1)
+    reportbugrc = (
+        """# Reportbug configuration generated by submittodebian(1)
 # See reportbug.conf(5) for the configuration file format.
 
 # Use Debian's reportbug SMTP Server:
@@ -195,12 +209,15 @@ no-cc
 #smtphost smtp.googlemail.com:587
 #smtpuser "<your address>@gmail.com"
 #smtptls
-""" % email
+"""
+        % email
+    )
 
-    with open(fn, 'w') as f:
+    with open(fn, "w") as f:
         f.write(reportbugrc)
 
-    Logger.info("""\
+    Logger.info(
+        """\
 You have not configured reportbug. Assuming this is the first time you have
 used it. Writing a ~/.reportbugrc that will use Debian's mail server, and CC
 the bug to you at <%s>
@@ -211,26 +228,32 @@ the bug to you at <%s>
 
 If this is not correct, please exit now and edit ~/.reportbugrc or run
 reportbug --configure for its configuration wizard.
-""" % (email, reportbugrc.strip()))
+"""
+        % (email, reportbugrc.strip())
+    )
 
     if YesNoQuestion().ask("Continue submitting this bug", "yes") == "no":
         sys.exit(1)
 
 
 def main():
-    description = 'Submit the Ubuntu changes in a package to Debian. ' + \
-                  'Run inside an unpacked Ubuntu source package.'
+    description = (
+        "Submit the Ubuntu changes in a package to Debian. "
+        + "Run inside an unpacked Ubuntu source package."
+    )
     parser = optparse.OptionParser(description=description)
     parser.parse_args()
 
-    if not os.path.exists('/usr/bin/reportbug'):
-        Logger.error("This utility requires the «reportbug» package, which isn't "
-                     "currently installed.")
+    if not os.path.exists("/usr/bin/reportbug"):
+        Logger.error(
+            "This utility requires the «reportbug» package, which isn't currently installed."
+        )
         sys.exit(1)
 
     check_reportbug_config()
-    changelog_file = (check_file('debian/changelog', critical=False) or
-                      check_file('../debian/changelog'))
+    changelog_file = check_file("debian/changelog", critical=False) or check_file(
+        "../debian/changelog"
+    )
     with open(changelog_file) as f:
         changelog = Changelog(f.read())
 
@@ -238,13 +261,13 @@ def main():
     bug_body = get_bug_body(changelog)
 
     tmpdir = mkdtemp()
-    body = os.path.join(tmpdir, 'bug_body')
-    with open(body, 'wb') as f:
-        f.write(bug_body.encode('utf-8'))
+    body = os.path.join(tmpdir, "bug_body")
+    with open(body, "wb") as f:
+        f.write(bug_body.encode("utf-8"))
 
-    restore_maintainer('debian')
+    restore_maintainer("debian")
     build_source_package()
-    update_maintainer('debian')
+    update_maintainer("debian")
 
     debdiff = gen_debdiff(tmpdir, changelog)
 
@@ -252,7 +275,7 @@ def main():
     # reverted in the most recent build
     build_source_package()
 
-    EditFile(debdiff, 'debdiff').edit(optional=True)
+    EditFile(debdiff, "debdiff").edit(optional=True)
 
     submit_bugreport(body, debdiff, deb_version, changelog)
     os.unlink(body)
@@ -260,5 +283,5 @@ def main():
     shutil.rmtree(tmpdir)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

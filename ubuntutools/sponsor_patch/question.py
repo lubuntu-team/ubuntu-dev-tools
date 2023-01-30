@@ -37,8 +37,7 @@ def ask_for_ignoring_or_fixing():
 def ask_for_manual_fixing():
     """Ask the user to resolve an issue manually."""
 
-    answer = YesNoQuestion().ask("Do you want to resolve this issue manually",
-                                 "yes")
+    answer = YesNoQuestion().ask("Do you want to resolve this issue manually", "yes")
     if answer == "no":
         user_abort()
 

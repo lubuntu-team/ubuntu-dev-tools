@@ -19,11 +19,11 @@ import sys
 
 from distro_info import DistroDataOutdated
 
-from ubuntutools.misc import (system_distribution, vendor_to_distroinfo,
-                              codename_to_distribution)
+from ubuntutools.misc import system_distribution, vendor_to_distroinfo, codename_to_distribution
 from ubuntutools.rdepends import query_rdepends, RDependsException
 
 from ubuntutools import getLogger
+
 Logger = getLogger()
 
 DEFAULT_MAX_DEPTH = 10  # We want avoid any infinite loop...
@@ -35,77 +35,107 @@ def main():
         default_release = system_distro_info.devel()
     except DistroDataOutdated as e:
         Logger.warning(e)
-        default_release = 'unstable'
+        default_release = "unstable"
 
-    description = ("List reverse-dependencies of package. "
-                   "If the package name is prefixed with src: then the "
-                   "reverse-dependencies of all the binary packages that "
-                   "the specified source package builds will be listed.")
+    description = (
+        "List reverse-dependencies of package. "
+        "If the package name is prefixed with src: then the "
+        "reverse-dependencies of all the binary packages that "
+        "the specified source package builds will be listed."
+    )
 
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('-r', '--release', default=default_release,
-                        help='Query dependencies in RELEASE. '
-                        'Default: %s' % default_release)
-    parser.add_argument('-R', '--without-recommends', action='store_false',
-                        dest='recommends',
-                        help='Only consider Depends relationships, '
-                        'not Recommends')
-    parser.add_argument('-s', '--with-suggests', action='store_true',
-                        help='Also consider Suggests relationships')
-    parser.add_argument('-b', '--build-depends', action='store_true',
-                        help='Query build dependencies (synonym for --arch=source)')
-    parser.add_argument('-a', '--arch', default='any',
-                        help='Query dependencies in ARCH. Default: any')
-    parser.add_argument('-c', '--component', action='append',
-                        help='Only consider reverse-dependencies in COMPONENT. '
-                        'Can be specified multiple times. Default: all')
-    parser.add_argument('-l', '--list', action='store_true',
-                        help='Display a simple, machine-readable list')
-    parser.add_argument('-u', '--service-url', metavar='URL',
-                        dest='server', default=None,
-                        help='Reverse Dependencies webservice URL. '
-                        'Default: UbuntuWire')
-    parser.add_argument('-x', '--recursive', action='store_true',
-                        help='Consider to find reverse dependencies recursively.')
-    parser.add_argument('-d', '--recursive-depth', type=int,
-                        default=DEFAULT_MAX_DEPTH,
-                        help='If recusive, you can specify the depth.')
-    parser.add_argument('package')
+    parser.add_argument(
+        "-r",
+        "--release",
+        default=default_release,
+        help="Query dependencies in RELEASE. Default: %s" % default_release,
+    )
+    parser.add_argument(
+        "-R",
+        "--without-recommends",
+        action="store_false",
+        dest="recommends",
+        help="Only consider Depends relationships, not Recommends",
+    )
+    parser.add_argument(
+        "-s", "--with-suggests", action="store_true", help="Also consider Suggests relationships"
+    )
+    parser.add_argument(
+        "-b",
+        "--build-depends",
+        action="store_true",
+        help="Query build dependencies (synonym for --arch=source)",
+    )
+    parser.add_argument(
+        "-a", "--arch", default="any", help="Query dependencies in ARCH. Default: any"
+    )
+    parser.add_argument(
+        "-c",
+        "--component",
+        action="append",
+        help="Only consider reverse-dependencies in COMPONENT. "
+        "Can be specified multiple times. Default: all",
+    )
+    parser.add_argument(
+        "-l", "--list", action="store_true", help="Display a simple, machine-readable list"
+    )
+    parser.add_argument(
+        "-u",
+        "--service-url",
+        metavar="URL",
+        dest="server",
+        default=None,
+        help="Reverse Dependencies webservice URL. Default: UbuntuWire",
+    )
+    parser.add_argument(
+        "-x",
+        "--recursive",
+        action="store_true",
+        help="Consider to find reverse dependencies recursively.",
+    )
+    parser.add_argument(
+        "-d",
+        "--recursive-depth",
+        type=int,
+        default=DEFAULT_MAX_DEPTH,
+        help="If recusive, you can specify the depth.",
+    )
+    parser.add_argument("package")
 
     options = parser.parse_args()
 
     opts = {}
     if options.server is not None:
-        opts['server'] = options.server
+        opts["server"] = options.server
 
     # Convert unstable/testing aliases to codenames:
     distribution = codename_to_distribution(options.release)
     if not distribution:
-        parser.error('Unknown release codename %s' % options.release)
+        parser.error("Unknown release codename %s" % options.release)
     distro_info = vendor_to_distroinfo(distribution)()
     try:
-        options.release = distro_info.codename(options.release,
-                                               default=options.release)
+        options.release = distro_info.codename(options.release, default=options.release)
     except DistroDataOutdated:
         # We already logged a warning
         pass
 
     if options.build_depends:
-        options.arch = 'source'
+        options.arch = "source"
 
-    if options.arch == 'source':
+    if options.arch == "source":
         fields = [
-            'Reverse-Build-Depends',
-            'Reverse-Build-Depends-Indep',
-            'Reverse-Build-Depends-Arch',
-            'Reverse-Testsuite-Triggers',
+            "Reverse-Build-Depends",
+            "Reverse-Build-Depends-Indep",
+            "Reverse-Build-Depends-Arch",
+            "Reverse-Testsuite-Triggers",
         ]
     else:
-        fields = ['Reverse-Depends']
+        fields = ["Reverse-Depends"]
         if options.recommends:
-            fields.append('Reverse-Recommends')
+            fields.append("Reverse-Recommends")
         if options.with_suggests:
-            fields.append('Reverse-Suggests')
+            fields.append("Reverse-Suggests")
 
     def build_results(package, result, fields, component, recursive):
         try:
@@ -119,9 +149,9 @@ def main():
         if fields:
             data = {k: v for k, v in data.items() if k in fields}
         if component:
-            data = {k: [rdep for rdep in v
-                        if rdep['Component'] in component]
-                    for k, v in data.items()}
+            data = {
+                k: [rdep for rdep in v if rdep["Component"] in component] for k, v in data.items()
+            }
             data = {k: v for k, v in data.items() if v}
 
         result[package] = data
@@ -129,13 +159,16 @@ def main():
         if recursive > 0:
             for rdeps in result[package].values():
                 for rdep in rdeps:
-                    build_results(
-                        rdep['Package'], result, fields, component, recursive - 1)
+                    build_results(rdep["Package"], result, fields, component, recursive - 1)
 
     result = {}
     build_results(
-        options.package, result, fields, options.component,
-        options.recursive and options.recursive_depth or 0)
+        options.package,
+        result,
+        fields,
+        options.component,
+        options.recursive and options.recursive_depth or 0,
+    )
 
     if options.list:
         display_consise(result)
@@ -150,50 +183,55 @@ def display_verbose(package, values):
 
     def log_field(field):
         Logger.info(field)
-        Logger.info('=' * len(field))
+        Logger.info("=" * len(field))
 
     def log_package(values, package, arch, dependency, offset=0):
-        line = '  ' * offset + '* %s' % package
+        line = "  " * offset + "* %s" % package
         if all_archs and set(arch) != all_archs:
-            line += ' [%s]' % ' '.join(sorted(arch))
+            line += " [%s]" % " ".join(sorted(arch))
         if dependency:
             if len(line) < 30:
-                line += ' ' * (30 - len(line))
-                line += '  (for %s)' % dependency
+                line += " " * (30 - len(line))
+                line += "  (for %s)" % dependency
         Logger.info(line)
         data = values.get(package)
         if data:
             offset = offset + 1
             for rdeps in data.values():
                 for rdep in rdeps:
-                    log_package(values,
-                                rdep['Package'],
-                                rdep.get('Architectures', all_archs),
-                                rdep.get('Dependency'),
-                                offset)
+                    log_package(
+                        values,
+                        rdep["Package"],
+                        rdep.get("Architectures", all_archs),
+                        rdep.get("Dependency"),
+                        offset,
+                    )
 
     all_archs = set()
     # This isn't accurate, but we make up for it by displaying what we found
     for data in values.values():
         for rdeps in data.values():
             for rdep in rdeps:
-                if 'Architectures' in rdep:
-                    all_archs.update(rdep['Architectures'])
+                if "Architectures" in rdep:
+                    all_archs.update(rdep["Architectures"])
 
     for field, rdeps in values[package].items():
         Logger.info(field)
-        rdeps.sort(key=lambda x: x['Package'])
+        rdeps.sort(key=lambda x: x["Package"])
         for rdep in rdeps:
-            log_package(values,
-                        rdep['Package'],
-                        rdep.get('Architectures', all_archs),
-                        rdep.get('Dependency'))
+            log_package(
+                values,
+                rdep["Package"],
+                rdep.get("Architectures", all_archs),
+                rdep.get("Dependency"),
+            )
         Logger.info("")
 
     if all_archs:
-        Logger.info("Packages without architectures listed are "
-                    "reverse-dependencies in: %s"
-                    % ', '.join(sorted(list(all_archs))))
+        Logger.info(
+            "Packages without architectures listed are "
+            "reverse-dependencies in: %s" % ", ".join(sorted(list(all_archs)))
+        )
 
 
 def display_consise(values):
@@ -201,10 +239,10 @@ def display_consise(values):
     for data in values.values():
         for rdeps in data.values():
             for rdep in rdeps:
-                result.add(rdep['Package'])
+                result.add(rdep["Package"])
 
-    Logger.info('\n'.join(sorted(list(result))))
+    Logger.info("\n".join(sorted(list(result))))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

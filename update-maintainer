@@ -18,9 +18,11 @@ import optparse
 import os
 import sys
 
-from ubuntutools.update_maintainer import (update_maintainer,
-                                           restore_maintainer,
-                                           MaintainerUpdateException)
+from ubuntutools.update_maintainer import (
+    update_maintainer,
+    restore_maintainer,
+    MaintainerUpdateException,
+)
 
 
 def find_debian_dir(depth=6):
@@ -30,10 +32,11 @@ def find_debian_dir(depth=6):
     :rtype: str
     :returns: a path to an existing debian/ directory, or None
     """
-    for path in ['../'*n or './' for n in list(range(0, depth+1))]:
-        debian_path = '{}debian'.format(path)
-        if os.path.exists(os.path.join(debian_path, 'control')) \
-                and os.path.exists(os.path.join(debian_path, 'changelog')):
+    for path in ["../" * n or "./" for n in list(range(0, depth + 1))]:
+        debian_path = "{}debian".format(path)
+        if os.path.exists(os.path.join(debian_path, "control")) and os.path.exists(
+            os.path.join(debian_path, "changelog")
+        ):
             return debian_path
     return None
 
@@ -43,20 +46,37 @@ def main():
     usage = "%s [options]" % (script_name)
     epilog = "See %s(1) for more info." % (script_name)
     parser = optparse.OptionParser(usage=usage, epilog=epilog)
-    parser.add_option("-d", "--debian-directory", dest="debian_directory",
-                      help="location of the 'debian' directory (default: "
-                           "%default).", metavar="PATH",
-                      default=find_debian_dir() or './debian')
-    parser.add_option("-r", "--restore",
-                      help="Restore the original maintainer",
-                      action='store_true', default=False)
-    parser.add_option("-q", "--quiet", help="print no informational messages",
-                      dest="quiet", action="store_true", default=False)
+    parser.add_option(
+        "-d",
+        "--debian-directory",
+        dest="debian_directory",
+        help="location of the 'debian' directory (default: %default).",
+        metavar="PATH",
+        default=find_debian_dir() or "./debian",
+    )
+    parser.add_option(
+        "-r",
+        "--restore",
+        help="Restore the original maintainer",
+        action="store_true",
+        default=False,
+    )
+    parser.add_option(
+        "-q",
+        "--quiet",
+        help="print no informational messages",
+        dest="quiet",
+        action="store_true",
+        default=False,
+    )
     (options, args) = parser.parse_args()
 
     if len(args) != 0:
-        print("%s: Error: Unsupported additional parameters specified: %s"
-              % (script_name, ", ".join(args)), file=sys.stderr)
+        print(
+            "%s: Error: Unsupported additional parameters specified: %s"
+            % (script_name, ", ".join(args)),
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     if not options.restore:

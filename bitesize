@@ -30,6 +30,7 @@ from launchpadlib.errors import HTTPError
 from ubuntutools.config import UDTConfig
 
 from ubuntutools import getLogger
+
 Logger = getLogger()
 
 
@@ -46,21 +47,28 @@ def save_entry(entry):
 
 
 def tag_bug(bug):
-    bug.tags = bug.tags + ['bitesize']  # LP: #254901 workaround
+    bug.tags = bug.tags + ["bitesize"]  # LP: #254901 workaround
     save_entry(bug)
 
 
 def main():
     usage = "Usage: %prog <bug number>"
     opt_parser = OptionParser(usage)
-    opt_parser.add_option("-l", "--lpinstance", metavar="INSTANCE",
-                          help="Launchpad instance to connect to "
-                               "(default: production)",
-                          dest="lpinstance", default=None)
-    opt_parser.add_option("--no-conf",
-                          help="Don't read config files or "
-                               "environment variables.",
-                          dest="no_conf", default=False, action="store_true")
+    opt_parser.add_option(
+        "-l",
+        "--lpinstance",
+        metavar="INSTANCE",
+        help="Launchpad instance to connect to (default: production)",
+        dest="lpinstance",
+        default=None,
+    )
+    opt_parser.add_option(
+        "--no-conf",
+        help="Don't read config files or environment variables.",
+        dest="no_conf",
+        default=False,
+        action="store_true",
+    )
     (options, args) = opt_parser.parse_args()
     config = UDTConfig(options.no_conf)
     if options.lpinstance is None:
@@ -77,19 +85,22 @@ def main():
         bug = launchpad.bugs[args[0]]
     except HTTPError as error:
         if error.response.status == 401:
-            error_out("Don't have enough permissions to access bug %s. %s" %
-                      (args[0], error.content))
+            error_out(
+                "Don't have enough permissions to access bug %s. %s" % (args[0], error.content)
+            )
         else:
             raise
-    if 'bitesize' in bug.tags:
+    if "bitesize" in bug.tags:
         error_out("Bug is already marked as 'bitesize'.")
-    bug.newMessage(content="I'm marking this bug as 'bitesize' as it looks "
-                           "like an issue that is easy to fix and suitable "
-                           "for newcomers in Ubuntu development. If you need "
-                           "any help with fixing it, talk to me about it.")
+    bug.newMessage(
+        content="I'm marking this bug as 'bitesize' as it looks "
+        "like an issue that is easy to fix and suitable "
+        "for newcomers in Ubuntu development. If you need "
+        "any help with fixing it, talk to me about it."
+    )
     bug.subscribe(person=launchpad.me)
     tag_bug(launchpad.bugs[bug.id])  # fresh bug object, LP: #336866 workaround
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

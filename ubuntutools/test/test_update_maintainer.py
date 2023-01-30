@@ -17,7 +17,6 @@
 """Test suite for ubuntutools.update_maintainer"""
 
 import os
-# import sys
 import unittest
 
 from io import StringIO
@@ -200,24 +199,23 @@ class UpdateMaintainerTestCase(unittest.TestCase):
     """TestCase object for ubuntutools.update_maintainer"""
 
     _directory = "/"
-    _files = {
-        "changelog": None,
-        "control": None,
-        "control.in": None,
-        "rules": None,
-    }
+    _files = {"changelog": None, "control": None, "control.in": None, "rules": None}
 
     def _fake_isfile(self, filename):
         """Check only for existing fake files."""
         directory, base = os.path.split(filename)
-        return (directory == self._directory and base in self._files and
-                self._files[base] is not None)
+        return (
+            directory == self._directory and base in self._files and self._files[base] is not None
+        )
 
-    def _fake_open(self, filename, mode='r'):
+    def _fake_open(self, filename, mode="r"):
         """Provide StringIO objects instead of real files."""
         directory, base = os.path.split(filename)
-        if (directory != self._directory or base not in self._files or
-                (mode == "r" and self._files[base] is None)):
+        if (
+            directory != self._directory
+            or base not in self._files
+            or (mode == "r" and self._files[base] is None)
+        ):
             raise IOError("No such file or directory: '%s'" % filename)
         if mode == "w":
             self._files[base] = StringIO()
@@ -228,11 +226,11 @@ class UpdateMaintainerTestCase(unittest.TestCase):
     def setUp(self):
         m = mock.mock_open()
         m.side_effect = self._fake_open
-        patcher = mock.patch('builtins.open', m)
+        patcher = mock.patch("builtins.open", m)
         self.addCleanup(patcher.stop)
         patcher.start()
         m = mock.MagicMock(side_effect=self._fake_isfile)
-        patcher = mock.patch('os.path.isfile', m)
+        patcher = mock.patch("os.path.isfile", m)
         self.addCleanup(patcher.stop)
         patcher.start()
         self._files["rules"] = StringIO(_SIMPLE_RULES)
@@ -260,8 +258,8 @@ class UpdateMaintainerTestCase(unittest.TestCase):
     def test_original_ubuntu_maintainer(self):
         """Test: Original maintainer is Ubuntu developer.
 
-           The Maintainer field needs to be update even if
-           XSBC-Original-Maintainer has an @ubuntu.com address."""
+        The Maintainer field needs to be update even if
+        XSBC-Original-Maintainer has an @ubuntu.com address."""
         self._files["changelog"] = StringIO(_LUCID_CHANGELOG)
         self._files["control"] = StringIO(_AXIS2C_CONTROL)
         update_maintainer(self._directory)
@@ -288,12 +286,11 @@ class UpdateMaintainerTestCase(unittest.TestCase):
 
     def test_comments_in_control(self):
         """Test: Update Maintainer field in a control file containing
-           comments."""
+        comments."""
         self._files["changelog"] = StringIO(_LUCID_CHANGELOG)
         self._files["control"] = StringIO(_SEAHORSE_PLUGINS_CONTROL)
         update_maintainer(self._directory)
-        self.assertEqual(self._files["control"].getvalue(),
-                         _SEAHORSE_PLUGINS_UPDATED)
+        self.assertEqual(self._files["control"].getvalue(), _SEAHORSE_PLUGINS_UPDATED)
 
     def test_skip_smart_rules(self):
         """Test: Skip update when XSBC-Original in debian/rules."""

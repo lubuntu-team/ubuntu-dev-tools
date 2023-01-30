@@ -26,6 +26,7 @@ import httplib2
 from ubuntutools.version import Version
 
 import logging
+
 Logger = logging.getLogger(__name__)
 
 
@@ -58,7 +59,7 @@ class BugTask(object):
             self.series = components[2].lower()
 
         if self.package is None:
-            title_re = r'^Sync ([a-z0-9+.-]+) [a-z0-9.+:~-]+ \([a-z]+\) from.*'
+            title_re = r"^Sync ([a-z0-9+.-]+) [a-z0-9.+:~-]+ \([a-z]+\) from.*"
             match = re.match(title_re, self.get_bug_title(), re.U | re.I)
             if match is not None:
                 self.package = match.group(1)
@@ -74,7 +75,7 @@ class BugTask(object):
             if url.endswith(".dsc"):
                 response, data = httplib2.Http().request(url)
                 assert response.status == 200
-                with open(filename, 'wb') as f:
+                with open(filename, "wb") as f:
                     f.write(data)
 
                 dsc_file = os.path.join(os.getcwd(), filename)
@@ -84,18 +85,26 @@ class BugTask(object):
         return dsc_file
 
     def get_branch_link(self):
-        return "lp:" + self.project + "/" + self.get_series() + "/" + \
-               self.package
+        return "lp:" + self.project + "/" + self.get_series() + "/" + self.package
 
     def get_bug_title(self):
         """Returns the title of the related bug."""
         return self.bug_task.bug.title
 
     def get_long_info(self):
-        return "Bug task: " + str(self.bug_task) + "\n" + \
-               "Package: " + str(self.package) + "\n" + \
-               "Project: " + str(self.project) + "\n" + \
-               "Series: " + str(self.series)
+        return (
+            "Bug task: "
+            + str(self.bug_task)
+            + "\n"
+            + "Package: "
+            + str(self.package)
+            + "\n"
+            + "Project: "
+            + str(self.project)
+            + "\n"
+            + "Series: "
+            + str(self.series)
+        )
 
     def get_lp_task(self):
         """Returns the Launchpad bug task object."""
@@ -137,14 +146,16 @@ class BugTask(object):
         dist = self.launchpad.distributions[project]
         archive = dist.getArchive(name="primary")
         distro_series = dist.getSeries(name_or_version=series)
-        published = archive.getPublishedSources(source_name=self.package,
-                                                distro_series=distro_series,
-                                                status="Published",
-                                                exact_match=True)
+        published = archive.getPublishedSources(
+            source_name=self.package,
+            distro_series=distro_series,
+            status="Published",
+            exact_match=True,
+        )
 
         latest_source = None
         for source in published:
-            if source.pocket in ('Release', 'Security', 'Updates', 'Proposed'):
+            if source.pocket in ("Release", "Security", "Updates", "Proposed"):
                 latest_source = source
                 break
         return latest_source
@@ -156,7 +167,7 @@ class BugTask(object):
     def get_latest_released_version(self):
         source = self.get_source(True)
         if source is None:  # Not currently published in Ubuntu
-            version = '~'
+            version = "~"
         else:
             version = source.source_package_version
         return Version(version)

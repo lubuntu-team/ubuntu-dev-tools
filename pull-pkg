@@ -25,5 +25,5 @@
 
 from ubuntutools.pullpkg import PullPkg
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     PullPkg.main()
