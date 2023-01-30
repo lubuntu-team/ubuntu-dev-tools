@@ -5,4 +5,4 @@ set -eu
 # SPDX-License-Identifier: GPL-3.0
 
 echo "Running flake8..."
-flake8 -v --max-line-length=99
+flake8 --max-line-length=99
