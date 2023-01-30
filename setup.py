@@ -1,10 +1,21 @@
 #!/usr/bin/python3
 
 import glob
-import os
+import pathlib
 import re
 
 from setuptools import setup
+
+
+def get_debian_version() -> str:
+    """Look what Debian version we have."""
+    changelog = pathlib.Path(__file__).parent / "debian" / "changelog"
+    with changelog.open("r", encoding="utf-8") as changelog_f:
+        head = changelog_f.readline()
+    match = re.compile(r".*\((.*)\).*").match(head)
+    if not match:
+        raise ValueError(f"Failed to extract Debian version from '{head}'.")
+    return match.group(1)
 
 
 def make_pep440_compliant(version: str) -> str:
@@ -18,14 +29,6 @@ def make_pep440_compliant(version: str) -> str:
     assert re.match("^[a-zA-Z0-9.]+$", sanitized_local), f"'{pep440_version}' not PEP440 compliant"
     return pep440_version
 
-
-# look/set what version we have
-changelog = "debian/changelog"
-if os.path.exists(changelog):
-    head = open(changelog, "r", encoding="utf-8").readline()
-    match = re.compile(r".*\((.*)\).*").match(head)
-    if match:
-        version = match.group(1)
 
 scripts = [
     "backportpackage",
@@ -81,7 +84,7 @@ data_files = [
 if __name__ == "__main__":
     setup(
         name="ubuntu-dev-tools",
-        version=make_pep440_compliant(version),
+        version=make_pep440_compliant(get_debian_version()),
         scripts=scripts,
         packages=[
             "ubuntutools",
