@@ -83,10 +83,11 @@ Files: doc/bitesize.1
        GPL-3
        grab-merge
        merge-changelog
+       run-linters
        setup-packaging-environment
        syncpackage
 Copyright: 2010,      Benjamin Drung <bdrung@ubuntu.com>
-           2007-2011, Canonical Ltd.
+           2007-2023, Canonical Ltd.
            2008,      Jonathan Patrick Davies <jpds@ubuntu.com>
            2008-2010, Martin Pitt <martin.pitt@canonical.com>
            2009,      Siegfried-Angel Gevatter Pujals <rainct@ubuntu.com>
