@@ -6,6 +6,9 @@
 #
 # See pull-pkg
 
+# pylint: disable=invalid-name
+# pylint: enable=invalid-name
+
 from ubuntutools.pullpkg import PullPkg
 
 if __name__ == "__main__":

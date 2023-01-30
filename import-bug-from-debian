@@ -21,6 +21,9 @@
 #
 # ##################################################################
 
+# pylint: disable=invalid-name
+# pylint: enable=invalid-name
+
 import argparse
 import logging
 import re

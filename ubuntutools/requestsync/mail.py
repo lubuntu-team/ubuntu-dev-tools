@@ -207,9 +207,9 @@ Content-Type: text/plain; charset=UTF-8
     while True:
         try:
             Logger.info("Connecting to %s:%s ...", mailserver_host, mailserver_port)
-            s = smtplib.SMTP(mailserver_host, mailserver_port)
+            smtp = smtplib.SMTP(mailserver_host, mailserver_port)
             break
-        except smtplib.SMTPConnectError as s:
+        except smtplib.SMTPConnectError as error:
             try:
                 # py2 path
                 # pylint: disable=unsubscriptable-object
@@ -217,8 +217,8 @@ Content-Type: text/plain; charset=UTF-8
                     "Could not connect to %s:%s: %s (%i)",
                     mailserver_host,
                     mailserver_port,
-                    s[1],
-                    s[0],
+                    error[1],
+                    error[0],
                 )
             except TypeError:
                 # pylint: disable=no-member
@@ -226,15 +226,15 @@ Content-Type: text/plain; charset=UTF-8
                     "Could not connect to %s:%s: %s (%i)",
                     mailserver_host,
                     mailserver_port,
-                    s.strerror,
-                    s.errno,
+                    error.strerror,
+                    error.errno,
                 )
-            if s.smtp_code == 421:
+            if error.smtp_code == 421:
                 confirmation_prompt(
                     message="This is a temporary error, press [Enter] "
                     "to retry. Press [Ctrl-C] to abort now."
                 )
-        except socket.error as s:
+        except socket.error as error:
             try:
                 # py2 path
                 # pylint: disable=unsubscriptable-object
@@ -242,8 +242,8 @@ Content-Type: text/plain; charset=UTF-8
                     "Could not connect to %s:%s: %s (%i)",
                     mailserver_host,
                     mailserver_port,
-                    s[1],
-                    s[0],
+                    error[1],
+                    error[0],
                 )
             except TypeError:
                 # pylint: disable=no-member
@@ -251,27 +251,27 @@ Content-Type: text/plain; charset=UTF-8
                     "Could not connect to %s:%s: %s (%i)",
                     mailserver_host,
                     mailserver_port,
-                    s.strerror,
-                    s.errno,
+                    error.strerror,
+                    error.errno,
                 )
             return
 
     if mailserver_user and mailserver_pass:
         try:
-            s.login(mailserver_user, mailserver_pass)
+            smtp.login(mailserver_user, mailserver_pass)
         except smtplib.SMTPAuthenticationError:
             Logger.error("Error authenticating to the server: invalid username and password.")
-            s.quit()
+            smtp.quit()
             return
         except smtplib.SMTPException:
             Logger.error("Unknown SMTP error.")
-            s.quit()
+            smtp.quit()
             return
 
     while True:
         try:
-            s.sendmail(myemailaddr, to, mail.encode("utf-8"))
-            s.quit()
+            smtp.sendmail(myemailaddr, to, mail.encode("utf-8"))
+            smtp.quit()
             os.remove(backup.name)
             Logger.info("Sync request mailed.")
             break
@@ -285,8 +285,8 @@ Content-Type: text/plain; charset=UTF-8
                 )
             else:
                 return
-        except smtplib.SMTPResponseException as e:
-            Logger.error("Error while sending: %i, %s", e.smtp_code, e.smtp_error)
+        except smtplib.SMTPResponseException as error:
+            Logger.error("Error while sending: %i, %s", error.smtp_code, error.smtp_error)
             return
         except smtplib.SMTPServerDisconnected:
             Logger.error("Server disconnected while sending the mail.")

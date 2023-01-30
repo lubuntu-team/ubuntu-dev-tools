@@ -187,8 +187,8 @@ def submit_bugreport(body, debdiff, deb_version, changelog):
 
 
 def check_reportbug_config():
-    fn = os.path.expanduser("~/.reportbugrc")
-    if os.path.exists(fn):
+    reportbugrc_filename = os.path.expanduser("~/.reportbugrc")
+    if os.path.exists(reportbugrc_filename):
         return
     email = ubu_email()[1]
     reportbugrc = (
@@ -210,7 +210,7 @@ no-cc
         % email
     )
 
-    with open(fn, "w") as f:
+    with open(reportbugrc_filename, "w") as f:
         f.write(reportbugrc)
 
     Logger.info(

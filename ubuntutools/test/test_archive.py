@@ -26,9 +26,9 @@ from ubuntutools.test.example_package import ExamplePackage
 
 class BaseVerificationTestCase(unittest.TestCase):
     def setUp(self):
-        d = tempfile.TemporaryDirectory()
-        self.addCleanup(d.cleanup)
-        self.pkg = ExamplePackage(destdir=Path(d.name))
+        tmpdir = tempfile.TemporaryDirectory()
+        self.addCleanup(tmpdir.cleanup)
+        self.pkg = ExamplePackage(destdir=Path(tmpdir.name))
         self.pkg.create()
         self.dsc = ubuntutools.archive.Dsc(self.pkg.dsc.read_bytes())
 
@@ -65,9 +65,9 @@ class LocalSourcePackageTestCase(BaseVerificationTestCase):
 
     def setUp(self):
         super().setUp()
-        d = tempfile.TemporaryDirectory()
-        self.addCleanup(d.cleanup)
-        self.workdir = Path(d.name)
+        tmpdir = tempfile.TemporaryDirectory()
+        self.addCleanup(tmpdir.cleanup)
+        self.workdir = Path(tmpdir.name)
 
     def pull(self, **kwargs):
         """Do the pull from pkg dir to the workdir, return the SourcePackage"""

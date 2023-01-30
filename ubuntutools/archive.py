@@ -102,12 +102,12 @@ class Dsc(debian.deb822.Dsc):
 
     def verify_file(self, pathname):
         "Verify that pathname matches the checksums in the dsc"
-        p = Path(pathname)
-        if not p.is_file():
+        path = Path(pathname)
+        if not path.is_file():
             return False
         alg, checksums = self.get_strongest_checksum()
-        size, digest = checksums[p.name]
-        return verify_file_checksum(p, alg, digest, size)
+        size, digest = checksums[path.name]
+        return verify_file_checksum(path, alg, digest, size)
 
     def compare_dsc(self, other):
         """Check whether any files in these two dscs that have the same name
@@ -256,7 +256,7 @@ class SourcePackage(ABC):
                 # log binary lookup failure, in case it provides hints
                 Logger.info(str(bpnfe))
                 # raise the original exception for the source lookup
-                raise pnfe
+                raise pnfe from None
 
             self.binary = self.source
             self.source = bpph.getSourcePackageName()
@@ -312,8 +312,8 @@ class SourcePackage(ABC):
             if self._dsc_source:
                 raise RuntimeError("Internal error: we have a dsc file but dsc not set")
             urls = self._source_urls(self.dsc_name)
-            with tempfile.TemporaryDirectory() as d:
-                tmpdsc = Path(d) / self.dsc_name
+            with tempfile.TemporaryDirectory() as tmpdir:
+                tmpdsc = Path(tmpdir) / self.dsc_name
                 self._download_file_from_urls(urls, tmpdsc)
                 self._dsc = Dsc(tmpdsc.read_bytes())
                 self._check_dsc_signature()
@@ -401,35 +401,35 @@ class SourcePackage(ABC):
             Logger.warning("Signature on %s could not be verified" % self.dsc_name)
 
     def _verify_file(self, pathname, dscverify=False, sha1sum=None, sha256sum=None, size=0):
-        p = Path(pathname)
-        if not p.exists():
+        path = Path(pathname)
+        if not path.exists():
             return False
-        if dscverify and not self.dsc.verify_file(p):
+        if dscverify and not self.dsc.verify_file(path):
             return False
         checksums = {}
         if sha1sum:
             checksums["SHA1"] = sha1sum
         if sha256sum:
             checksums["SHA256"] = sha256sum
-        if not verify_file_checksums(p, checksums, size):
+        if not verify_file_checksums(path, checksums, size):
             return False
         return True
 
     def _download_file(self, url, filename, size=0, dscverify=False, sha1sum=None, sha256sum=None):
         "Download url to filename; will be put in workdir unless filename is absolute path."
         if Path(filename).is_absolute():
-            p = Path(filename).expanduser().resolve()
+            path = Path(filename).expanduser().resolve()
         else:
-            p = self.workdir / filename
+            path = self.workdir / filename
 
         can_verify = any((dscverify, sha1sum, sha256sum))
-        if can_verify and self._verify_file(p, dscverify, sha1sum, sha256sum, size):
-            Logger.info(f"Using existing file {p}")
+        if can_verify and self._verify_file(path, dscverify, sha1sum, sha256sum, size):
+            Logger.info(f"Using existing file {path}")
             return True
 
-        download(url, p, size)
+        download(url, path, size)
 
-        return self._verify_file(p, dscverify, sha1sum, sha256sum, size)
+        return self._verify_file(path, dscverify, sha1sum, sha256sum, size)
 
     def _download_file_from_urls(
         self, urls, filename, size=0, dscverify=False, sha1sum=None, sha256sum=None
@@ -698,8 +698,8 @@ class PersonalPackageArchiveSourcePackage(UbuntuSourcePackage):
     def team(self):
         try:
             return PersonTeam.fetch(self._teamname)
-        except KeyError:
-            raise ValueError(f"No user/team '{self._teamname}' found on Launchpad")
+        except KeyError as error:
+            raise ValueError(f"No user/team '{self._teamname}' found on Launchpad") from error
 
     @functools.lru_cache()
     def getArchive(self):
@@ -823,9 +823,9 @@ class UbuntuCloudArchiveSourcePackage(PersonalPackageArchiveSourcePackage):
         if not any((release, pocket)):
             all_ppas = cls.getUbuntuCloudArchiveTeam().getPPAs()
             ppas = []
-            for r in cls.getUbuntuCloudArchiveReleaseNames():
-                for p in cls.VALID_POCKETS:
-                    name = f"{r}-{p}"
+            for ppa_release in cls.getUbuntuCloudArchiveReleaseNames():
+                for valid_pocket in cls.VALID_POCKETS:
+                    name = f"{ppa_release}-{valid_pocket}"
                     if name in all_ppas:
                         ppas.append(all_ppas[name])
             return ppas
@@ -868,27 +868,27 @@ class UbuntuCloudArchiveSourcePackage(PersonalPackageArchiveSourcePackage):
         release = release.lower().strip()
 
         # Cases 1 and 2
-        PATTERN1 = r"^(?P<ucarelease>[a-z]+)(?:-(?P<pocket>[a-z]+))?$"
+        pattern1 = r"^(?P<ucarelease>[a-z]+)(?:-(?P<pocket>[a-z]+))?$"
         # Cases 3 and 4
-        PATTERN2 = r"^(?P<ubunturelease>[a-z]+)-(?P<ucarelease>[a-z]+)(?:-(?P<pocket>[a-z]+))?$"
+        pattern2 = r"^(?P<ubunturelease>[a-z]+)-(?P<ucarelease>[a-z]+)(?:-(?P<pocket>[a-z]+))?$"
         # Case 5
-        PATTERN3 = r"^(?P<ubunturelease>[a-z]+)-(?P<pocket>[a-z]+)/(?P<ucarelease>[a-z]+)$"
+        pattern3 = r"^(?P<ubunturelease>[a-z]+)-(?P<pocket>[a-z]+)/(?P<ucarelease>[a-z]+)$"
 
-        for pattern in [PATTERN1, PATTERN2, PATTERN3]:
+        for pattern in [pattern1, pattern2, pattern3]:
             match = re.match(pattern, release)
             if match:
-                r = match.group("ucarelease")
-                p = match.group("pocket")
+                uca_release = match.group("ucarelease")
+                pocket = match.group("pocket")
                 # For UCA, there is no 'release' pocket, the default is 'updates'
-                if p and p == "release":
+                if pocket and pocket == "release":
                     Logger.warning(
                         "Ubuntu Cloud Archive does not use 'release' pocket,"
                         " using 'updates' instead"
                     )
-                    p = "updates"
-                if cls.isValidRelease(r) and (not p or p in cls.VALID_POCKETS):
-                    Logger.debug(f"Using Ubuntu Cloud Archive release '{r}'")
-                    return (r, p)
+                    pocket = "updates"
+                if cls.isValidRelease(uca_release) and (not pocket or pocket in cls.VALID_POCKETS):
+                    Logger.debug(f"Using Ubuntu Cloud Archive release '{uca_release}'")
+                    return (uca_release, pocket)
         raise SeriesNotFoundException(f"Ubuntu Cloud Archive release '{release}' not found")
 
     @classmethod
@@ -897,14 +897,14 @@ class UbuntuCloudArchiveSourcePackage(PersonalPackageArchiveSourcePackage):
             raise SeriesNotFoundException(f"Ubuntu Cloud Archive release '{release}' not found")
         if pocket and pocket not in cls.VALID_POCKETS:
             raise PocketDoesNotExistError(f"Ubuntu Cloud Archive pocket '{pocket}' is invalid")
-        DEFAULT = tuple(
+        default = tuple(
             cls.getUbuntuCloudArchivePPAs(release=release or cls.getDevelSeries())[0].name.split(
                 "-", maxsplit=1
             )
         )
         if not package:
             # not much we can do without a package name
-            return DEFAULT
+            return default
         checked_pocket = False
         for ppa in cls.getUbuntuCloudArchivePPAs(release=release):
             if pocket and pocket != ppa.name.partition("-")[2]:
@@ -918,10 +918,10 @@ class UbuntuCloudArchiveSourcePackage(PersonalPackageArchiveSourcePackage):
             if version:
                 params["version"] = version
             if ppa.getPublishedSources(**params):
-                (r, _, p) = ppa.name.partition("-")
-                return (r, p)
+                (ppa_release, _, ppa_pocket) = ppa.name.partition("-")
+                return (ppa_release, ppa_pocket)
         # package/version not found in any ppa
-        return DEFAULT
+        return default
 
 
 class _WebJSON(object):
@@ -986,9 +986,9 @@ class _Snapshot(_WebJSON):
         url = "/mr/package/{}/{}/srcfiles".format(name, version)
         try:
             response = self.load("{}?fileinfo=1".format(url))
-        except HTTPError:
+        except HTTPError as error:
             msg = "Package {} version {} not found"
-            raise PackageNotFoundException(msg.format(name, version))
+            raise PackageNotFoundException(msg.format(name, version)) from error
         result = response.get("result")
         info = response.get("fileinfo")
         if len(result) < 1:
@@ -998,11 +998,11 @@ class _Snapshot(_WebJSON):
         # this expects the 'component' to follow 'pool[-*]' in the path
         found_pool = False
         component = None
-        for s in path.split("/"):
+        for part in path.split("/"):
             if found_pool:
-                component = s
+                component = part
                 break
-            if s.startswith("pool"):
+            if part.startswith("pool"):
                 found_pool = True
         if not component:
             Logger.warning("could not determine component from path %s" % path)
@@ -1014,8 +1014,8 @@ class _Snapshot(_WebJSON):
     def _get_package(self, name, url, pkginit, version, sort_key):
         try:
             results = self.load("/mr/{}/{}/".format(url, name))["result"]
-        except HTTPError:
-            raise PackageNotFoundException("Package {} not found.".format(name))
+        except HTTPError as error:
+            raise PackageNotFoundException("Package {} not found.".format(name)) from error
 
         results = sorted(results, key=lambda r: r[sort_key], reverse=True)
         results = [pkginit(r) for r in results if version == r["version"]]
@@ -1168,7 +1168,7 @@ class SnapshotBinaryPackage(SnapshotPackage):
 
 
 class SnapshotFile(object):
-    def __init__(self, pkg_name, pkg_version, component, obj, h):
+    def __init__(self, pkg_name, pkg_version, component, obj, h):  # pylint: disable=invalid-name
         self.package_name = pkg_name
         self.package_version = pkg_version
         self.component = component

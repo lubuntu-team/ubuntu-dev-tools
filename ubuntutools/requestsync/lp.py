@@ -149,9 +149,9 @@ def get_ubuntu_delta_changelog(srcpkg):
         changes = Changes(Http().request(changes_url)[1])
         for line in changes["Changes"].splitlines():
             line = line[1:]
-            m = topline.match(line)
-            if m:
-                distribution = m.group(3).split()[0].split("-")[0]
+            match = topline.match(line)
+            if match:
+                distribution = match.group(3).split()[0].split("-")[0]
                 if debian_info.valid(distribution):
                     break
             if line.startswith("  "):

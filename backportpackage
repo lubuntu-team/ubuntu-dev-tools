@@ -324,7 +324,7 @@ def orig_needed(upload, workdir, pkg):
 
     version = pkg.version.upstream_version
 
-    h = Http()
+    http = Http()
     for filename in glob.glob(os.path.join(workdir, "%s_%s.orig*" % (pkg.source, version))):
         url = "https://launchpad.net/~%s/+archive/%s/+sourcefiles/%s/%s/%s" % (
             quote(user),
@@ -334,7 +334,7 @@ def orig_needed(upload, workdir, pkg):
             quote(os.path.basename(filename)),
         )
         try:
-            headers, body = h.request(url, "HEAD")
+            headers, body = http.request(url, "HEAD")
             if headers.status != 200 or not headers["content-location"].startswith(
                 "https://launchpadlibrarian.net"
             ):

@@ -52,7 +52,7 @@ UPLOAD_QUEUE_STATUSES = ("New", "Unapproved", "Accepted", "Done", "Rejected")
 
 DOWNLOAD_BLOCKSIZE_DEFAULT = 8192
 
-_system_distribution_chain = []
+_SYSTEM_DISTRIBUTION_CHAIN = []
 
 
 class DownloadError(Exception):
@@ -74,11 +74,11 @@ def system_distribution_chain():
     the distribution chain can't be determined, print an error message
     and return an empty list.
     """
-    global _system_distribution_chain
-    if len(_system_distribution_chain) == 0:
+    global _SYSTEM_DISTRIBUTION_CHAIN
+    if len(_SYSTEM_DISTRIBUTION_CHAIN) == 0:
         try:
             vendor = check_output(("dpkg-vendor", "--query", "Vendor"), encoding="utf-8").strip()
-            _system_distribution_chain.append(vendor)
+            _SYSTEM_DISTRIBUTION_CHAIN.append(vendor)
         except CalledProcessError:
             Logger.error("Could not determine what distribution you are running.")
             return []
@@ -89,7 +89,7 @@ def system_distribution_chain():
                     (
                         "dpkg-vendor",
                         "--vendor",
-                        _system_distribution_chain[-1],
+                        _SYSTEM_DISTRIBUTION_CHAIN[-1],
                         "--query",
                         "Parent",
                     ),
@@ -98,9 +98,9 @@ def system_distribution_chain():
             except CalledProcessError:
                 # Vendor has no parent
                 break
-            _system_distribution_chain.append(parent)
+            _SYSTEM_DISTRIBUTION_CHAIN.append(parent)
 
-    return _system_distribution_chain
+    return _SYSTEM_DISTRIBUTION_CHAIN
 
 
 def system_distribution():
@@ -138,16 +138,16 @@ def readlist(filename, uniq=True):
     Read a list of words from the indicated file. If 'uniq' is True, filter
     out duplicated words.
     """
-    p = Path(filename)
+    path = Path(filename)
 
-    if not p.is_file():
-        Logger.error(f"File {p} does not exist.")
+    if not path.is_file():
+        Logger.error(f"File {path} does not exist.")
         return False
 
-    content = p.read_text().replace("\n", " ").replace(",", " ")
+    content = path.read_text().replace("\n", " ").replace(",", " ")
 
     if not content.strip():
-        Logger.error(f"File {p} is empty.")
+        Logger.error(f"File {path} is empty.")
         return False
 
     items = [item for item in content.split() if item]
@@ -234,29 +234,31 @@ def verify_file_checksums(pathname, checksums={}, size=0):
 
     Returns True if all checks pass, False otherwise
     """
-    p = Path(pathname)
+    path = Path(pathname)
 
-    if not p.is_file():
-        Logger.error(f"File {p} not found")
+    if not path.is_file():
+        Logger.error(f"File {path} not found")
         return False
-    filesize = p.stat().st_size
+    filesize = path.stat().st_size
     if size and size != filesize:
-        Logger.error(f"File {p} incorrect size, got {filesize} expected {size}")
+        Logger.error(f"File {path} incorrect size, got {filesize} expected {size}")
         return False
 
     for (alg, checksum) in checksums.items():
-        h = hashlib.new(alg)
-        with p.open("rb") as f:
+        hash_ = hashlib.new(alg)
+        with path.open("rb") as f:
             while True:
-                block = f.read(h.block_size)
+                block = f.read(hash_.block_size)
                 if len(block) == 0:
                     break
-                h.update(block)
-        digest = h.hexdigest()
+                hash_.update(block)
+        digest = hash_.hexdigest()
         if digest == checksum:
-            Logger.debug(f"File {p} checksum ({alg}) verified: {checksum}")
+            Logger.debug(f"File {path} checksum ({alg}) verified: {checksum}")
         else:
-            Logger.error(f"File {p} checksum ({alg}) mismatch: got {digest} expected {checksum}")
+            Logger.error(
+                f"File {path} checksum ({alg}) mismatch: got {digest} expected {checksum}"
+            )
             return False
     return True
 
@@ -288,9 +290,13 @@ def extract_authentication(url):
 
     This returns a tuple in the form (url, username, password)
     """
-    u = urlparse(url)
-    if u.username or u.password:
-        return (u._replace(netloc=u.hostname).geturl(), u.username, u.password)
+    components = urlparse(url)
+    if components.username or components.password:
+        return (
+            components._replace(netloc=components.hostname).geturl(),
+            components.username,
+            components.password,
+        )
     return (url, None, None)
 
 
@@ -339,21 +345,21 @@ def download(src, dst, size=0, *, blocksize=DOWNLOAD_BLOCKSIZE_DEFAULT):
     (src, username, password) = extract_authentication(src)
     auth = (username, password) if username or password else None
 
-    with tempfile.TemporaryDirectory() as d:
-        tmpdst = Path(d) / "dst"
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmpdst = Path(tmpdir) / "dst"
         try:
             with requests.get(src, stream=True, auth=auth) as fsrc, tmpdst.open("wb") as fdst:
                 fsrc.raise_for_status()
                 _download(fsrc, fdst, size, blocksize=blocksize)
-        except requests.exceptions.HTTPError as e:
-            if e.response is not None and e.response.status_code == 404:
-                raise NotFoundError(f"URL {src} not found: {e}")
-            raise DownloadError(e)
-        except requests.exceptions.ConnectionError as e:
+        except requests.exceptions.HTTPError as error:
+            if error.response is not None and error.response.status_code == 404:
+                raise NotFoundError(f"URL {src} not found: {error}") from error
+            raise DownloadError(error) from error
+        except requests.exceptions.ConnectionError as error:
             # This is likely a archive hostname that doesn't resolve, like 'ftpmaster.internal'
-            raise NotFoundError(f"URL {src} not found: {e}")
-        except requests.exceptions.RequestException as e:
-            raise DownloadError(e)
+            raise NotFoundError(f"URL {src} not found: {error}") from error
+        except requests.exceptions.RequestException as error:
+            raise DownloadError(error) from error
         shutil.move(tmpdst, dst)
     return dst
 
@@ -440,8 +446,8 @@ def _download(fsrc, fdst, size, *, blocksize):
 
 
 def _download_text(src, binary, *, blocksize):
-    with tempfile.TemporaryDirectory() as d:
-        dst = Path(d) / "dst"
+    with tempfile.TemporaryDirectory() as tmpdir:
+        dst = Path(tmpdir) / "dst"
         download(src, dst, blocksize=blocksize)
         return dst.read_bytes() if binary else dst.read_text()
 

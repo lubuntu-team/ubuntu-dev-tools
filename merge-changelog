@@ -18,6 +18,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# pylint: disable=invalid-name
+# pylint: enable=invalid-name
+
 import sys
 
 from debian.changelog import Changelog
@@ -59,9 +62,9 @@ def merge_changelog(left_changelog, right_changelog):
     right_blocks = iter(right_cl)
 
     clist = sorted(left_versions | right_versions, reverse=True)
-    ci = len(clist)
+    remaining = len(clist)
     for version in clist:
-        ci -= 1
+        remaining -= 1
         if version in left_versions:
             block = next(left_blocks)
             if version in right_versions:
@@ -71,7 +74,7 @@ def merge_changelog(left_changelog, right_changelog):
 
         assert block.version == version
 
-        Logger.info(str(block).strip() + ("\n" if ci else ""))
+        Logger.info(str(block).strip() + ("\n" if remaining else ""))
 
 
 def main():

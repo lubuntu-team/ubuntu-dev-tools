@@ -57,11 +57,11 @@ class ExamplePackage(object):
         return "my content"
 
     def create(self):
-        with tempfile.TemporaryDirectory() as d:
-            self._create(Path(d))
+        with tempfile.TemporaryDirectory() as tmpdir:
+            self._create(Path(tmpdir))
 
-    def _create(self, d):
-        pkgdir = d / self.dirname
+    def _create(self, directory: Path):
+        pkgdir = directory / self.dirname
         pkgdir.mkdir()
         (pkgdir / self.content_filename).write_text(self.content_text)
 
@@ -80,13 +80,13 @@ class ExamplePackage(object):
             f"dpkg-source -b {self.dirname}".split(),
             check=True,
             env=self.env,
-            cwd=str(d),
+            cwd=str(directory),
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
 
         # move tarballs and dsc to destdir
         self.destdir.mkdir(parents=True, exist_ok=True)
-        (d / self.orig.name).rename(self.orig)
-        (d / self.debian.name).rename(self.debian)
-        (d / self.dsc.name).rename(self.dsc)
+        (directory / self.orig.name).rename(self.orig)
+        (directory / self.debian.name).rename(self.debian)
+        (directory / self.dsc.name).rename(self.dsc)

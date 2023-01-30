@@ -107,21 +107,21 @@ class PullPkg(object):
         unexpected errors will flow up to the caller.
         On success, this simply returns.
         """
-        Logger = ubuntutools_getLogger()
+        logger = ubuntutools_getLogger()
 
         try:
             cls(*args, **kwargs).pull()
             return
         except KeyboardInterrupt:
-            Logger.info("User abort.")
+            logger.info("User abort.")
         except (
             PackageNotFoundException,
             SeriesNotFoundException,
             PocketDoesNotExistError,
             InvalidDistroValueError,
             InvalidPullValueError,
-        ) as e:
-            Logger.error(str(e))
+        ) as error:
+            logger.error(str(error))
             sys.exit(errno.ENOENT)
 
     def __init__(self, *args, **kwargs):
@@ -275,12 +275,12 @@ class PullPkg(object):
 
         if distro == DISTRO_PPA:
             # PPAs are part of Ubuntu distribution
-            d = Distribution(DISTRO_UBUNTU)
+            distribution = Distribution(DISTRO_UBUNTU)
         else:
-            d = Distribution(distro)
+            distribution = Distribution(distro)
 
         # let SeriesNotFoundException flow up
-        d.getSeries(release)
+        distribution.getSeries(release)
 
         Logger.debug("Using distro '%s' release '%s' pocket '%s'", distro, release, pocket)
         return (release, pocket)
@@ -340,12 +340,12 @@ class PullPkg(object):
         params["package"] = options["package"]
 
         if options["release"]:
-            (r, v, p) = self.parse_release_and_version(
+            (release, version, pocket) = self.parse_release_and_version(
                 distro, options["release"], options["version"]
             )
-            params["series"] = r
-            params["version"] = v
-            params["pocket"] = p
+            params["series"] = release
+            params["version"] = version
+            params["pocket"] = pocket
 
         if params["package"].endswith(".dsc") and not params["series"] and not params["version"]:
             params["dscfile"] = params["package"]
@@ -553,33 +553,33 @@ class PullPkg(object):
             raise PackageNotFoundException(msg)
 
         if pull == PULL_LIST:
-            for p in packages:
-                msg = "Found %s %s (ID %s)" % (p.package_name, p.package_version, p.id)
-                if p.display_arches:
-                    msg += " arch %s" % p.display_arches
+            for pkg in packages:
+                msg = "Found %s %s (ID %s)" % (pkg.package_name, pkg.package_version, pkg.id)
+                if pkg.display_arches:
+                    msg += " arch %s" % pkg.display_arches
                 Logger.info(msg)
-                url = p.changesFileUrl()
+                url = pkg.changesFileUrl()
                 if url:
                     Logger.info("Changes file:")
                     Logger.info("  %s", url)
                 else:
                     Logger.info("No changes file")
-                urls = p.sourceFileUrls()
+                urls = pkg.sourceFileUrls()
                 if urls:
                     Logger.info("Source files:")
                     for url in urls:
                         Logger.info("  %s", url)
                 else:
                     Logger.info("No source files")
-                urls = p.binaryFileUrls()
+                urls = pkg.binaryFileUrls()
                 if urls:
                     Logger.info("Binary files:")
                     for url in urls:
                         Logger.info("  %s", url)
-                        Logger.info("    { %s }" % p.binaryFileProperties(url))
+                        Logger.info("    { %s }" % pkg.binaryFileProperties(url))
                 else:
                     Logger.info("No binary files")
-                urls = p.customFileUrls()
+                urls = pkg.customFileUrls()
                 if urls:
                     Logger.info("Custom files:")
                     for url in urls:
@@ -593,18 +593,18 @@ class PullPkg(object):
             else:
                 msg += ", please specify the version"
             Logger.error("Available package versions/ids are:")
-            for p in packages:
-                Logger.error("%s %s (id %s)" % (p.package_name, p.package_version, p.id))
+            for pkg in packages:
+                Logger.error("%s %s (id %s)" % (pkg.package_name, pkg.package_version, pkg.id))
             raise PackageNotFoundException(msg)
 
-        p = packages[0]
+        pkg = packages[0]
 
-        urls = set(p.customFileUrls())
-        if p.changesFileUrl():
-            urls.add(p.changesFileUrl())
+        urls = set(pkg.customFileUrls())
+        if pkg.changesFileUrl():
+            urls.add(pkg.changesFileUrl())
 
         if pull == PULL_SOURCE:
-            urls |= set(p.sourceFileUrls())
+            urls |= set(pkg.sourceFileUrls())
             if not urls:
                 Logger.error("No source files to download")
             dscfile = None
@@ -636,7 +636,7 @@ class PullPkg(object):
             else:
                 raise InvalidPullValueError("Invalid pull value %s" % pull)
 
-            urls |= set(p.binaryFileUrls())
+            urls |= set(pkg.binaryFileUrls())
             if not urls:
                 Logger.error("No binary files to download")
             for url in urls:

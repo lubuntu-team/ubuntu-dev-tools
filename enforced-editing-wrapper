@@ -22,6 +22,9 @@
 # UDT_EDIT_WRAPPER_TEMPLATE_RE: An extra boilerplate-detecting regex.
 # UDT_EDIT_WRAPPER_FILE_DESCRIPTION: The type of file being edited.
 
+# pylint: disable=invalid-name
+# pylint: enable=invalid-name
+
 import optparse
 import os
 import re

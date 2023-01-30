@@ -242,9 +242,9 @@ class Distribution(BaseWrapper):
             res = self._archives.get(archive)
 
             if not res:
-                for a in self.archives:
-                    if a.name == archive:
-                        res = Archive(a)
+                for archive_ in self.archives:
+                    if archive_.name == archive:
+                        res = Archive(archive_)
                         self._archives[res.name] = res
                         break
 
@@ -271,9 +271,9 @@ class Distribution(BaseWrapper):
 
         try:
             series = DistroSeries(self().getSeries(name_or_version=name_or_version))
-        except HTTPError:
+        except HTTPError as error:
             message = "Release '%s' is unknown in '%s'." % (name_or_version, self.display_name)
-            raise SeriesNotFoundException(message)
+            raise SeriesNotFoundException(message) from error
 
         self._cache_series(series)
         return series
@@ -293,9 +293,9 @@ class Distribution(BaseWrapper):
         Returns a list of all DistroSeries objects.
         """
         if not self._have_all_series:
-            for s in Launchpad.load(self.series_collection_link).entries:
-                series = DistroSeries(s["self_link"])
-                self._cache_series(series)
+            for series in Launchpad.load(self.series_collection_link).entries:
+                series_link = DistroSeries(series["self_link"])
+                self._cache_series(series_link)
             self._have_all_series = True
 
         allseries = filter(lambda s: s.active, self._series.values())
@@ -346,9 +346,9 @@ class DistroSeries(BaseWrapper):
             try:
                 architecture = DistroArchSeries(self().getDistroArchSeries(archtag=archtag))
                 self._architectures[architecture.architecture_tag] = architecture
-            except HTTPError:
+            except HTTPError as error:
                 message = "Architecture %s is unknown." % archtag
-                raise ArchSeriesNotFoundException(message)
+                raise ArchSeriesNotFoundException(message) from error
         return self._architectures[archtag]
 
     def getPackageUploads(self, name=None, pocket=None, version=None, status="Unapproved"):
@@ -418,9 +418,9 @@ class PackageUpload(BaseWrapper):
             urls = self.binaryFileUrls()
             props = self.getBinaryProperties()
             self._binary_prop_dict = dict(zip(urls, props))
-            for (k, v) in copy(self._binary_prop_dict).items():
-                filename = os.path.basename(urlparse(k).path)
-                self._binary_prop_dict[filename] = v
+            for (key, value) in copy(self._binary_prop_dict).items():
+                filename = os.path.basename(urlparse(key).path)
+                self._binary_prop_dict[filename] = value
         return self._binary_prop_dict.get(filename_or_url, {})
 
 
@@ -583,9 +583,9 @@ class Archive(BaseWrapper):
         else:
             pockets = tuple(pocket)
 
-        for p in pockets:
-            if p not in POCKETS:
-                raise PocketDoesNotExistError("Pocket '%s' does not exist." % p)
+        for pocket_ in pockets:
+            if pocket_ not in POCKETS:
+                raise PocketDoesNotExistError("Pocket '%s' does not exist." % pocket_)
 
         if not status:
             if version:
@@ -599,9 +599,9 @@ class Archive(BaseWrapper):
         else:
             statuses = tuple(status)
 
-        for s in statuses:
-            if s not in STATUSES:
-                raise ValueError("Status '%s' is not valid." % s)
+        for status_ in statuses:
+            if status_ not in STATUSES:
+                raise ValueError("Status '%s' is not valid." % status_)
 
         dist = Distribution(self.distribution_link)
 
@@ -685,25 +685,25 @@ class Archive(BaseWrapper):
                     err_msg = "status %s not in (%s)" % (record.status, ",".join(statuses))
                     Logger.debug(skipmsg + err_msg)
                     continue
-                r = wrapper(record)
-                if binary and archtag and archtag != r.arch:
-                    err_msg = "arch %s does not match requested arch %s" % (r.arch, archtag)
+                release = wrapper(record)
+                if binary and archtag and archtag != release.arch:
+                    err_msg = "arch %s does not match requested arch %s" % (release.arch, archtag)
                     Logger.debug(skipmsg + err_msg)
                     continue
                 # results are ordered so first is latest
-                cache[index] = r
-                return r
+                cache[index] = release
+                return release
 
         version_with_epoch = None
         if version and version == Version(version).strip_epoch() and len(records) == 0:
             # a specific version was asked for, but we found none;
             # check if one exists with an epoch to give a hint in error msg
             for epoch in range(1, 9):
-                v = Version(version)
-                v.epoch = epoch
-                params["version"] = v.full_version
+                version_ = Version(version)
+                version_.epoch = epoch
+                params["version"] = version_.full_version
                 if len(getattr(self, function)(**params)) > 0:
-                    version_with_epoch = v.full_version
+                    version_with_epoch = version_.full_version
                     Logger.debug("Found version with epoch %s" % version_with_epoch)
                     break
 
@@ -957,12 +957,12 @@ class SourcePackagePublishingHistory(BaseWrapper):
                 Logger.warning(
                     "SPPH %s_%s has no sourceFileUrls" % (self.getPackageName(), self.getVersion())
                 )
-            for u in urls:
+            for url in urls:
                 # make sure mandatory fields are present
                 for field in ["url", "sha1", "sha256", "size"]:
-                    if field not in u:
-                        u[field] = None
-                u["filename"] = os.path.basename(urlparse(u["url"]).path)
+                    if field not in url:
+                        url[field] = None
+                url["filename"] = os.path.basename(urlparse(url["url"]).path)
             self._source_urls = urls
 
         if include_meta:
@@ -1036,11 +1036,11 @@ class SourcePackagePublishingHistory(BaseWrapper):
         if self.status in ["Pending", "Published"]:
             # Published, great!  Directly query the list of binaries
             binaries = map(BinaryPackagePublishingHistory, self._lpobject.getPublishedBinaries())
-            for b in binaries:
-                a = b.arch
-                if a not in self._binaries:
-                    self._binaries[a] = {}
-                self._binaries[a][b.binary_package_name] = b
+            for binary in binaries:
+                arch_ = binary.arch
+                if arch_ not in self._binaries:
+                    self._binaries[arch_] = {}
+                self._binaries[arch_][binary.binary_package_name] = binary
         else:
             # we have to go the long way :(
             Logger.info("Please wait, this may take some time...")
@@ -1050,37 +1050,37 @@ class SourcePackagePublishingHistory(BaseWrapper):
                 # strip out the URL leading text.
                 filename = os.path.basename(urlparse(url).path)
                 # strip the file suffix
-                (pkgname, _, e) = filename.rpartition(".")
+                (pkgname, _, extension) = filename.rpartition(".")
                 # split into name, version, arch
-                (n, v, a) = pkgname.rsplit("_", 2)
+                (name_, _, arch_) = pkgname.rsplit("_", 2)
                 # arch 'all' has separate bpph for each real arch,
                 # but all point to the same binary url
-                if a == "all":
-                    a = arch or host_architecture()
+                if arch_ == "all":
+                    arch_ = arch or host_architecture()
                 # Only check the arch requested - saves time
-                if arch and arch != a:
+                if arch and arch != arch_:
                     continue
                 # Only check the name requested - saves time
-                if name and not re.match(name, n):
+                if name and not re.match(name, name_):
                     continue
                 # Only check the ext requested - saves time
-                if ext and not re.match(ext, e):
+                if ext and not re.match(ext, extension):
                     continue
                 # If we already have this BPPH, keep going
-                if a in self._binaries and n in self._binaries[a]:
+                if arch_ in self._binaries and name_ in self._binaries[arch_]:
                     continue
                 # we ignore the version, as it may be missing epoch
                 # also we can't use series, as some package versions
                 # span multiple series! (e.g. for different archs)
-                params = {"name": n, "archtag": a, "version": self.getVersion()}
+                params = {"name": name_, "archtag": arch_, "version": self.getVersion()}
                 try:
                     bpph = archive.getBinaryPackage(**params)
                 except PackageNotFoundException:
                     Logger.debug("Could not find pkg in archive: %s" % filename)
                     continue
-                if a not in self._binaries:
-                    self._binaries[a] = {}
-                self._binaries[a][n] = bpph
+                if arch_ not in self._binaries:
+                    self._binaries[arch_] = {}
+                self._binaries[arch_][name_] = bpph
 
         if not arch:
             bpphs = [b for a in self._binaries.values() for b in a.values()]
@@ -1215,21 +1215,21 @@ class BinaryPackagePublishingHistory(BaseWrapper):
         if not self._binary_urls:
             try:
                 urls = self._lpobject.binaryFileUrls(include_meta=True)
-            except AttributeError:
+            except AttributeError as error:
                 raise AttributeError(
                     "binaryFileUrls can only be found in lpapi "
                     "devel, not 1.0. Login using devel to have it."
-                )
+                ) from error
             if not urls:
                 Logger.warning(
                     "BPPH %s_%s has no binaryFileUrls" % (self.getPackageName(), self.getVersion())
                 )
-            for u in urls:
+            for url in urls:
                 # make sure mandatory fields are present
                 for field in ["url", "sha1", "sha256", "size"]:
-                    if field not in u:
-                        u[field] = None
-                u["filename"] = os.path.basename(urlparse(u["url"]).path)
+                    if field not in url:
+                        url[field] = None
+                url["filename"] = os.path.basename(urlparse(url["url"]).path)
             self._binary_urls = urls
 
         if include_meta:
@@ -1438,9 +1438,9 @@ class PersonTeam(BaseWrapper, metaclass=MetaPersonTeam):
         if pocket not in POCKETS:
             raise PocketDoesNotExistError("Pocket '%s' does not exist." % pocket)
 
-        canUpload = self._upload.get((archive, distroseries, pocket, package, component))
+        can_upload = self._upload.get((archive, distroseries, pocket, package, component))
 
-        if canUpload is None:
+        if can_upload is None:
             # checkUpload() throws an exception if the person can't upload
             try:
                 archive.checkUpload(
@@ -1450,16 +1450,16 @@ class PersonTeam(BaseWrapper, metaclass=MetaPersonTeam):
                     pocket=pocket,
                     sourcepackagename=package,
                 )
-                canUpload = True
+                can_upload = True
             except HTTPError as e:
                 if e.response.status == 403:
-                    canUpload = False
+                    can_upload = False
                 else:
                     raise e
             index = (archive, distroseries, pocket, package, component)
-            self._upload[index] = canUpload
+            self._upload[index] = can_upload
 
-        return canUpload
+        return can_upload
 
     def getPPAs(self):
         if self._ppas is None:

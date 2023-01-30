@@ -29,6 +29,9 @@
 # configurations. For example, a symlink called pbuilder-hardy will assume
 # that the target distribution is always meant to be Ubuntu Hardy.
 
+# pylint: disable=invalid-name
+# pylint: enable=invalid-name
+
 import os
 import os.path
 import shutil

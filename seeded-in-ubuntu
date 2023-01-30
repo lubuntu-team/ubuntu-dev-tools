@@ -14,6 +14,9 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+# pylint: disable=invalid-name
+# pylint: enable=invalid-name
+
 import collections
 import gzip
 import json
@@ -35,21 +38,21 @@ def load_index(url):
     and read it.
     """
     cachedir = os.path.expanduser("~/.cache/ubuntu-dev-tools")
-    fn = os.path.join(cachedir, "seeded.json.gz")
+    seeded = os.path.join(cachedir, "seeded.json.gz")
 
-    if not os.path.isfile(fn) or time.time() - os.path.getmtime(fn) > 60 * 60 * 2:
+    if not os.path.isfile(seeded) or time.time() - os.path.getmtime(seeded) > 60 * 60 * 2:
         if not os.path.isdir(cachedir):
             os.makedirs(cachedir)
-        urllib.request.urlretrieve(url, fn)
+        urllib.request.urlretrieve(url, seeded)
 
     try:
-        with gzip.open(fn, "r") as f:
+        with gzip.open(seeded, "r") as f:
             return json.load(f)
     except Exception as e:
         Logger.error(
             "Unable to parse seed data: %s. Deleting cached data, please try again.", str(e)
         )
-        os.unlink(fn)
+        os.unlink(seeded)
 
 
 def resolve_binaries(sources):

@@ -40,9 +40,9 @@ class ConfigTestCase(unittest.TestCase):
 
     def setUp(self):
         super(ConfigTestCase, self).setUp()
-        m = mock.mock_open()
-        m.side_effect = self._fake_open
-        patcher = mock.patch("builtins.open", m)
+        open_mock = mock.mock_open()
+        open_mock.side_effect = self._fake_open
+        patcher = mock.patch("builtins.open", open_mock)
         self.addCleanup(patcher.stop)
         patcher.start()
 
@@ -230,8 +230,6 @@ class UbuEmailTestCase(unittest.TestCase):
         try:
             os.environ["DEBFULLNAME"] = env_name
         except UnicodeEncodeError:
-            raise unittest.SkipTest(
-                "python interpreter is not running in an unicode capable locale"
-            )
+            self.skipTest("python interpreter is not running in an unicode capable locale")
         os.environ["DEBEMAIL"] = email = "joe@example.net"
         self.assertEqual(ubu_email(), (name, email))

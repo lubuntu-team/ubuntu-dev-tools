@@ -20,6 +20,9 @@
 #
 # ##################################################################
 
+# pylint: disable=invalid-name
+# pylint: enable=invalid-name
+
 import optparse
 import subprocess
 import sys

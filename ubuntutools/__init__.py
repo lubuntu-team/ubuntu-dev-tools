@@ -7,7 +7,7 @@ import logging
 import sys
 
 
-def getLogger():
+def getLogger():  # pylint: disable=invalid-name
     """Get the logger instance for this module
 
     Quick guide for using this or not: if you want to call ubuntutools

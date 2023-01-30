@@ -22,6 +22,9 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+# pylint: disable=invalid-name
+# pylint: enable=invalid-name
+
 import sys
 from optparse import OptionGroup, OptionParser
 
@@ -145,14 +148,14 @@ def main():
         try:
             package = str(args[0]).lower()
             release = str(args[1]).lower()
-            op = str(args[2]).lower()
+            operation = str(args[2]).lower()
         except IndexError:
             opt_parser.print_help()
             sys.exit(1)
 
         # Check our operation.
-        if op not in ("rescore", "retry", "status"):
-            Logger.error("Invalid operation: %s." % op)
+        if operation not in ("rescore", "retry", "status"):
+            Logger.error("Invalid operation: %s." % operation)
             sys.exit(1)
 
         # If the user has specified an architecture to build, we only wish to
@@ -199,9 +202,9 @@ def main():
         # (retry) or buildd admins (rescore). Check if the proper permissions
         # are in place.
         me = PersonTeam.me
-        if op == "rescore":
+        if operation == "rescore":
             necessary_privs = me.isLpTeamMember("launchpad-buildd-admins")
-        if op == "retry":
+        if operation == "retry":
             necessary_privs = me.canUploadPackage(
                 ubuntu_archive,
                 distroseries,
@@ -210,11 +213,11 @@ def main():
                 pocket=pocket,
             )
 
-        if op in ("rescore", "retry") and not necessary_privs:
+        if operation in ("rescore", "retry") and not necessary_privs:
             Logger.error(
                 "You cannot perform the %s operation on a %s "
                 "package as you do not have the permissions "
-                "to do this action." % (op, component)
+                "to do this action." % (operation, component)
             )
             sys.exit(1)
 
@@ -235,7 +238,7 @@ def main():
 
             done = True
             Logger.info("%s: %s." % (build.arch_tag, build.buildstate))
-            if op == "rescore":
+            if operation == "rescore":
                 if build.can_be_rescored:
                     # FIXME: make priority an option
                     priority = 5000
@@ -243,7 +246,7 @@ def main():
                     build.rescore(score=priority)
                 else:
                     Logger.info("Cannot rescore build on %s." % build.arch_tag)
-            if op == "retry":
+            if operation == "retry":
                 if build.can_be_retried:
                     Logger.info("Retrying build on %s..." % build.arch_tag)
                     build.retry()
