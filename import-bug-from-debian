@@ -104,7 +104,7 @@ def main():
         bug_num = int(bug_num)
         bug_nums.append(bug_num)
 
-    bugs = debianbts.get_status(*bug_nums)
+    bugs = debianbts.get_status(bug_nums)
 
     if not bugs:
         Logger.error("Cannot find any of the listed bugs")

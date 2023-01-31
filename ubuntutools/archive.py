@@ -39,7 +39,8 @@ import tempfile
 from abc import ABC, abstractmethod
 from contextlib import closing
 from pathlib import Path
-from urllib.request import urljoin, urlopen, urlparse
+from urllib.parse import urljoin, urlparse
+from urllib.request import urlopen
 
 import debian.deb822
 from debian.changelog import Changelog
@@ -1046,6 +1047,7 @@ Snapshot = _Snapshot()
 
 class SnapshotPackage(object):
     def __init__(self, obj):
+        self.name = None
         self._obj = obj
         self._files = None
         self._component = None
@@ -1206,7 +1208,7 @@ class SnapshotFile(object):
         elif "first_seen" in self._obj:
             return self._obj["first_seen"]
         else:
-            Logger.error("File {} has no date information", self.name)
+            Logger.error("File %s has no date information", self.name)
             return "unknown"
 
     def getHash(self):
@@ -1255,6 +1257,7 @@ class SnapshotSPPH(object):
 
     def __init__(self, snapshot_pkg):
         self._pkg = snapshot_pkg
+        self._changelog = None
 
     # LP API defined fields
 

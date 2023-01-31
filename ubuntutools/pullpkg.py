@@ -433,7 +433,7 @@ class PullPkg(object):
 
         if options["upload_queue"]:
             # upload queue API is different/simpler
-            self.pull_upload_queue(
+            self.pull_upload_queue(  # pylint: disable=missing-kwoa
                 pull, arch=options["arch"], download_only=options["download_only"], **params
             )
             return
