@@ -26,7 +26,7 @@ from ubuntutools.sponsor_patch.question import ask_for_manual_fixing
 Logger = logging.getLogger(__name__)
 
 
-class Patch(object):
+class Patch:
     """This object represents a patch that can be downloaded from Launchpad."""
 
     def __init__(self, patch):

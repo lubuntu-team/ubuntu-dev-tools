@@ -23,7 +23,7 @@ import sys
 import tempfile
 
 
-class Question(object):
+class Question:
     def __init__(self, options, show_help=True):
         assert len(options) >= 2
         self.options = [s.lower() for s in options]
@@ -116,7 +116,7 @@ def confirmation_prompt(message=None, action=None):
         sys.exit(1)
 
 
-class EditFile(object):
+class EditFile:
     def __init__(self, filename, description, placeholders=None):
         self.filename = filename
         self.description = description
@@ -158,7 +158,7 @@ class EditFile(object):
             elif self.check_edit():
                 done = True
 
-    def check_edit(self):
+    def check_edit(self):  # pylint: disable=no-self-use
         """Override this to implement extra checks on the edited report.
         Should return False if another round of editing is needed,
         and should prompt the user to confirm that, if necessary.
@@ -176,7 +176,7 @@ class EditBugReport(EditFile):
             ("Summary (one line):\n%s\n\nDescription:\n%s" % (subject, body)).encode("utf-8")
         )
         tmpfile.close()
-        super(EditBugReport, self).__init__(tmpfile.name, "bug report", placeholders)
+        super().__init__(tmpfile.name, "bug report", placeholders)
 
     def check_edit(self):
         with open(self.filename, "r", encoding="utf-8") as f:

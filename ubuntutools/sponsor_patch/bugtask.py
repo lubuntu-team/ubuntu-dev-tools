@@ -37,7 +37,7 @@ def is_sync(bug):
     return "sync" in bug.title.lower().split(" ") or "sync" in bug.tags
 
 
-class BugTask(object):
+class BugTask:
     def __init__(self, bug_task, launchpad):
         self.bug_task = bug_task
         self.launchpad = launchpad
@@ -126,8 +126,7 @@ class BugTask(object):
         if self.series is None or latest_release:
             dist = self.launchpad.distributions[self.project]
             return dist.current_series.name
-        else:
-            return self.series
+        return self.series
 
     def get_short_info(self):
         return self.bug_task.bug_target_name + ": " + self.bug_task.status

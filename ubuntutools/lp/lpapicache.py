@@ -73,7 +73,7 @@ __all__ = [
 ]
 
 
-class _Launchpad(object):
+class _Launchpad:
     """Singleton for LP API access."""
 
     __lp = None
@@ -131,10 +131,10 @@ class MetaWrapper(type):
         super(MetaWrapper, cls).__init__(name, bases, attrd)
         if "resource_type" not in attrd:
             raise TypeError('Class "%s" needs an associated resource type' % name)
-        cls._cache = dict()
+        cls._cache = {}
 
 
-class BaseWrapper(object, metaclass=MetaWrapper):
+class BaseWrapper(metaclass=MetaWrapper):
     """
     A base class from which other wrapper classes are derived.
     """
@@ -173,15 +173,13 @@ class BaseWrapper(object, metaclass=MetaWrapper):
                     if isinstance(cache, collections.abc.Callable):
                         cache(cached)
                 return cached
-            else:
-                raise TypeError("'%s' is not a '%s' object" % (str(data), str(cls.resource_type)))
-        else:
-            # not a LP API representation, let the specific class handle it
-            fetch = getattr(cls, "fetch", None)
-            if isinstance(fetch, collections.abc.Callable):
-                return fetch(data)
-            else:
-                raise NotImplementedError("Don't know how to fetch '%s' from LP" % str(data))
+            raise TypeError("'%s' is not a '%s' object" % (str(data), str(cls.resource_type)))
+
+        # not a LP API representation, let the specific class handle it
+        fetch = getattr(cls, "fetch", None)
+        if isinstance(fetch, collections.abc.Callable):
+            return fetch(data)
+        raise NotImplementedError("Don't know how to fetch '%s' from LP" % str(data))
 
     def __call__(self):
         return self._lpobject
@@ -192,8 +190,7 @@ class BaseWrapper(object, metaclass=MetaWrapper):
     def __repr__(self):
         if hasattr(str, "format"):
             return "<{0}: {1!r}>".format(self.__class__.__name__, self._lpobject)
-        else:
-            return "<%s: %r>" % (self.__class__.__name__, self._lpobject)
+        return "<%s: %r>" % (self.__class__.__name__, self._lpobject)
 
 
 class Distribution(BaseWrapper):
@@ -204,9 +201,9 @@ class Distribution(BaseWrapper):
     resource_type = "distribution"
 
     def __init__(self, *args):  # pylint: disable=unused-argument
-        self._archives = dict()
-        self._series_by_name = dict()
-        self._series = dict()
+        self._archives = {}
+        self._series_by_name = {}
+        self._series = {}
         self._dev_series = None
         self._have_all_series = False
         self._main_archive = None
@@ -253,13 +250,12 @@ class Distribution(BaseWrapper):
 
             if res:
                 return res
-            else:
-                message = "The Archive '%s' doesn't exist in %s" % (archive, self.display_name)
-                raise ArchiveNotFoundException(message)
-        else:
-            if self._main_archive is None:
-                self._main_archive = Archive(self.main_archive_link)
-            return self._main_archive
+            message = "The Archive '%s' doesn't exist in %s" % (archive, self.display_name)
+            raise ArchiveNotFoundException(message)
+
+        if self._main_archive is None:
+            self._main_archive = Archive(self.main_archive_link)
+        return self._main_archive
 
     def getSeries(self, name_or_version):
         """
@@ -310,7 +306,7 @@ class Distribution(BaseWrapper):
         return collections.OrderedDict((s.name, s) for s in allseries)
 
 
-class DistroArchSeries(BaseWrapper):
+class DistroArchSeries(BaseWrapper):  # pylint: disable=too-few-public-methods
     """
     Wrapper class around a LP distro arch series object.
     """
@@ -333,7 +329,7 @@ class DistroSeries(BaseWrapper):
 
     def __init__(self, *args):  # pylint: disable=unused-argument
         if "_architectures" not in self.__dict__:
-            self._architectures = dict()
+            self._architectures = {}
 
     def getArchSeries(self, archtag=None):
         """
@@ -625,7 +621,7 @@ class Archive(BaseWrapper):
                 series_to_check = [dist.getDevelopmentSeries()]
 
         # check each series - if only version was provided, series will be None
-        for series in series_to_check:
+        for series in series_to_check:  # pylint: disable=redefined-argument-from-local
             arch_series = None
 
             if isinstance(series, DistroArchSeries):
@@ -851,7 +847,7 @@ class SourcePackagePublishingHistory(BaseWrapper):
         # Don't share _builds between different
         # SourcePackagePublishingHistory objects
         if "_builds" not in self.__dict__:
-            self._builds = dict()
+            self._builds = {}
 
     def getDistroSeries(self):
         """
@@ -1109,7 +1105,7 @@ class SourcePackagePublishingHistory(BaseWrapper):
             self._builds[build.arch_tag] = Build(build)
 
     def getBuildStates(self, archs):
-        res = list()
+        res = []
 
         if not self._builds:
             self._fetch_builds()
@@ -1121,7 +1117,7 @@ class SourcePackagePublishingHistory(BaseWrapper):
         return "Build state(s) for '%s':\n%s" % (self.getPackageName(), "\n".join(res))
 
     def rescoreBuilds(self, archs, score):
-        res = list()
+        res = []
 
         if not self._builds:
             self._fetch_builds()
@@ -1140,7 +1136,7 @@ class SourcePackagePublishingHistory(BaseWrapper):
         )
 
     def retryBuilds(self, archs):
-        res = list()
+        res = []
 
         if not self._builds:
             self._fetch_builds()
@@ -1317,8 +1313,7 @@ class BinaryPackagePublishingHistory(BaseWrapper):
         """
         if bool(self._lpobject.architecture_specific):
             return self.arch
-        else:
-            return "all"
+        return "all"
 
     def getFileExt(self):
         """
@@ -1394,7 +1389,7 @@ class PersonTeam(BaseWrapper, metaclass=MetaPersonTeam):
         # Don't share _upload between different PersonTeams
         self._ppas = None
         if "_upload" not in self.__dict__:
-            self._upload = dict()
+            self._upload = {}
 
     def __str__(self):
         return "%s (%s)" % (self.display_name, self.name)
@@ -1513,7 +1508,7 @@ class Project(BaseWrapper):
         return Project(Launchpad.projects(project))
 
 
-class ProjectSeries(BaseWrapper):
+class ProjectSeries(BaseWrapper):  # pylint: disable=too-few-public-methods
     """
     Wrapper class around a LP project_series object.
     """
@@ -1556,7 +1551,7 @@ class Build(BaseWrapper):
         return False
 
 
-class DistributionSourcePackage(BaseWrapper):
+class DistributionSourcePackage(BaseWrapper):  # pylint: disable=too-few-public-methods
     """
     Caching class for distribution_source_package objects.
     """
@@ -1564,7 +1559,7 @@ class DistributionSourcePackage(BaseWrapper):
     resource_type = "distribution_source_package"
 
 
-class Packageset(BaseWrapper):
+class Packageset(BaseWrapper):  # pylint: disable=too-few-public-methods
     """
     Caching class for packageset objects.
     """

@@ -177,6 +177,7 @@ def locate_package(package, distribution):
         Logger.info(
             "Binary package specified, considering its source package instead: %s", package
         )
+    return None
 
 
 def request_backport(package_spph, source, destinations):

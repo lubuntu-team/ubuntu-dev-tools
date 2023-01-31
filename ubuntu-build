@@ -277,7 +277,7 @@ def main():
     me = PersonTeam.me
 
     # Check permisions (part 1): Rescoring can only be done by buildd admins
-    can_rescore = (args.priority and me.isLpTeamMember("launchpad-buildd-admins")) or False
+    can_rescore = args.priority and me.isLpTeamMember("launchpad-buildd-admins")
     if args.priority and not can_rescore:
         Logger.error(
             "You don't have the permissions to rescore builds. Ignoring your rescore request."

@@ -378,7 +378,7 @@ def main():
         status = "new"
         subscribe = "ubuntu-release"
 
-    srcpkg = not newsource and srcpkg or None
+    srcpkg = None if newsource else srcpkg
     if lpapi:
         # Map status to the values expected by LP API
         mapping = {"new": "New", "confirmed": "Confirmed"}

@@ -22,7 +22,7 @@ from pathlib import Path
 from ubuntutools.version import Version
 
 
-class ExamplePackage(object):
+class ExamplePackage:
     def __init__(self, source="example", version="1.0-1", destdir="test-data"):
         self.source = source
         self.version = Version(version)

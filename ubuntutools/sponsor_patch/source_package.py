@@ -58,7 +58,7 @@ def strip_epoch(version):
     return version_without_epoch
 
 
-class SourcePackage(object):
+class SourcePackage:
     """This class represents a source package."""
 
     def __init__(self, package, builder, workdir, branch):
@@ -79,7 +79,7 @@ class SourcePackage(object):
             answer = question.ask("Do you want to acknowledge the sync request", "no")
             if answer == "edit":
                 return False
-            elif answer == "no":
+            if answer == "no":
                 user_abort()
 
             bug = task.bug
@@ -139,7 +139,7 @@ class SourcePackage(object):
             answer = question.ask("Do you want to upload the package to %s" % target, "no")
             if answer == "edit":
                 return False
-            elif answer == "no":
+            if answer == "no":
                 user_abort()
             cmd = ["dput", "--force", upload, self._changes_file]
             Logger.debug(" ".join(cmd))
@@ -200,13 +200,12 @@ class SourcePackage(object):
                 answer = question.ask("Do you want to resolve this issue manually", "yes")
                 if answer == "yes":
                     break
-                elif answer == "update":
+                if answer == "update":
                     update = True
                     continue
-                elif answer == "retry":
+                if answer == "retry":
                     continue
-                else:
-                    user_abort()
+                user_abort()
             successful_built = True
         if not successful_built:
             # We want to do a manual fix if the build failed.

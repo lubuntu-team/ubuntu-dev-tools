@@ -53,6 +53,7 @@ def load_index(url):
             "Unable to parse seed data: %s. Deleting cached data, please try again.", str(e)
         )
         os.unlink(seeded)
+    return None
 
 
 def resolve_binaries(sources):

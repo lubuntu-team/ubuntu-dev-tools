@@ -88,7 +88,7 @@ class InvalidPullValueError(ValueError):
     """Thrown when --pull value is invalid"""
 
 
-class PullPkg(object):
+class PullPkg:
     """Class used to pull file(s) associated with a specific package"""
 
     @classmethod
@@ -218,7 +218,8 @@ class PullPkg(object):
 
         return self.parse_options(vars(newparser.parse_args(args)))
 
-    def parse_pull(self, pull):
+    @staticmethod
+    def parse_pull(pull):
         if not pull:
             raise InvalidPullValueError("Must specify --pull")
 
@@ -236,7 +237,8 @@ class PullPkg(object):
 
         return pull
 
-    def parse_distro(self, distro):
+    @staticmethod
+    def parse_distro(distro):
         if not distro:
             raise InvalidDistroValueError("Must specify --distro")
 
@@ -256,7 +258,8 @@ class PullPkg(object):
 
         return distro
 
-    def parse_release(self, distro, release):
+    @staticmethod
+    def parse_release(distro, release):
         if distro == DISTRO_UCA:
             return UbuntuCloudArchiveSourcePackage.parseReleaseAndPocket(release)
 
@@ -503,7 +506,7 @@ class PullPkg(object):
         status=None,
         download_only=None,
         **kwargs,
-    ):  # pylint: disable=unused-argument
+    ):  # pylint: disable=no-self-use,unused-argument
         if not series:
             Logger.error("Using --upload-queue requires specifying series")
             return

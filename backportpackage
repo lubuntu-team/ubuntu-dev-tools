@@ -285,19 +285,19 @@ def get_old_version(source, release):
         return pkg.getVersion()
     except (SeriesNotFoundException, PackageNotFoundException):
         pass
+    return None
 
 
 def get_backport_dist(release, release_pocket):
     if release_pocket:
         return release
-    else:
-        return "%s-backports" % release
+    return "%s-backports" % release
 
 
 def do_build(workdir, dsc, release, builder, update):
     builder = get_builder(builder)
     if not builder:
-        return
+        return None
 
     if update:
         if 0 != builder.update(release):

@@ -66,16 +66,16 @@ def check_support(apt_cache, pkgname, alt=False):
         if src["Section"].startswith("universe") or src["Section"].startswith("multiverse"):
             print(prefix, "binary and source package is in", section.split("/")[0])
             return False
-        else:
-            print(
-                prefix,
-                "is in",
-                section.split("/")[0] + ", but its source",
-                pkg.candidate.source_name,
-                "is already in main; file an ubuntu-archive bug for "
-                "promoting the current preferred alternative",
-            )
-            return True
+
+        print(
+            prefix,
+            "is in",
+            section.split("/")[0] + ", but its source",
+            pkg.candidate.source_name,
+            "is already in main; file an ubuntu-archive bug for "
+            "promoting the current preferred alternative",
+        )
+        return True
 
     if alt:
         print(prefix, "is already in main; consider preferring it")

@@ -356,10 +356,7 @@ def sponsor_patch(bug_number, build, builder, edit, keyid, lpinstance, update, u
             series = task.get_debian_source_series()
             if source_package.sync(upload, series, bug_number, bug.owner.name):
                 return
-            else:
-                edit = True
-        else:
-            edit = True
+        edit = True
 
     if patch:
         edit |= patch.apply(task)

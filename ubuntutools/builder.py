@@ -31,7 +31,7 @@ def _build_preparation(result_directory):
         os.makedirs(result_directory)
 
 
-class Builder(object):
+class Builder:
     def __init__(self, name):
         self.name = name
         cmd = ["dpkg-architecture", "-qDEB_BUILD_ARCH_CPU"]
@@ -197,3 +197,4 @@ def get_builder(name):
     else:
         Logger.error("Unsupported builder specified: %s.", name)
         Logger.error("Supported builders: %s", ", ".join(sorted(_SUPPORTED_BUILDERS.keys())))
+    return None

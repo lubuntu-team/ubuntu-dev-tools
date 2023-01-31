@@ -446,7 +446,8 @@ class SourcePackage(ABC):
                 Logger.error("Download Error: %s", e)
         raise DownloadError(f"Failed to download {filename}")
 
-    def pull_dsc(self):
+    @staticmethod
+    def pull_dsc():
         """DEPRECATED
 
         This method is badly named and historically has only 'pulled' the
@@ -565,7 +566,7 @@ class DebianSPPH(SourcePackagePublishingHistory):
     resource_type = "source_package_publishing_history"
 
     def __init__(self, *args, **kwargs):
-        super(DebianSPPH, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._srcpkg = None
 
     def getBinaries(self, arch=None, name=None, ext=None):
@@ -589,7 +590,7 @@ class DebianSourcePackage(SourcePackage):
         return DebianSPPH
 
     def __init__(self, *args, **kwargs):
-        super(DebianSourcePackage, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.masters.append(UDTConfig.defaults["DEBSEC_MIRROR"])
 
         # Cached values:
@@ -611,7 +612,7 @@ class DebianSourcePackage(SourcePackage):
         if not self._spph:
             try:
                 # superclass will set self._spph
-                return super(DebianSourcePackage, self).lp_spph
+                return super().lp_spph
             except PackageNotFoundException:
                 pass
             except SeriesNotFoundException:
@@ -631,7 +632,7 @@ class DebianSourcePackage(SourcePackage):
 
     def _source_urls(self, name):
         "Generator of sources for name"
-        for url in super(DebianSourcePackage, self)._source_urls(name):
+        for url in super()._source_urls(name):
             yield url
         if name in self.snapshot_files:
             yield self.snapshot_files[name]
@@ -683,7 +684,7 @@ class PersonalPackageArchiveSourcePackage(UbuntuSourcePackage):
     "Download / unpack an Ubuntu Personal Package Archive source package"
 
     def __init__(self, *args, **kwargs):
-        super(PersonalPackageArchiveSourcePackage, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         assert "ppa" in kwargs
         ppa = kwargs["ppa"].split("/")
         if len(ppa) != 2:
@@ -755,7 +756,7 @@ class UbuntuCloudArchiveSourcePackage(PersonalPackageArchiveSourcePackage):
             )
 
         kwargs["ppa"] = f"{self.TEAM}/{series}-{pocket}"
-        super(UbuntuCloudArchiveSourcePackage, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         if pocket == "staging":
             # Don't bother with the archive; just get directly from the staging ppa, since
@@ -776,7 +777,7 @@ class UbuntuCloudArchiveSourcePackage(PersonalPackageArchiveSourcePackage):
                 "Binaries from 'staging' pocket will not match published binaries; "
                 "see https://bugs.launchpad.net/cloud-archive/+bug/1649979"
             )
-        return super(UbuntuCloudArchiveSourcePackage, self).pull_binaries(arch, name, ext)
+        return super().pull_binaries(arch, name, ext)
 
     @classmethod
     @functools.lru_cache()
@@ -925,8 +926,8 @@ class UbuntuCloudArchiveSourcePackage(PersonalPackageArchiveSourcePackage):
         return default
 
 
-class _WebJSON(object):
-    def getHostUrl(self):
+class _WebJSON:
+    def getHostUrl(self):  # pylint: disable=no-self-use
         raise Exception("Not implemented")
 
     def load(self, path=""):
@@ -949,7 +950,7 @@ class Madison(_WebJSON):
     }
 
     def __init__(self, distro="debian"):
-        super(Madison, self).__init__()
+        super().__init__()
         self._distro = distro
         # This currently will NOT work with ubuntu; it doesn't support f=json
         if distro != "debian":
@@ -1043,7 +1044,7 @@ class _Snapshot(_WebJSON):
 Snapshot = _Snapshot()
 
 
-class SnapshotPackage(object):
+class SnapshotPackage:
     def __init__(self, obj):
         self.name = None
         self._obj = obj
@@ -1064,7 +1065,7 @@ class SnapshotPackage(object):
 class SnapshotSourcePackage(SnapshotPackage):
     def __init__(self, obj, name):
         # obj required fields: 'version'
-        super(SnapshotSourcePackage, self).__init__(obj)
+        super().__init__(obj)
         self.name = name
         self._binary_files = None
         self._spph = None
@@ -1163,7 +1164,7 @@ class SnapshotBinaryPackage(SnapshotPackage):
         return [f for f in self._files if f.isArch(arch)]
 
 
-class SnapshotFile(object):
+class SnapshotFile:
     def __init__(self, pkg_name, pkg_version, component, obj, h):  # pylint: disable=invalid-name
         self.package_name = pkg_name
         self.package_version = pkg_version
@@ -1171,7 +1172,8 @@ class SnapshotFile(object):
         self._obj = obj
         self._hash = h
 
-    def getType(self):
+    @staticmethod
+    def getType():
         return None
 
     @property
@@ -1198,11 +1200,10 @@ class SnapshotFile(object):
     def date(self):
         if "run" in self._obj:
             return self._obj["run"]
-        elif "first_seen" in self._obj:
+        if "first_seen" in self._obj:
             return self._obj["first_seen"]
-        else:
-            Logger.error("File %s has no date information", self.name)
-            return "unknown"
+        Logger.error("File %s has no date information", self.name)
+        return "unknown"
 
     def getHash(self):
         return self._hash
@@ -1215,13 +1216,14 @@ class SnapshotFile(object):
 
 
 class SnapshotSourceFile(SnapshotFile):
-    def getType(self):
+    @staticmethod
+    def getType():
         return "source"
 
 
 class SnapshotBinaryFile(SnapshotFile):
     def __init__(self, name, version, component, obj, h, arch, source):
-        super(SnapshotBinaryFile, self).__init__(name, version, component, obj, h)
+        super().__init__(name, version, component, obj, h)
         self.source = source
         self.arch = arch
         self._bpph = None
@@ -1233,7 +1235,8 @@ class SnapshotBinaryFile(SnapshotFile):
             return True
         return arch == self.arch
 
-    def getType(self):
+    @staticmethod
+    def getType():
         return "binary"
 
     def getBPPH(self):
@@ -1242,7 +1245,7 @@ class SnapshotBinaryFile(SnapshotFile):
         return self._bpph
 
 
-class SnapshotSPPH(object):
+class SnapshotSPPH:
     """Provide the same interface as SourcePackagePublishingHistory"""
 
     def __init__(self, snapshot_pkg):
@@ -1309,7 +1312,7 @@ class SnapshotSPPH(object):
                 return f["sha1"]
         return None
 
-    def sourceFileSha256(self, url_or_filename):  # pylint: disable=unused-argument
+    def sourceFileSha256(self, url_or_filename):  # pylint: disable=no-self-use,unused-argument
         return None
 
     def sourceFileSize(self, url_or_filename):
@@ -1366,7 +1369,7 @@ class SnapshotSPPH(object):
         return [b.getBPPH() for b in self._pkg.getBinaryFiles(arch=arch, name=name, ext=ext)]
 
 
-class SnapshotBPPH(object):
+class SnapshotBPPH:  # pylint: disable=too-many-public-methods
     """Provide the same interface as BinaryPackagePublishingHistory"""
 
     def __init__(self, snapshot_binfile):
@@ -1439,7 +1442,7 @@ class SnapshotBPPH(object):
             return self._file.getHash()
         return None
 
-    def binaryFileSha256(self, url_or_filename):  # pylint: disable=unused-argument
+    def binaryFileSha256(self, url_or_filename):  # pylint: disable=no-self-use,unused-argument
         return None
 
     def binaryFileSize(self, url_or_filename):
@@ -1447,7 +1450,8 @@ class SnapshotBPPH(object):
             return int(self._file.size)
         return 0
 
-    def getBuild(self):
+    @staticmethod
+    def getBuild():
         return None
 
     def getUrl(self):

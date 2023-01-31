@@ -215,6 +215,7 @@ def codename_to_distribution(codename):
 
         if info().valid(codename):
             return distro
+    return None
 
 
 def verify_file_checksums(pathname, checksums=None, size=0):
@@ -364,7 +365,7 @@ def download(src, dst, size=0, *, blocksize=DOWNLOAD_BLOCKSIZE_DEFAULT):
     return dst
 
 
-class _StderrProgressBar(object):
+class _StderrProgressBar:
     BAR_WIDTH_MIN = 40
     BAR_WIDTH_DEFAULT = 60
 

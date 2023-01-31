@@ -37,7 +37,7 @@ class MaintainerUpdateException(Exception):
     pass
 
 
-class Control(object):
+class Control:
     """Represents a debian/control file"""
 
     def __init__(self, filename):

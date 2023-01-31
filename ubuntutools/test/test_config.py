@@ -40,7 +40,7 @@ class ConfigTestCase(unittest.TestCase):
         return StringIO(files[filename])
 
     def setUp(self):
-        super(ConfigTestCase, self).setUp()
+        super().setUp()
         open_mock = mock.mock_open()
         open_mock.side_effect = self._fake_open
         patcher = mock.patch("builtins.open", open_mock)
@@ -105,7 +105,8 @@ REPEAT=yes
         # self.assertRegex(errs,
         # r'Warning: Cannot parse.*\bCOMMAND_EXECUTION=a')
 
-    def get_value(self, *args, **kwargs):
+    @staticmethod
+    def get_value(*args, **kwargs):
         config = UDTConfig(prefix="TEST")
         return config.get_value(*args, **kwargs)
 
@@ -166,7 +167,8 @@ class UbuEmailTestCase(unittest.TestCase):
     def tearDown(self):
         self.clean_environment()
 
-    def clean_environment(self):
+    @staticmethod
+    def clean_environment():
         for k in ("UBUMAIL", "DEBEMAIL", "DEBFULLNAME"):
             if k in os.environ:
                 del os.environ[k]

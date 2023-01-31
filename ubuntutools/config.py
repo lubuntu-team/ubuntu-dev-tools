@@ -27,7 +27,7 @@ import sys
 Logger = logging.getLogger(__name__)
 
 
-class UDTConfig(object):
+class UDTConfig:
     """Ubuntu Dev Tools configuration file (devscripts config file) and
     environment variable parsing.
     """
@@ -61,7 +61,8 @@ class UDTConfig(object):
         if not no_conf:
             self.config = self.parse_devscripts_config()
 
-    def parse_devscripts_config(self):
+    @staticmethod
+    def parse_devscripts_config():
         """Read the devscripts configuration files, and return the values as a
         dictionary
         """

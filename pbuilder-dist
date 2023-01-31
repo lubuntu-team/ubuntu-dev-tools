@@ -51,7 +51,7 @@ from ubuntutools.question import YesNoQuestion
 Logger = getLogger()
 
 
-class PbuilderDist(object):
+class PbuilderDist:
     def __init__(self, builder):
         # Base directory where pbuilder will put all the files it creates.
         self.base = None
@@ -179,19 +179,18 @@ class PbuilderDist(object):
                 if os.path.isfile(operation):
                     self.operation = "build"
                     return [operation]
-                else:
-                    Logger.error('Could not find file "%s".', operation)
-                    sys.exit(1)
-            else:
-                Logger.error(
-                    '"%s" is not a recognized argument.\nPlease use one of these: %s.',
-                    operation,
-                    ", ".join(arguments),
-                )
+                Logger.error('Could not find file "%s".', operation)
                 sys.exit(1)
-        else:
-            self.operation = operation
-            return []
+
+            Logger.error(
+                '"%s" is not a recognized argument.\nPlease use one of these: %s.',
+                operation,
+                ", ".join(arguments),
+            )
+            sys.exit(1)
+
+        self.operation = operation
+        return []
 
     def get_command(self, remaining_arguments=None):
         """PbuilderDist.get_command -> string

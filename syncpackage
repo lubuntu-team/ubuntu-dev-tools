@@ -87,7 +87,7 @@ def add_fixed_bugs(changes, bugs):
             bugs.update(changes[i][22:].strip().split(" "))
             changes[i] = "Launchpad-Bugs-Fixed: %s" % (" ".join(bugs))
             break
-        elif i == len(changes) - 1:
+        if i == len(changes) - 1:
             # Launchpad-Bugs-Fixed entry does not exist in changes file
             line = "Launchpad-Bugs-Fixed: %s" % (" ".join(bugs))
             changes.append(line)
@@ -523,7 +523,7 @@ def parse():
         metavar="BUG",
         dest="bugs",
         action="append",
-        default=list(),
+        default=[],
         help="Mark Launchpad bug BUG as being fixed by this upload.",
     )
     parser.add_argument(
