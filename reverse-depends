@@ -183,10 +183,6 @@ def display_verbose(package, values):
         Logger.info("No reverse dependencies found")
         return
 
-    def log_field(field):
-        Logger.info(field)
-        Logger.info("=" * len(field))
-
     def log_package(values, package, arch, dependency, offset=0):
         line = "  " * offset + "* %s" % package
         if all_archs and set(arch) != all_archs:
@@ -218,7 +214,8 @@ def display_verbose(package, values):
                     all_archs.update(rdep["Architectures"])
 
     for field, rdeps in values[package].items():
-        Logger.info(field)
+        Logger.info("%s", field)
+        Logger.info("%s", "=" * len(field))
         rdeps.sort(key=lambda x: x["Package"])
         for rdep in rdeps:
             log_package(
