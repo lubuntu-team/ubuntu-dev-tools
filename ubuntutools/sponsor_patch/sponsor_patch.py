@@ -245,8 +245,8 @@ def get_open_ubuntu_bug_task(launchpad, bug, branch=None):
             Logger.info(
                 "https://launchpad.net/bugs/%i has %i Ubuntu tasks:", bug_id, len(ubuntu_tasks)
             )
-            for i in range(len(ubuntu_tasks)):
-                print("%i) %s" % (i + 1, ubuntu_tasks[i].get_package_and_series()))
+            for i, ubuntu_task in enumerate(ubuntu_tasks):
+                print("%i) %s" % (i + 1, ubuntu_task.get_package_and_series()))
             selected = input_number(
                 "To which Ubuntu task does the patch belong", 1, len(ubuntu_tasks)
             )

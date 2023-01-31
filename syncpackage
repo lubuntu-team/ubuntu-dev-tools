@@ -82,8 +82,8 @@ def add_fixed_bugs(changes, bugs):
     # Remove duplicates
     bugs = set(str(bug) for bug in bugs)
 
-    for i in range(len(changes)):
-        if changes[i].startswith("Launchpad-Bugs-Fixed:"):
+    for i, change in enumerate(changes):
+        if change.startswith("Launchpad-Bugs-Fixed:"):
             bugs.update(changes[i][22:].strip().split(" "))
             changes[i] = "Launchpad-Bugs-Fixed: %s" % (" ".join(bugs))
             break
@@ -285,7 +285,7 @@ def fetch_source_pkg(package, dist, version, component, ubuntu_release, mirror):
         dist = "unstable"
 
     requested_version = version
-    if type(version) == str:
+    if isinstance(version, str):
         version = Version(version)
 
     if version is None or component is None:

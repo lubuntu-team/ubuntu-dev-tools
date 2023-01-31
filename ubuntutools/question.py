@@ -97,7 +97,7 @@ def input_number(question, min_number, max_number, default=None):
                     print("Please input a number between %i and %i." % (min_number, max_number))
             except ValueError:
                 print("Please input a number.")
-    assert type(selected) == int
+    assert isinstance(selected, int)
     return selected
 
 

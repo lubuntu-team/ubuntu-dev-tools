@@ -150,7 +150,7 @@ def main():
     )
     if not args.lpapi and not mailserver_host:
         try:
-            import DNS
+            import DNS  # pylint: disable=import-outside-toplevel
 
             DNS.DiscoverNameServers()
             mxlist = DNS.mxlookup(bug_mail_domain)
@@ -167,6 +167,7 @@ def main():
     mailserver_pass = config.get_value("SMTP_PASS", compat_keys=["UBUSMTP_PASS", "DEBSMTP_PASS"])
 
     # import the needed requestsync module
+    # pylint: disable=import-outside-toplevel
     if args.lpapi:
         from ubuntutools.lp.lpapicache import Distribution, Launchpad
         from ubuntutools.requestsync.lp import (
@@ -259,7 +260,7 @@ def main():
     # Stop if Ubuntu has already the version from Debian or a newer version
     if (ubuntu_version >= debian_version) and args.lpapi:
         # try rmadison
-        import ubuntutools.requestsync.mail
+        import ubuntutools.requestsync.mail  # pylint: disable=import-outside-toplevel
 
         try:
             debian_srcpkg = ubuntutools.requestsync.mail.get_debian_srcpkg(srcpkg, distro)
