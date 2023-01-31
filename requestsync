@@ -299,17 +299,14 @@ def main():
         check_existing_reports(srcpkg)
 
     # Generate bug report
-    pkg_to_sync = "%s %s (%s) from Debian %s (%s)" % (
-        srcpkg,
-        debian_version,
-        ubuntu_component,
-        distro,
-        debian_component,
+    pkg_to_sync = (
+        f"{srcpkg} {debian_version} ({ubuntu_component})"
+        f" from Debian {distro} ({debian_component})"
     )
-    title = "Sync %s" % pkg_to_sync
+    title = f"Sync {pkg_to_sync}"
     if ffe:
         title = "FFe: " + title
-    report = "Please sync %s\n\n" % pkg_to_sync
+    report = f"Please sync {pkg_to_sync}\n\n"
 
     if "ubuntu" in str(ubuntu_version):
         need_interaction = True
@@ -318,9 +315,8 @@ def main():
         Logger.info("Please edit the report and give an explanation.")
         Logger.info("Not saving the report file will abort the request.")
         report += (
-            "Explanation of the Ubuntu delta and why it can be "
-            "dropped:\n%s\n>>> ENTER_EXPLANATION_HERE <<<\n\n"
-            % get_ubuntu_delta_changelog(ubuntu_srcpkg)
+            f"Explanation of the Ubuntu delta and why it can be dropped:\n"
+            f"{get_ubuntu_delta_changelog(ubuntu_srcpkg)}\n>>> ENTER_EXPLANATION_HERE <<<\n\n"
         )
 
     if ffe:
@@ -339,10 +335,7 @@ def main():
     if newsource:
         report += "All changelog entries:\n\n"
     else:
-        report += "Changelog entries since current %s version %s:\n\n" % (
-            args.release,
-            ubuntu_version,
-        )
+        report += f"Changelog entries since current {args.release} version {ubuntu_version}:\n\n"
     changelog = debian_srcpkg.getChangelog(since_version=base_version)
     if not changelog:
         if not args.missing_changelog_ok:

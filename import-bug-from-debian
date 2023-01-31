@@ -129,10 +129,7 @@ def main():
             err = True
             continue
 
-        description = "Imported from Debian bug http://bugs.debian.org/%d:\n\n%s" % (
-            bug_num,
-            summary,
-        )
+        description = f"Imported from Debian bug http://bugs.debian.org/{bug_num}:\n\n{summary}"
         # LP limits descriptions to 50K chars
         description = (description[:49994] + " [...]") if len(description) > 50000 else description
 

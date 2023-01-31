@@ -216,7 +216,7 @@ class UpdateMaintainerTestCase(unittest.TestCase):
             or base not in self._files
             or (mode == "r" and self._files[base] is None)
         ):
-            raise IOError("No such file or directory: '%s'" % filename)
+            raise IOError(f"No such file or directory: '{filename}'")
         if mode == "w":
             self._files[base] = StringIO()
             self._files[base].close = lambda: None

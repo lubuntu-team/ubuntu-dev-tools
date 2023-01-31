@@ -130,7 +130,7 @@ class MetaWrapper(type):
     def __init__(cls, name, bases, attrd):
         super(MetaWrapper, cls).__init__(name, bases, attrd)
         if "resource_type" not in attrd:
-            raise TypeError('Class "%s" needs an associated resource type' % name)
+            raise TypeError(f'Class "{name}" needs an associated resource type')
         cls._cache = {}
 
 
@@ -173,13 +173,13 @@ class BaseWrapper(metaclass=MetaWrapper):
                     if isinstance(cache, collections.abc.Callable):
                         cache(cached)
                 return cached
-            raise TypeError("'%s' is not a '%s' object" % (str(data), str(cls.resource_type)))
+            raise TypeError(f"'{data}' is not a '{cls.resource_type}' object")
 
         # not a LP API representation, let the specific class handle it
         fetch = getattr(cls, "fetch", None)
         if isinstance(fetch, collections.abc.Callable):
             return fetch(data)
-        raise NotImplementedError("Don't know how to fetch '%s' from LP" % str(data))
+        raise NotImplementedError(f"Don't know how to fetch '{data}' from LP")
 
     def __call__(self):
         return self._lpobject
@@ -188,9 +188,7 @@ class BaseWrapper(metaclass=MetaWrapper):
         return getattr(self._lpobject, attr)
 
     def __repr__(self):
-        if hasattr(str, "format"):
-            return "<{0}: {1!r}>".format(self.__class__.__name__, self._lpobject)
-        return "<%s: %r>" % (self.__class__.__name__, self._lpobject)
+        return f"<{self.__class__.__name__}: {self._lpobject!r}>"
 
 
 class Distribution(BaseWrapper):
@@ -225,7 +223,7 @@ class Distribution(BaseWrapper):
         Fetch the distribution object identified by 'dist' from LP.
         """
         if not isinstance(dist, str):
-            raise TypeError("Don't know what do with '%r'" % dist)
+            raise TypeError(f"Don't know what do with '{dist!r}'")
         cached = cls._cache.get(dist)
         if not cached:
             cached = Distribution(Launchpad.distributions[dist])
@@ -250,7 +248,7 @@ class Distribution(BaseWrapper):
 
             if res:
                 return res
-            message = "The Archive '%s' doesn't exist in %s" % (archive, self.display_name)
+            message = f"The Archive '{archive}' doesn't exist in {self.display_name}"
             raise ArchiveNotFoundException(message)
 
         if self._main_archive is None:
@@ -271,7 +269,7 @@ class Distribution(BaseWrapper):
         try:
             series = DistroSeries(self().getSeries(name_or_version=name_or_version))
         except HTTPError as error:
-            message = "Release '%s' is unknown in '%s'." % (name_or_version, self.display_name)
+            message = f"Release '{name_or_version}' is unknown in '{self.display_name}'."
             raise SeriesNotFoundException(message) from error
 
         self._cache_series(series)
@@ -299,10 +297,7 @@ class Distribution(BaseWrapper):
 
         allseries = filter(lambda s: s.active, self._series.values())
         allseries = sorted(allseries, key=lambda s: float(s.version), reverse=True)
-        Logger.debug(
-            "Found series: %s",
-            ", ".join(map(lambda s: "%s (%s)" % (s.name, s.version), allseries)),
-        )
+        Logger.debug("Found series: %s", ", ".join([f"{s.name} ({s.version})" for s in allseries]))
         return collections.OrderedDict((s.name, s) for s in allseries)
 
 
@@ -346,7 +341,7 @@ class DistroSeries(BaseWrapper):
                 architecture = DistroArchSeries(self().getDistroArchSeries(archtag=archtag))
                 self._architectures[architecture.architecture_tag] = architecture
             except HTTPError as error:
-                message = "Architecture %s is unknown." % archtag
+                message = f"Architecture {archtag} is unknown."
                 raise ArchSeriesNotFoundException(message) from error
         return self._architectures[archtag]
 
@@ -584,7 +579,7 @@ class Archive(BaseWrapper):
 
         for pocket_ in pockets:
             if pocket_ not in POCKETS:
-                raise PocketDoesNotExistError("Pocket '%s' does not exist." % pocket_)
+                raise PocketDoesNotExistError(f"Pocket '{pocket_}' does not exist.")
 
         if not status:
             if version:
@@ -600,7 +595,7 @@ class Archive(BaseWrapper):
 
         for status_ in statuses:
             if status_ not in STATUSES:
-                raise ValueError("Status '%s' is not valid." % status_)
+                raise ValueError(f"Status '{status_}' is not valid.")
 
         dist = Distribution(self.distribution_link)
 
@@ -662,32 +657,30 @@ class Archive(BaseWrapper):
                 params["version"] = version
 
             Logger.debug(
-                "Calling %s(%s)",
-                function,
-                ", ".join(["%s=%s" % (k, v) for (k, v) in params.items()]),
+                "Calling %s(%s)", function, ", ".join([f"{k}={v}" for (k, v) in params.items()])
             )
             records = getattr(self, function)(**params)
 
-            err_msg = "does not exist in the %s %s archive" % (dist.display_name, self.name)
+            err_msg = f"does not exist in the {dist.display_name} {self.name} archive"
 
             for record in records:
                 if binary:
                     rversion = getattr(record, "binary_package_version", None)
                 else:
                     rversion = getattr(record, "source_package_version", None)
-                skipmsg = "Skipping version %s: " % rversion
+                skipmsg = f"Skipping version {rversion}: "
 
                 if record.pocket not in pockets:
-                    err_msg = "pocket %s not in (%s)" % (record.pocket, ",".join(pockets))
+                    err_msg = f"pocket {record.pocket} not in ({','.join(pockets)})"
                     Logger.debug(skipmsg + err_msg)
                     continue
                 if record.status not in statuses:
-                    err_msg = "status %s not in (%s)" % (record.status, ",".join(statuses))
+                    err_msg = f"status {record.status} not in ({','.join(statuses)})"
                     Logger.debug(skipmsg + err_msg)
                     continue
                 release = wrapper(record)
                 if binary and archtag and archtag != release.arch:
-                    err_msg = "arch %s does not match requested arch %s" % (release.arch, archtag)
+                    err_msg = f"arch {release.arch} does not match requested arch {archtag}"
                     Logger.debug(skipmsg + err_msg)
                     continue
                 # results are ordered so first is latest
@@ -713,30 +706,30 @@ class Archive(BaseWrapper):
             package_type = "source package"
         else:
             package_type = "package"
-        msg = "The %s '%s' " % (package_type, name)
+        msg = f"The {package_type} '{name}' "
         if version:
-            msg += "version %s " % version
+            msg += f"version {version} "
         msg += err_msg
         if binary and archtag:
-            msg += " for architecture %s" % archtag
+            msg += f" for architecture {archtag}"
         if len(series_to_check) > 1:
             msg += " in any release"
             if len(pockets) == 1:
-                msg += " for pocket %s" % pockets[0]
+                msg += f" for pocket {pockets[0]}"
             elif len(pockets) != len(POCKETS):
-                msg += " for pockets " + ", ".join(pockets)
+                msg += f" for pockets {', '.join(pockets)}"
         elif series:
-            msg += " in %s" % series.name
+            msg += f" in {series.name}"
             if len(pockets) == 1:
-                msg += "-%s" % pockets[0]
+                msg += f"-{pockets[0]}"
             elif len(pockets) != len(POCKETS):
-                msg += " for pockets " + ", ".join(pockets)
+                msg += f" for pockets {', '.join(pockets)}"
         if len(statuses) == 1:
-            msg += " with status %s" % statuses[0]
+            msg += f" with status {statuses[0]}"
         elif len(statuses) != len(STATUSES):
-            msg += " with status in " + ", ".join(statuses)
+            msg += f" with status in {', '.join(statuses)}"
         if version_with_epoch:
-            msg += " (did you forget the epoch? try %s)" % version_with_epoch
+            msg += f" (did you forget the epoch? try {version_with_epoch})"
         raise PackageNotFoundException(msg)
 
     def copyPackage(
@@ -1113,8 +1106,9 @@ class SourcePackagePublishingHistory(BaseWrapper):
         for arch in archs:
             build = self._builds.get(arch)
             if build:
-                res.append("  %s" % build)
-        return "Build state(s) for '%s':\n%s" % (self.getPackageName(), "\n".join(res))
+                res.append(f"  {build}")
+        msg = "\n".join(res)
+        return f"Build state(s) for '{self.getPackageName()}':\n{msg}"
 
     def rescoreBuilds(self, archs, score):
         res = []
@@ -1126,14 +1120,11 @@ class SourcePackagePublishingHistory(BaseWrapper):
             build = self._builds.get(arch)
             if build:
                 if build.rescore(score):
-                    res.append("  %s: done" % arch)
+                    res.append(f"  {arch}: done")
                 else:
-                    res.append("  %s: failed" % arch)
-        return "Rescoring builds of '%s' to %i:\n%s" % (
-            self.getPackageName(),
-            score,
-            "\n".join(res),
-        )
+                    res.append(f"  {arch}: failed")
+        msg = "\n".join(res)
+        return f"Rescoring builds of '{self.getPackageName()}' to {score}:\n{msg}"
 
     def retryBuilds(self, archs):
         res = []
@@ -1145,10 +1136,11 @@ class SourcePackagePublishingHistory(BaseWrapper):
             build = self._builds.get(arch)
             if build:
                 if build.retry():
-                    res.append("  %s: done" % arch)
+                    res.append(f"  {arch}: done")
                 else:
-                    res.append("  %s: failed" % arch)
-        return "Retrying builds of '%s':\n%s" % (self.getPackageName(), "\n".join(res))
+                    res.append(f"  {arch}: failed")
+        msg = "\n".join(res)
+        return f"Retrying builds of '{self.getPackageName()}':\n{msg}"
 
 
 class BinaryPackagePublishingHistory(BaseWrapper):
@@ -1297,9 +1289,7 @@ class BinaryPackagePublishingHistory(BaseWrapper):
         """
         Returns the original build URL of the binary package.
         """
-        return "{build}/+files/{filename}".format(
-            build=self.getBuild().getUrl(), filename=self.getFileName()
-        )
+        return f"{self.getBuild().getUrl()}/+files/{self.getFileName()}"
 
     def getFileVersion(self):
         """
@@ -1351,11 +1341,9 @@ class BinaryPackagePublishingHistory(BaseWrapper):
         """
         Returns the filename for this binary package.
         """
-        return "{name}_{version}_{arch}.{ext}".format(
-            name=self.getPackageName(),
-            version=self.getFileVersion(),
-            arch=self.getFileArch(),
-            ext=self.getFileExt(),
+        return (
+            f"{self.getPackageName()}_{self.getFileVersion()}"
+            f"_{self.getFileArch()}.{self.getFileExt()}"
         )
 
 
@@ -1392,7 +1380,7 @@ class PersonTeam(BaseWrapper, metaclass=MetaPersonTeam):
             self._upload = {}
 
     def __str__(self):
-        return "%s (%s)" % (self.display_name, self.name)
+        return f"{self.display_name} ({self.name})"
 
     def cache(self):
         self._cache[self.name] = self
@@ -1403,7 +1391,7 @@ class PersonTeam(BaseWrapper, metaclass=MetaPersonTeam):
         Fetch the person or team object identified by 'url' from LP.
         """
         if not isinstance(person_or_team, str):
-            raise TypeError("Don't know what do with '%r'" % person_or_team)
+            raise TypeError(f"Don't know what do with '{person_or_team!r}'")
         cached = cls._cache.get(person_or_team)
         if not cached:
             cached = PersonTeam(Launchpad.people[person_or_team])
@@ -1426,9 +1414,9 @@ class PersonTeam(BaseWrapper, metaclass=MetaPersonTeam):
         'distroseries' has to be an DistroSeries object.
         """
         if not isinstance(archive, Archive):
-            raise TypeError("'%r' is not an Archive object." % archive)
+            raise TypeError(f"'{archive!r}' is not an Archive object.")
         if not isinstance(distroseries, DistroSeries):
-            raise TypeError("'%r' is not a DistroSeries object." % distroseries)
+            raise TypeError(f"'{distroseries!r}' is not a DistroSeries object.")
         if package is not None and not isinstance(package, str):
             raise TypeError("A source package name expected.")
         if component is not None and not isinstance(component, str):
@@ -1436,7 +1424,7 @@ class PersonTeam(BaseWrapper, metaclass=MetaPersonTeam):
         if package is None and component is None:
             raise ValueError("Either a source package name or a component has to be specified.")
         if pocket not in POCKETS:
-            raise PocketDoesNotExistError("Pocket '%s' does not exist." % pocket)
+            raise PocketDoesNotExistError(f"Pocket '{pocket}' does not exist.")
 
         can_upload = self._upload.get((archive, distroseries, pocket, package, component))
 
@@ -1504,7 +1492,7 @@ class Project(BaseWrapper):
         Fetch the project object identified by 'project' from LP.
         """
         if not isinstance(project, str):
-            raise TypeError("Don't know what do with '%r'" % project)
+            raise TypeError(f"Don't know what do with '{project!r}'")
         return Project(Launchpad.projects(project))
 
 
@@ -1524,7 +1512,7 @@ class Build(BaseWrapper):
     resource_type = "build"
 
     def __str__(self):
-        return "%s: %s" % (self.arch_tag, self.buildstate)
+        return f"{self.arch_tag}: {self.buildstate}"
 
     def getSourcePackagePublishingHistory(self):
         link = self._lpobject.current_source_publication_link

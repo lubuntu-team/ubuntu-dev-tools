@@ -105,13 +105,11 @@ def check_existing_reports(srcpkg):
     # Search bug list for other sync requests.
     for bug in pkg_bug_list:
         # check for Sync or sync and the package name
-        if not bug.is_complete and "ync %s" % srcpkg in bug.title:
+        if not bug.is_complete and f"ync {srcpkg}" in bug.title:
             print(
-                "The following bug could be a possible duplicate sync bug "
-                "on Launchpad:\n"
-                " * %s (%s)\n"
-                "Please check the above URL to verify this before "
-                "continuing." % (bug.title, bug.web_link)
+                f"The following bug could be a possible duplicate sync bug on Launchpad:\n"
+                f" * {bug.title} ({bug.web_link})\n"
+                f"Please check the above URL to verify this before continuing."
             )
             confirmation_prompt()
 
@@ -126,10 +124,9 @@ def get_ubuntu_delta_changelog(srcpkg):
         source_name=srcpkg.getPackageName(), exact_match=True, pocket="Release"
     )
     debian_info = DebianDistroInfo()
+    name_chars = "[-+0-9a-z.]"
     topline = re.compile(
-        r"^(\w%(name_chars)s*) \(([^\(\) \t]+)\)"
-        r"((\s+%(name_chars)s+)+)\;" % {"name_chars": "[-+0-9a-z.]"},
-        re.IGNORECASE,
+        rf"^(\w%({name_chars})s*) \(([^\(\) \t]+)\)((\s+%({name_chars})s+)+)\;", re.IGNORECASE
     )
     delta = []
     for record in spph:
@@ -168,14 +165,12 @@ def post_bug(srcpkg, subscribe, status, bugtitle, bugtext):
     Use the LP API to file the sync request.
     """
 
-    print("The final report is:\nSummary: %s\nDescription:\n%s\n" % (bugtitle, bugtext))
+    print(f"The final report is:\nSummary: {bugtitle}\nDescription:\n{bugtext}\n")
     confirmation_prompt()
 
     if srcpkg:
         # pylint: disable=protected-access
-        bug_target = DistributionSourcePackage(
-            "%subuntu/+source/%s" % (Launchpad._root_uri, srcpkg)
-        )
+        bug_target = DistributionSourcePackage(f"{Launchpad._root_uri}ubuntu/+source/{srcpkg}")
     else:
         # new source package
         bug_target = Distribution("ubuntu")
@@ -193,4 +188,4 @@ def post_bug(srcpkg, subscribe, status, bugtitle, bugtext):
 
     bug.subscribe(person=PersonTeam(subscribe)())
 
-    print("Sync request filed as bug #%i: %s" % (bug.id, bug.web_link))
+    print(f"Sync request filed as bug #{bug.id}: {bug.web_link}")

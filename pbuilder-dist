@@ -154,7 +154,7 @@ class PbuilderDist:
                 # should work nevertheless.
                 if distro not in self._debian_distros:
                     question = (
-                        'Warning: Unknown distribution "%s". ' "Do you want to continue" % distro
+                        f'Warning: Unknown distribution "{distro}". ' "Do you want to continue"
                     )
                     answer = YesNoQuestion().ask(question, "no")
                     if answer == "no":
@@ -208,7 +208,7 @@ class PbuilderDist:
 
         prefix = os.path.join(self.base, self.chroot_string)
         if "--buildresult" not in remaining_arguments:
-            result = os.path.normpath("%s_result/" % prefix)
+            result = os.path.normpath(f"{prefix}_result/")
         else:
             location_of_arg = remaining_arguments.index("--buildresult")
             result = os.path.normpath(remaining_arguments[location_of_arg + 1])
@@ -241,7 +241,7 @@ class PbuilderDist:
                 sys.exit(1)
 
         arguments = [
-            "--%s" % self.operation,
+            f"--{self.operation}",
             "--distribution",
             self.target_distro,
             "--buildresult",
@@ -282,9 +282,9 @@ class PbuilderDist:
         arguments += ["--mirror", mirror]
 
         othermirrors = []
-        localrepo = "/var/cache/archive/" + self.target_distro
+        localrepo = f"/var/cache/archive/{self.target_distro}"
         if os.path.exists(localrepo):
-            repo = "deb file:///var/cache/archive/ %s/" % self.target_distro
+            repo = f"deb file:///var/cache/archive/ {self.target_distro}/"
             othermirrors.append(repo)
 
         if self.target_distro in self._debian_distros:
@@ -307,21 +307,17 @@ class PbuilderDist:
                     if float(debian_info.version(codename)) < 11.0:
                         pocket = "/updates"
                 othermirrors.append(
-                    "deb %s %s%s %s"
-                    % (config.get_value("DEBSEC_MIRROR"), self.target_distro, pocket, components)
+                    f"deb {config.get_value('DEBSEC_MIRROR')}"
+                    f" {self.target_distro}{pocket} {components}"
                 )
             if self.enable_updates:
-                othermirrors.append(
-                    "deb %s %s-updates %s" % (mirror, self.target_distro, components)
-                )
+                othermirrors.append(f"deb {mirror} {self.target_distro}-updates {components}")
             if self.enable_proposed:
                 othermirrors.append(
-                    "deb %s %s-proposed-updates %s" % (mirror, self.target_distro, components)
+                    f"deb {mirror} {self.target_distro}-proposed-updates {components}"
                 )
             if self.enable_backports:
-                othermirrors.append(
-                    "deb %s %s-backports %s" % (mirror, self.target_distro, components)
-                )
+                othermirrors.append(f"deb {mirror} {self.target_distro}-backports {components}")
 
             aptcache = os.path.join(self.base, "aptcache", "debian")
         else:
@@ -336,17 +332,11 @@ class PbuilderDist:
                 self.enable_updates = False
 
             if self.enable_security:
-                othermirrors.append(
-                    "deb %s %s-security %s" % (mirror, self.target_distro, components)
-                )
+                othermirrors.append(f"deb {mirror} {self.target_distro}-security {components}")
             if self.enable_updates:
-                othermirrors.append(
-                    "deb %s %s-updates %s" % (mirror, self.target_distro, components)
-                )
+                othermirrors.append(f"deb {mirror} {self.target_distro}-updates {components}")
             if self.enable_proposed:
-                othermirrors.append(
-                    "deb %s %s-proposed %s" % (mirror, self.target_distro, components)
-                )
+                othermirrors.append(f"deb {mirror} {self.target_distro}-proposed {components}")
 
             aptcache = os.path.join(self.base, "aptcache", "ubuntu")
 
@@ -392,7 +382,7 @@ class PbuilderDist:
         if self.build_architecture != self.system_architecture:
             arguments += ["--debootstrapopts", "--arch=" + self.build_architecture]
 
-        apt_conf_dir = os.path.join(self.base, "etc/%s/apt.conf" % self.target_distro)
+        apt_conf_dir = os.path.join(self.base, f"etc/{self.target_distro}/apt.conf")
         if os.path.exists(apt_conf_dir):
             arguments += ["--aptconfdir", apt_conf_dir]
 

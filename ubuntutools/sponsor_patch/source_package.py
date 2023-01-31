@@ -91,10 +91,9 @@ class SourcePackage:
 
             msg = "Sync request ACK'd."
             if self._build_log:
-                msg = ("%s %s builds on %s. " + msg) % (
-                    self._package,
-                    self._version,
-                    self._builder.get_architecture(),
+                msg = (
+                    f"{self._package} {self._version} builds"
+                    f" on {self._builder.get_architecture()}. {msg}"
                 )
             bug.newMessage(content=msg, subject="sponsor-patch")
             Logger.debug("Acknowledged sync request bug #%i.", bug.id)
@@ -136,7 +135,7 @@ class SourcePackage:
             else:
                 target = upload
             question = Question(["yes", "edit", "no"])
-            answer = question.ask("Do you want to upload the package to %s" % target, "no")
+            answer = question.ask(f"Do you want to upload the package to {target}", "no")
             if answer == "edit":
                 return False
             if answer == "no":
@@ -177,8 +176,9 @@ class SourcePackage:
 
         if dist is None:
             dist = re.sub("-.*$", "", self._changelog.distributions)
-        build_name = "{}_{}_{}.build".format(
-            self._package, strip_epoch(self._version), self._builder.get_architecture()
+        build_name = (
+            f"{self._package}_{strip_epoch(self._version)}"
+            f"_{self._builder.get_architecture()}.build"
         )
         self._build_log = os.path.join(self._buildresult, build_name)
 
@@ -255,7 +255,7 @@ class SourcePackage:
     def _changes_file(self):
         """Returns the file name of the .changes file."""
         return os.path.join(
-            self._workdir, "{}_{}_source.changes".format(self._package, strip_epoch(self._version))
+            self._workdir, f"{self._package}_{ strip_epoch(self._version)}_source.changes"
         )
 
     def check_target(self, upload, launchpad):
@@ -310,8 +310,8 @@ class SourcePackage:
         bug title."""
 
         if not task.title_contains(self._version):
-            print("Bug #%i title: %s" % (bug_number, task.get_bug_title()))
-            msg = "Is %s %s the version that should be synced" % (self._package, self._version)
+            print(f"Bug #{bug_number} title: {task.get_bug_title()}")
+            msg = f"Is {self._package} {self._version} the version that should be synced"
             answer = YesNoQuestion().ask(msg, "no")
             if answer == "no":
                 user_abort()
@@ -319,22 +319,20 @@ class SourcePackage:
     @property
     def _debdiff_filename(self):
         """Returns the file name of the .debdiff file."""
-        debdiff_name = "{}_{}.debdiff".format(self._package, strip_epoch(self._version))
+        debdiff_name = f"{self._package}_{strip_epoch(self._version)}.debdiff"
         return os.path.join(self._workdir, debdiff_name)
 
     @property
     def _dsc_file(self):
         """Returns the file name of the .dsc file."""
-        return os.path.join(
-            self._workdir, "{}_{}.dsc".format(self._package, strip_epoch(self._version))
-        )
+        return os.path.join(self._workdir, f"{self._package}_{strip_epoch(self._version)}.dsc")
 
     def generate_debdiff(self, dsc_file):
         """Generates a debdiff between the given .dsc file and this source
         package."""
 
-        assert os.path.isfile(dsc_file), "%s does not exist." % (dsc_file)
-        assert os.path.isfile(self._dsc_file), "%s does not exist." % (self._dsc_file)
+        assert os.path.isfile(dsc_file), f"{dsc_file} does not exist."
+        assert os.path.isfile(self._dsc_file), f"{self._dsc_file} does not exist."
         cmd = ["debdiff", dsc_file, self._dsc_file]
         if not Logger.isEnabledFor(logging.DEBUG):
             cmd.insert(1, "-q")
@@ -350,7 +348,7 @@ class SourcePackage:
         change something.
         """
 
-        assert os.path.isfile(self._changes_file), "%s does not exist." % (self._changes_file)
+        assert os.path.isfile(self._changes_file), f"{self._changes_file} does not exist."
         changes = debian.deb822.Changes(open(self._changes_file, encoding="utf-8"))
         fixed_bugs = []
         if "Launchpad-Bugs-Fixed" in changes:
@@ -371,7 +369,7 @@ class SourcePackage:
         """Print things that should be checked before uploading a package."""
 
         lintian_filename = self._run_lintian()
-        print("\nPlease check %s %s carefully:" % (self._package, self._version))
+        print(f"\nPlease check {self._package} {self._version} carefully:")
         if os.path.isfile(self._debdiff_filename):
             print("file://" + self._debdiff_filename)
         print("file://" + lintian_filename)
@@ -430,7 +428,7 @@ class SourcePackage:
             changes_for_lintian = self._changes_file
 
         # Check lintian
-        assert os.path.isfile(changes_for_lintian), "%s does not exist." % (changes_for_lintian)
+        assert os.path.isfile(changes_for_lintian), f"{changes_for_lintian} does not exist."
         cmd = ["lintian", "-IE", "--pedantic", "-q", "--profile", "ubuntu", changes_for_lintian]
         lintian_filename = os.path.join(
             self._workdir, self._package + "_" + strip_epoch(self._version) + ".lintian"

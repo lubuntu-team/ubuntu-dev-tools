@@ -133,12 +133,12 @@ class PullPkg:
 
         help_default_pull = "What to pull: " + ", ".join(VALID_PULLS)
         if self._default_pull:
-            help_default_pull += " (default: %s)" % self._default_pull
+            help_default_pull += f" (default: {self._default_pull})"
         help_default_distro = "Pull from: " + ", ".join(VALID_DISTROS)
         if self._default_distro:
-            help_default_distro += " (default: %s)" % self._default_distro
+            help_default_distro += f" (default: {self._default_distro})"
         help_default_arch = "Get binary packages for arch"
-        help_default_arch += "(default: %s)" % self._default_arch
+        help_default_arch += f"(default: {self._default_arch})"
 
         # use add_help=False because we do parse_known_args() below, and if
         # that sees --help then it exits immediately
@@ -233,7 +233,7 @@ class PullPkg:
             pull = PULL_DEBS
         # verify pull action is valid
         if pull not in VALID_PULLS:
-            raise InvalidPullValueError("Invalid pull action '%s'" % pull)
+            raise InvalidPullValueError(f"Invalid pull action '{pull}'")
 
         return pull
 
@@ -254,7 +254,7 @@ class PullPkg:
             distro = DISTRO_UCA
         # verify distro is valid
         if distro not in VALID_DISTROS:
-            raise InvalidDistroValueError("Invalid distro '%s'" % distro)
+            raise InvalidDistroValueError(f"Invalid distro '{distro}'")
 
         return distro
 
@@ -397,11 +397,10 @@ class PullPkg:
             elif options["status"][0].capitalize() in UPLOAD_QUEUE_STATUSES:
                 params["status"] = options["status"][0].capitalize()
             else:
-                msg = "Invalid upload queue status '%s': valid values are %s" % (
-                    options["status"][0],
-                    ", ".join(UPLOAD_QUEUE_STATUSES),
+                raise ValueError(
+                    f"Invalid upload queue status '{options['status'][0]}':"
+                    f" valid values are {', '.join(UPLOAD_QUEUE_STATUSES)}"
                 )
-                raise ValueError(msg)
 
         return params
 
@@ -492,7 +491,7 @@ class PullPkg:
                 Logger.error("No %s found for %s %s", pull, package, spph.getVersion())
         else:
             Logger.error("Internal error: invalid pull value after parse_pull()")
-            raise InvalidPullValueError("Invalid pull value '%s'" % pull)
+            raise InvalidPullValueError(f"Invalid pull value '{pull}'")
 
     def pull_upload_queue(
         self,
@@ -543,22 +542,18 @@ class PullPkg:
             ]
 
         if not packages:
-            msg = "Package %s not found in %s upload queue for %s" % (
-                package,
-                queuetype,
-                series.name,
-            )
+            msg = f"Package {package} not found in {queuetype} upload queue for {series.name}"
             if version:
-                msg += " with version/id %s" % version
+                msg += f" with version/id {version}"
             if pull in VALID_BINARY_PULLS:
-                msg += " for arch %s" % arch
+                msg += f" for arch {arch}"
             raise PackageNotFoundException(msg)
 
         if pull == PULL_LIST:
             for pkg in packages:
-                msg = "Found %s %s (ID %s)" % (pkg.package_name, pkg.package_version, pkg.id)
+                msg = f"Found {pkg.package_name} {pkg.package_version} (ID {pkg.id})"
                 if pkg.display_arches:
-                    msg += " arch %s" % pkg.display_arches
+                    msg += f" arch {pkg.display_arches}"
                 Logger.info(msg)
                 url = pkg.changesFileUrl()
                 if url:
@@ -591,7 +586,7 @@ class PullPkg:
         if len(packages) > 1:
             msg = "Found multiple packages"
             if version:
-                msg += " with version %s, please specify the ID instead" % version
+                msg += f" with version {version}, please specify the ID instead"
             else:
                 msg += ", please specify the version"
             Logger.error("Available package versions/ids are:")
@@ -634,13 +629,13 @@ class PullPkg:
         else:
             name = ".*"
             if pull == PULL_DEBS:
-                name = r"{}(?<!-di)(?<!-dbgsym)$".format(name)
+                name = rf"{name}(?<!-di)(?<!-dbgsym)$"
             elif pull == PULL_DDEBS:
                 name += "-dbgsym$"
             elif pull == PULL_UDEBS:
                 name += "-di$"
             else:
-                raise InvalidPullValueError("Invalid pull value %s" % pull)
+                raise InvalidPullValueError(f"Invalid pull value {pull}")
 
             urls |= set(pkg.binaryFileUrls())
             if not urls:

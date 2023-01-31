@@ -78,7 +78,7 @@ class YesNoQuestion(Question):
 
 def input_number(question, min_number, max_number, default=None):
     if default:
-        question += " [%i]? " % (default)
+        question += f" [{default}]? "
     else:
         question += "? "
     selected = None
@@ -94,7 +94,7 @@ def input_number(question, min_number, max_number, default=None):
             try:
                 selected = int(selected)
                 if selected < min_number or selected > max_number:
-                    print("Please input a number between %i and %i." % (min_number, max_number))
+                    print(f"Please input a number between {min_number} and {max_number}.")
             except ValueError:
                 print("Please input a number.")
     assert isinstance(selected, int)
@@ -108,7 +108,7 @@ def confirmation_prompt(message=None, action=None):
     if message is None:
         if action is None:
             action = "continue"
-        message = "Press [Enter] to %s. Press [Ctrl-C] to abort now." % action
+        message = f"Press [Enter] to {action}. Press [Ctrl-C] to abort now."
     try:
         input(message)
     except (EOFError, KeyboardInterrupt):
@@ -126,7 +126,7 @@ class EditFile:
 
     def edit(self, optional=False):
         if optional:
-            print("\n\nCurrently the %s looks like:" % self.description)
+            print(f"\n\nCurrently the {self.description} looks like:")
             with open(self.filename, "r", encoding="utf-8") as f:
                 print(f.read())
             if YesNoQuestion().ask("Edit", "no") == "no":
@@ -147,12 +147,12 @@ class EditFile:
 
             if placeholders_present:
                 print(
-                    "Placeholders still present in the %s. "
-                    "Please replace them with useful information." % self.description
+                    f"Placeholders still present in the {self.description}. "
+                    f"Please replace them with useful information."
                 )
                 confirmation_prompt(action="edit again")
             elif not modified:
-                print("The %s was not modified" % self.description)
+                print(f"The {self.description} was not modified")
                 if YesNoQuestion().ask("Edit again", "yes") == "no":
                     done = True
             elif self.check_edit():
@@ -172,9 +172,7 @@ class EditBugReport(EditFile):
     def __init__(self, subject, body, placeholders=None):
         prefix = os.path.basename(sys.argv[0]) + "_"
         tmpfile = tempfile.NamedTemporaryFile(prefix=prefix, suffix=".txt", delete=False)
-        tmpfile.write(
-            ("Summary (one line):\n%s\n\nDescription:\n%s" % (subject, body)).encode("utf-8")
-        )
+        tmpfile.write((f"Summary (one line):\n{subject}\n\nDescription:\n{body}").encode("utf-8"))
         tmpfile.close()
         super().__init__(tmpfile.name, "bug report", placeholders)
 
@@ -184,8 +182,7 @@ class EditBugReport(EditFile):
 
         if self.split_re.match(report) is None:
             print(
-                "The %s doesn't start with 'Summary:' and 'Description:' "
-                "blocks" % self.description
+                f"The {self.description} doesn't start with 'Summary:' and 'Description:' blocks"
             )
             confirmation_prompt("edit again")
             return False

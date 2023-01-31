@@ -202,7 +202,7 @@ def find_release_package(mirror, workdir, package, version, source_release, conf
         distribution = system_distribution()
     mirrors = [mirror] if mirror else []
 
-    mirrors.append(config.get_value("%s_MIRROR" % distribution.upper()))
+    mirrors.append(config.get_value(f"{distribution.upper()}_MIRROR"))
 
     if not version:
         archive = Distribution(distribution.lower()).getArchive()
@@ -259,13 +259,13 @@ def get_backport_version(version, suffix, upload, release):
             release_version = debian_distro_info.version(release)
             if not release_version:
                 error("Can't find the release version for %s", release)
-            backport_version = "{}~bpo{}+1".format(version, release_version)
+            backport_version = f"{version}~bpo{release_version}+1"
         else:
             error("%s is not a supported release (%s)", release, debian_codenames)
     elif distribution == "Ubuntu":
         series = Distribution(distribution.lower()).getSeries(name_or_version=release)
 
-        backport_version = version + ("~bpo%s.1" % (series.version))
+        backport_version = f"{version}~bpo{series.version}.1"
     else:
         error("Unknown distribution «%s» for release «%s»", distribution, release)
     if suffix is not None:
@@ -291,7 +291,7 @@ def get_old_version(source, release):
 def get_backport_dist(release, release_pocket):
     if release_pocket:
         return release
-    return "%s-backports" % release
+    return f"{release}-backports"
 
 
 def do_build(workdir, dsc, release, builder, update):
@@ -309,9 +309,9 @@ def do_build(workdir, dsc, release, builder, update):
 
 
 def do_upload(workdir, package, bp_version, changes, upload, prompt):
-    print("Please check %s %s in file://%s carefully!" % (package, bp_version, workdir))
+    print(f"Please check {package} {bp_version} in file://{workdir} carefully!")
     if prompt or upload == "ubuntu":
-        question = "Do you want to upload the package to %s" % upload
+        question = f"Do you want to upload the package to {upload}"
         answer = YesNoQuestion().ask(question, "yes")
         if answer == "no":
             return
@@ -329,13 +329,11 @@ def orig_needed(upload, workdir, pkg):
     version = pkg.version.upstream_version
 
     http = Http()
-    for filename in glob.glob(os.path.join(workdir, "%s_%s.orig*" % (pkg.source, version))):
-        url = "https://launchpad.net/~%s/+archive/%s/+sourcefiles/%s/%s/%s" % (
-            quote(user),
-            quote(ppa),
-            quote(pkg.source),
-            quote(pkg.version.full_version),
-            quote(os.path.basename(filename)),
+    for filename in glob.glob(os.path.join(workdir, f"{pkg.source}_{version}.orig*")):
+        url = (
+            f"https://launchpad.net/~{quote(user)}/+archive/{quote(ppa)}/+sourcefiles"
+            f"/{quote(pkg.source)}/{quote(pkg.version.full_version)}"
+            f"/{quote(os.path.basename(filename))}"
         )
         try:
             headers = http.request(url, "HEAD")[0]
@@ -364,11 +362,11 @@ def do_backport(
     keyid,
     prompt,
 ):
-    dirname = "%s-%s" % (pkg.source, release)
+    dirname = f"{pkg.source}-{release}"
     srcdir = os.path.join(workdir, dirname)
 
     if os.path.exists(srcdir):
-        question = "Working directory %s already exists. Delete it?" % srcdir
+        question = f"Working directory {srcdir} already exists. Delete it?"
         if YesNoQuestion().ask(question, "no") == "no":
             sys.exit(1)
         shutil.rmtree(srcdir)
@@ -379,9 +377,9 @@ def do_backport(
     old_version = get_old_version(pkg.source, release)
     bp_dist = get_backport_dist(release, release_pocket)
 
-    changelog = "%s backport to %s." % (message, release)
+    changelog = f"{message} backport to {release}."
     if close:
-        changelog += " (LP: #%s)" % (close,)
+        changelog += f" (LP: #{close})"
     check_call(
         [
             "dch",
@@ -403,7 +401,7 @@ def do_backport(
     else:
         cmd.append("-sd")
     if old_version:
-        cmd.append("-v%s" % old_version)
+        cmd.append(f"-v{old_version}")
     env = os.environ.copy()
     # An ubuntu.com e-mail address would make dpkg-buildpackage fail if there
     # wasn't an Ubuntu maintainer for an ubuntu-versioned package. LP: #1007042

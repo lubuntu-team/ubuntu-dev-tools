@@ -80,9 +80,8 @@ def main():
         "--arch",
         action="append",
         dest="architecture",
-        help="Rebuild or rescore a specific "
-        "architecture. Valid architectures "
-        "include: %s." % ", ".join(valid_archs),
+        help=f"Rebuild or rescore a specific architecture. Valid architectures "
+        f"include: {', '.join(valid_archs)}.",
     )
 
     # Batch processing options
@@ -115,8 +114,8 @@ def main():
         "--arch2",
         action="append",
         dest="architecture",
-        help="Affect only 'architecture' (can be used "
-        "several times). Valid architectures are: %s." % ", ".join(valid_archs),
+        help=f"Affect only 'architecture' (can be used several times)."
+        f" Valid architectures are: {', '.join(valid_archs)}.",
     )
     parser.add_argument("packages", metavar="package", nargs="+", help=argparse.SUPPRESS)
 

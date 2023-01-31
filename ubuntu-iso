@@ -54,7 +54,7 @@ def main():
 
     for iso in args.isos:
         if len(args.isos) > 1:
-            prefix = "%s:" % iso
+            prefix = f"{iso}:"
         else:
             prefix = ""
 

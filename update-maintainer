@@ -36,7 +36,7 @@ def find_debian_dir(depth=6):
     :returns: a path to an existing debian/ directory, or None
     """
     for path in ["../" * n or "./" for n in list(range(0, depth + 1))]:
-        debian_path = "{}debian".format(path)
+        debian_path = f"{path}debian"
         if os.path.exists(os.path.join(debian_path, "control")) and os.path.exists(
             os.path.join(debian_path, "changelog")
         ):
@@ -46,7 +46,7 @@ def find_debian_dir(depth=6):
 
 def main():
     script_name = os.path.basename(sys.argv[0])
-    epilog = "See %s(1) for more info." % (script_name)
+    epilog = f"See {script_name}(1) for more info."
     parser = argparse.ArgumentParser(epilog=epilog)
     parser.add_argument(
         "-d",

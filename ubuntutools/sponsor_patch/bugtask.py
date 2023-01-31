@@ -80,7 +80,7 @@ class BugTask:
                 dsc_file = os.path.join(os.getcwd(), filename)
             else:
                 urlretrieve(url, filename)
-        assert os.path.isfile(dsc_file), "%s does not exist." % (dsc_file)
+        assert os.path.isfile(dsc_file), f"{dsc_file} does not exist."
         return dsc_file
 
     def get_branch_link(self):

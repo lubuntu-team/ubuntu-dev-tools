@@ -41,11 +41,11 @@ def determine_destinations(source, destination):
         destination = ubuntu_info.lts()
 
     if source not in ubuntu_info.all:
-        raise DestinationException("Source release %s does not exist" % source)
+        raise DestinationException(f"Source release {source} does not exist")
     if destination not in ubuntu_info.all:
-        raise DestinationException("Destination release %s does not exist" % destination)
+        raise DestinationException(f"Destination release {destination} does not exist")
     if destination not in ubuntu_info.supported():
-        raise DestinationException("Destination release %s is not supported" % destination)
+        raise DestinationException(f"Destination release {destination} is not supported")
 
     found = False
     destinations = []
@@ -137,9 +137,9 @@ def find_rdepends(releases, published_binaries):
     for binpkg, rdeps in intermediate.items():
         output += ["", binpkg, "-" * len(binpkg)]
         for pkg, appearences in rdeps.items():
-            output += ["* %s" % pkg]
+            output += [f"* {pkg}"]
             for release, relationship in appearences:
-                output += ["  [ ] %s (%s)" % (release, relationship)]
+                output += [f"  [ ] {release} ({relationship})"]
 
     found_any = sum(len(rdeps) for rdeps in intermediate.values())
     if found_any:
@@ -200,11 +200,9 @@ def request_backport(package_spph, source, destinations):
 
     testing = ["[Testing]", ""]
     for dest in destinations:
-        testing += [" * %s:" % dest.capitalize()]
+        testing += [f" * {dest.capitalize()}:"]
         testing += ["   [ ] Package builds without modification"]
-        testing += [
-            "   [ ] %s installs cleanly and runs" % binary for binary in published_binaries
-        ]
+        testing += [f"   [ ] {binary} installs cleanly and runs" for binary in published_binaries]
 
     subst = {
         "package": package_spph.getPackageName(),

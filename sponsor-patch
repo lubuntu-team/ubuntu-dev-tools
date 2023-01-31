@@ -38,7 +38,7 @@ def parse(script_name):
         "%(prog)s [options] <bug number>\n"
         "One of --upload, --workdir, or --sponsor must be specified."
     )
-    epilog = "See %s(1) for more info." % (script_name)
+    epilog = f"See {script_name}(1) for more info."
     parser = argparse.ArgumentParser(usage=usage, epilog=epilog)
 
     parser.add_argument(

@@ -85,11 +85,11 @@ def add_fixed_bugs(changes, bugs):
     for i, change in enumerate(changes):
         if change.startswith("Launchpad-Bugs-Fixed:"):
             bugs.update(changes[i][22:].strip().split(" "))
-            changes[i] = "Launchpad-Bugs-Fixed: %s" % (" ".join(bugs))
+            changes[i] = f"Launchpad-Bugs-Fixed: {' '.join(bugs)}"
             break
         if i == len(changes) - 1:
             # Launchpad-Bugs-Fixed entry does not exist in changes file
-            line = "Launchpad-Bugs-Fixed: %s" % (" ".join(bugs))
+            line = f"Launchpad-Bugs-Fixed: {' '.join(bugs)}"
             changes.append(line)
 
     return "\n".join(changes + [""])
@@ -194,7 +194,7 @@ def sync_dsc(
 
     if not fakesync:
         # create the changes file
-        changes_filename = "%s_%s_source.changes" % (src_pkg.source, new_ver.strip_epoch())
+        changes_filename = f"{src_pkg.source}_{new_ver.strip_epoch()}_source.changes"
         cmd = [
             "dpkg-genchanges",
             "-S",
@@ -237,11 +237,10 @@ def sync_dsc(
     else:
         # Create fakesync changelog entry
         new_ver = Version(new_ver.full_version + "fakesync1")
-        changes_filename = "%s_%s_source.changes" % (src_pkg.source, new_ver.strip_epoch())
+        changes_filename = f"{src_pkg.source}_{new_ver.strip_epoch()}_source.changes"
         if len(bugs) > 0:
-            message = "Fake sync due to mismatching orig tarball (LP: %s)." % (
-                ", ".join(["#" + str(b) for b in bugs])
-            )
+            bug_numbers = [f"#{b}" for b in bugs]
+            message = f"Fake sync due to mismatching orig tarball (LP: {', '.join(bug_numbers)})."
         else:
             message = "Fake sync due to mismatching orig tarball."
         cmd = ["dch", "-v", new_ver.full_version, "--force-distribution", "-D", release, message]
@@ -441,12 +440,8 @@ def is_blacklisted(query):
     lp_comments = series.getDifferenceComments(source_package_name=query)
     blacklisted = False
     comments = [
-        "%s\n  -- %s  %s"
-        % (
-            c.body_text,
-            c.comment_author.name,
-            c.comment_date.strftime("%a, %d %b %Y %H:%M:%S +0000"),
-        )
+        f"{c.body_text}\n  -- {c.comment_author.name}"
+        f"  {c.comment_date.strftime('%a, %d %b %Y %H:%M:%S +0000')}"
         for c in lp_comments
     ]
 
@@ -482,9 +477,9 @@ def is_blacklisted(query):
 def close_bugs(bugs, package, version, changes, sponsoree):
     """Close the correct task on all bugs, with changes"""
     ubuntu = Launchpad.distributions["ubuntu"]
-    message = "This bug was fixed in the package %s - %s" % (package, version)
+    message = f"This bug was fixed in the package {package} - {version}"
     if sponsoree:
-        message += "\nSponsored for %s (%s)" % (sponsoree.display_name, sponsoree.name)
+        message += f"\nSponsored for {sponsoree.display_name} ({sponsoree.name})"
     if changes:
         message += "\n\n---------------\n" + changes
     for bug in bugs:
@@ -510,7 +505,7 @@ def parse():
     """Parse given command-line parameters."""
 
     usage = "%(prog)s [options] <.dsc URL/path or package name>"
-    epilog = "See %s(1) for more info." % os.path.basename(sys.argv[0])
+    epilog = f"See {os.path.basename(sys.argv[0])}(1) for more info."
     parser = argparse.ArgumentParser(usage=usage, epilog=epilog)
 
     parser.add_argument("-d", "--distribution", help="Debian distribution to sync from.")
@@ -599,13 +594,13 @@ def parse():
         "-D",
         "--debian-mirror",
         metavar="DEBIAN_MIRROR",
-        help="Preferred Debian mirror (default: %s)" % UDTConfig.defaults["DEBIAN_MIRROR"],
+        help=f"Preferred Debian mirror (default: {UDTConfig.defaults['DEBIAN_MIRROR']})",
     )
     no_lp.add_argument(
         "-U",
         "--ubuntu-mirror",
         metavar="UBUNTU_MIRROR",
-        help="Preferred Ubuntu mirror (default: %s)" % UDTConfig.defaults["UBUNTU_MIRROR"],
+        help=f"Preferred Ubuntu mirror (default: {UDTConfig.defaults['UBUNTU_MIRROR']})",
     )
     parser.add_argument("package", help=argparse.SUPPRESS)
     args = parser.parse_args()
@@ -620,8 +615,8 @@ def parse():
 
     if args.component not in (None, "main", "contrib", "non-free"):
         parser.error(
-            "%s is not a valid Debian component. "
-            "It should be one of main, contrib, or non-free." % args.component
+            f"{args.component} is not a valid Debian component. "
+            f"It should be one of main, contrib, or non-free."
         )
 
     if args.lp and args.uploader_name:
@@ -668,7 +663,7 @@ def main():
 
     if args.release is None:
         ubuntu = Launchpad.distributions["ubuntu"]
-        args.release = "%s-proposed" % ubuntu.current_series.name
+        args.release = f"{ubuntu.current_series.name}-proposed"
 
     if not args.fakesync and not args.lp:
         Logger.warning(

@@ -647,7 +647,7 @@ class DebianSourcePackage(SourcePackage):
                 version = self.version.full_version
                 srcpkg = Snapshot.getSourcePackage(self.source, version=version)
                 if not srcpkg:
-                    msg = "Package {} {} not found".format(self.source, version)
+                    msg = f"Package {self.source} {version} not found"
                     raise PackageNotFoundException(msg)
                 self._snapshot_package = srcpkg
             else:
@@ -657,7 +657,7 @@ class DebianSourcePackage(SourcePackage):
                 params = {"series": series} if series else {}
                 srcpkg = Madison(self.distribution).getSourcePackage(self.source, **params)
                 if not srcpkg:
-                    raise PackageNotFoundException("Package {} not found".format(self.source))
+                    raise PackageNotFoundException(f"Package {self.source} not found")
                 if self.source != srcpkg.name:
                     self.binary = self.source
                     self.source = srcpkg.name
@@ -688,7 +688,7 @@ class PersonalPackageArchiveSourcePackage(UbuntuSourcePackage):
         assert "ppa" in kwargs
         ppa = kwargs["ppa"].split("/")
         if len(ppa) != 2:
-            raise ValueError('Invalid PPA value "%s",' 'must be "<USER>/<PPA>"' % kwargs["ppa"])
+            raise ValueError(f'Invalid PPA value "{kwargs["ppa"]}",' 'must be "<USER>/<PPA>"')
         self._teamname = ppa[0]
         self._ppaname = ppa[1]
         self.masters = []
@@ -960,13 +960,13 @@ class Madison(_WebJSON):
         return self.urls[self._distro]
 
     def getSourcePackage(self, name, series="unstable"):
-        url = "?f=json&package={name}&s={series}".format(name=name, series=series)
+        url = f"?f=json&package={name}&s={series}"
         try:
             result = self.load(url)
         except HTTPError:
             result = None
         if not result:
-            msg = "Package {} not found in '{}'".format(name, series)
+            msg = f"Package {name} not found in '{series}'"
             raise PackageNotFoundException(msg)
         versions = list(result[0][name].values())[0]
         latest = versions[sorted(versions.keys(), reverse=True)[0]]
@@ -985,17 +985,17 @@ class _Snapshot(_WebJSON):
         # unfortunately there is no (easy) way to find the component for older
         # package versions (madison only lists the most recent versions).
         # so we have to parse the file path to determine the component :(
-        url = "/mr/package/{}/{}/srcfiles".format(name, version)
+        url = f"/mr/package/{name}/{version}/srcfiles"
         try:
-            response = self.load("{}?fileinfo=1".format(url))
+            response = self.load(f"{url}?fileinfo=1")
         except HTTPError as error:
-            msg = "Package {} version {} not found"
-            raise PackageNotFoundException(msg.format(name, version)) from error
+            msg = f"Package {name} version {version} not found"
+            raise PackageNotFoundException(msg) from error
         result = response.get("result")
         info = response.get("fileinfo")
         if len(result) < 1:
-            msg = "No source files for package {} version {}"
-            raise PackageNotFoundException(msg.format(name, version))
+            msg = f"No source files for package {name} version {version}"
+            raise PackageNotFoundException(msg)
         path = info[result[0]["hash"]][0]["path"]
         # this expects the 'component' to follow 'pool[-*]' in the path
         found_pool = False
@@ -1015,15 +1015,15 @@ class _Snapshot(_WebJSON):
 
     def _get_package(self, name, url, pkginit, version, sort_key):
         try:
-            results = self.load("/mr/{}/{}/".format(url, name))["result"]
+            results = self.load(f"/mr/{url}/{name}/")["result"]
         except HTTPError as error:
-            raise PackageNotFoundException("Package {} not found.".format(name)) from error
+            raise PackageNotFoundException(f"Package {name} not found.") from error
 
         results = sorted(results, key=lambda r: r[sort_key], reverse=True)
         results = [pkginit(r) for r in results if version == r["version"]]
         if not results:
-            msg = "Package {name} version {version} not found."
-            raise PackageNotFoundException(msg.format(name=name, version=version))
+            msg = f"Package {name} version {version} not found."
+            raise PackageNotFoundException(msg)
         return results
 
     def getSourcePackages(self, name, version):
@@ -1080,8 +1080,8 @@ class SnapshotSourcePackage(SnapshotPackage):
 
     def getBinaryFiles(self, arch=None, name=None, ext=None):
         if not self._binary_files:
-            url = "/mr/package/{}/{}/allfiles".format(self.name, self.version)
-            response = Snapshot.load("{}?fileinfo=1".format(url))
+            url = f"/mr/package/{self.name}/{self.version}/allfiles"
+            response = Snapshot.load(f"{url}?fileinfo=1")
             info = response["fileinfo"]
             files = [
                 SnapshotBinaryFile(
@@ -1108,8 +1108,8 @@ class SnapshotSourcePackage(SnapshotPackage):
 
     def getFiles(self):
         if not self._files:
-            url = "/mr/package/{}/{}/srcfiles".format(self.name, self.version)
-            response = Snapshot.load("{}?fileinfo=1".format(url))
+            url = f"/mr/package/{self.name}/{self.version}/srcfiles"
+            response = Snapshot.load(f"{url}?fileinfo=1")
             info = response["fileinfo"]
             self._files = [
                 SnapshotSourceFile(
@@ -1144,8 +1144,8 @@ class SnapshotBinaryPackage(SnapshotPackage):
 
     def getFiles(self, arch=None):
         if not self._files:
-            url = "/mr/binary/{}/{}/binfiles".format(self.name, self.version)
-            response = Snapshot.load("{}?fileinfo=1".format(url))
+            url = f"/mr/binary/{self.name}/{self.version}/binfiles"
+            response = Snapshot.load(f"{url}?fileinfo=1")
             info = response["fileinfo"]
             self._files = [
                 SnapshotBinaryFile(
@@ -1209,10 +1209,10 @@ class SnapshotFile:
         return self._hash
 
     def getUrl(self):
-        return "{}/file/{}".format(Snapshot.getHostUrl(), self.getHash())
+        return f"{Snapshot.getHostUrl()}/file/{self.getHash()}"
 
     def __repr__(self):
-        return "{}/{} {} bytes {}".format(self.path, self.name, self.size, self.date)
+        return f"{self.path}/{self.name} {self.size} bytes {self.date}"
 
 
 class SnapshotSourceFile(SnapshotFile):
@@ -1260,7 +1260,7 @@ class SnapshotSPPH:
 
     @property
     def display_name(self):
-        return "{name} {version}".format(name=self.getPackageName(), version=self.getVersion())
+        return f"{self.getPackageName()} {self.getVersion()}"
 
     @property
     def pocket(self):
@@ -1329,7 +1329,7 @@ class SnapshotSPPH:
         if self._changelog is None:
             name = self.getPackageName()
             if name.startswith("lib"):
-                subdir = "lib%s" % name[3]
+                subdir = f"lib{name[3]}"
             else:
                 subdir = name[0]
             pkgversion = Version(self.getVersion()).strip_epoch()
@@ -1394,7 +1394,7 @@ class SnapshotBPPH:  # pylint: disable=too-many-public-methods
 
     @property
     def display_name(self):
-        return "{name} {version}".format(name=self.getPackageName(), version=self.getVersion())
+        return f"{self.getPackageName()} {self.getVersion()}"
 
     @property
     def pocket(self):

@@ -37,7 +37,7 @@ def main():
     parser.add_argument("filename", help=argparse.SUPPRESS)
     args = parser.parse_args()
     if not os.path.isfile(args.filename):
-        parser.error("File %s does not exist" % args.filename)
+        parser.error(f"File {args.filename} does not exist")
 
     if "UDT_EDIT_WRAPPER_EDITOR" in os.environ:
         os.environ["EDITOR"] = os.environ["UDT_EDIT_WRAPPER_EDITOR"]

@@ -81,7 +81,7 @@ def present_on(appearences):
     for flavor, types in present.items():
         if len(types) > 1:
             types.discard("supported")
-    output = ["  %s: %s" % (flavor, ", ".join(sorted(types))) for flavor, types in present.items()]
+    output = [f"  {flavor}: {', '.join(sorted(types))}" for flavor, types in present.items()]
     output.sort()
     return "\n".join(output)
 

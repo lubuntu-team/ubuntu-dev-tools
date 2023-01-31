@@ -173,7 +173,7 @@ def split_release_pocket(release, default="Release"):
         pocket = pocket.capitalize()
 
         if pocket not in POCKETS:
-            raise PocketDoesNotExistError("Pocket '%s' does not exist." % pocket)
+            raise PocketDoesNotExistError(f"Pocket '{pocket}' does not exist.")
 
     return (release, pocket)
 
@@ -406,7 +406,7 @@ def _download(fsrc, fdst, size, *, blocksize):
     parsed = urlparse(url)
     filename = Path(parsed.path).name
     hostname = parsed.hostname
-    sizemb = " (%0.3f MiB)" % (size / 1024.0 / 1024) if size else ""
+    sizemb = f" ({size / 1024.0 / 1024:0.3f} MiB)" if size else ""
     Logger.info("Downloading %s from %s%s", filename, hostname, sizemb)
 
     # Don't show progress if:

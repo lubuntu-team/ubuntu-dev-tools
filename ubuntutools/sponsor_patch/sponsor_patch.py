@@ -83,12 +83,11 @@ def edit_source():
     cmd = [get_user_shell()]
     Logger.debug(" ".join(cmd))
     print(
-        """An interactive shell was launched in
-file://%s
+        f"""An interactive shell was launched in
+file://{os.getcwd()}
 Edit your files. When you are done, exit the shell. If you wish to abort the
 process, exit the shell such that it returns an exit code other than zero.
-"""
-        % (os.getcwd()),
+""",
         end=" ",
     )
     returncode = subprocess.call(cmd)
@@ -101,35 +100,25 @@ def ask_for_patch_or_branch(bug, attached_patches, linked_branches):
     patch = None
     branch = None
     if len(attached_patches) == 0:
-        msg = "https://launchpad.net/bugs/%i has %i branches linked:" % (
-            bug.id,
-            len(linked_branches),
-        )
+        msg = f"{len(linked_branches)} branches linked:"
     elif len(linked_branches) == 0:
-        msg = "https://launchpad.net/bugs/%i has %i patches attached:" % (
-            bug.id,
-            len(attached_patches),
-        )
+        msg = f"{len(attached_patches)} patches attached:"
     else:
-        branches = "%i branch" % len(linked_branches)
+        branches = f"{len(linked_branches)} branch"
         if len(linked_branches) > 1:
             branches += "es"
-        patches = "%i patch" % len(attached_patches)
+        patches = f"{len(attached_patches)} patch"
         if len(attached_patches) > 1:
             patches += "es"
-        msg = "https://launchpad.net/bugs/%i has %s linked and %s attached:" % (
-            bug.id,
-            branches,
-            patches,
-        )
-    Logger.info(msg)
+        msg = f"{branches} linked and {patches} attached:"
+    Logger.info("https://launchpad.net/bugs/%i has %s", bug.id, msg)
     i = 0
     for linked_branch in linked_branches:
         i += 1
-        print("%i) %s" % (i, linked_branch.display_name))
+        print(f"{i}) {linked_branch.display_name}")
     for attached_patch in attached_patches:
         i += 1
-        print("%i) %s" % (i, attached_patch.title))
+        print(f"{i}) {attached_patch.title}")
     selected = input_number("Which branch or patch do you want to download", 1, i, i)
     if selected <= len(linked_branches):
         branch = linked_branches[selected - 1].bzr_identity
@@ -246,7 +235,7 @@ def get_open_ubuntu_bug_task(launchpad, bug, branch=None):
                 "https://launchpad.net/bugs/%i has %i Ubuntu tasks:", bug_id, len(ubuntu_tasks)
             )
             for i, ubuntu_task in enumerate(ubuntu_tasks):
-                print("%i) %s" % (i + 1, ubuntu_task.get_package_and_series()))
+                print(f"{i + 1}) {ubuntu_task.get_package_and_series()}")
             selected = input_number(
                 "To which Ubuntu task does the patch belong", 1, len(ubuntu_tasks)
             )

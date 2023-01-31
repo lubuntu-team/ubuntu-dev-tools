@@ -73,8 +73,8 @@ def need_sponsorship(name, component, release):
     """
 
     val = YesNoQuestion().ask(
-        "Do you have upload permissions for the '%s' component or "
-        "the package '%s' in Ubuntu %s?\nIf in doubt answer 'n'." % (component, name, release),
+        f"Do you have upload permissions for the '{component}' component or "
+        f"the package '{name}' in Ubuntu {release}?\nIf in doubt answer 'n'.",
         "no",
     )
     return val == "no"
@@ -85,9 +85,8 @@ def check_existing_reports(srcpkg):
     Point the user to the URL to manually check for duplicate bug reports.
     """
     print(
-        "Please check on "
-        "https://bugs.launchpad.net/ubuntu/+source/%s/+bugs\n"
-        "for duplicate sync requests before continuing." % srcpkg
+        f"Please check on https://bugs.launchpad.net/ubuntu/+source/{srcpkg}/+bugs\n"
+        f"for duplicate sync requests before continuing."
     )
     confirmation_prompt()
 
@@ -129,29 +128,25 @@ def mail_bug(
     Submit the sync request per email.
     """
 
-    to = "new@" + bug_mail_domain
+    to = f"new@{bug_mail_domain}"
 
     # generate mailbody
     if srcpkg:
-        mailbody = " affects ubuntu/%s\n" % srcpkg
+        mailbody = f" affects ubuntu/{srcpkg}\n"
     else:
         mailbody = " affects ubuntu\n"
-    mailbody += """\
- status %s
+    mailbody += f"""\
+ status {status}
  importance wishlist
- subscribe %s
+ subscribe {subscribe}
  done
 
-%s""" % (
-        status,
-        subscribe,
-        bugtext,
-    )
+{bugtext}"""
 
     # prepare sign command
     gpg_command = None
     for cmd in ("gnome-gpg", "gpg2", "gpg"):
-        if os.access("/usr/bin/%s" % cmd, os.X_OK):
+        if os.access(f"/usr/bin/{cmd}", os.X_OK):
             gpg_command = [cmd]
             break
 
@@ -173,20 +168,15 @@ def mail_bug(
         sys.exit(1)
 
     # generate email
-    mail = """\
-From: %s
-To: %s
-Subject: %s
+    mail = f"""\
+From: {myemailaddr}
+To: {to}
+Subject: {bugtitle}
 Content-Type: text/plain; charset=UTF-8
 
-%s""" % (
-        myemailaddr,
-        to,
-        bugtitle,
-        signed_report,
-    )
+{signed_report}"""
 
-    print("The final report is:\n%s" % mail)
+    print(f"The final report is:\n{mail}")
     confirmation_prompt()
 
     # save mail in temporary file

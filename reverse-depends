@@ -114,7 +114,7 @@ def main():
     # Convert unstable/testing aliases to codenames:
     distribution = codename_to_distribution(options.release)
     if not distribution:
-        parser.error("Unknown release codename %s" % options.release)
+        parser.error(f"Unknown release codename {options.release}")
     distro_info = vendor_to_distroinfo(distribution)()
     try:
         options.release = distro_info.codename(options.release, default=options.release)
@@ -184,13 +184,13 @@ def display_verbose(package, values):
         return
 
     def log_package(values, package, arch, dependency, offset=0):
-        line = "  " * offset + "* %s" % package
+        line = f"{'  ' * offset}* {package}"
         if all_archs and set(arch) != all_archs:
-            line += " [%s]" % " ".join(sorted(arch))
+            line += f" [{' '.join(sorted(arch))}]"
         if dependency:
             if len(line) < 30:
                 line += " " * (30 - len(line))
-                line += "  (for %s)" % dependency
+                line += f"  (for {dependency})"
         Logger.info(line)
         data = values.get(package)
         if data:

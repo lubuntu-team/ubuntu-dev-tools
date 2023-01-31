@@ -41,7 +41,7 @@ class Control:
     """Represents a debian/control file"""
 
     def __init__(self, filename):
-        assert os.path.isfile(filename), "%s does not exist." % (filename)
+        assert os.path.isfile(filename), f"{filename} does not exist."
         self._filename = filename
         self._content = open(filename, encoding="utf-8").read()
 
@@ -114,9 +114,9 @@ def _find_files(debian_directory, verbose):
 
     # Make sure that a changelog and control file is available
     if len(control_files) == 0:
-        raise MaintainerUpdateException("No control file found in %s." % debian_directory)
+        raise MaintainerUpdateException(f"No control file found in {debian_directory}.")
     if not os.path.isfile(changelog_file):
-        raise MaintainerUpdateException("No changelog file found in %s." % debian_directory)
+        raise MaintainerUpdateException(f"No changelog file found in {debian_directory}.")
 
     # If the rules file accounts for XSBC-Original-Maintainer, we should not
     # touch it in this package (e.g. the python package).
@@ -160,8 +160,8 @@ def update_maintainer(debian_directory, verbose=False):
 
         if original_maintainer.strip().lower() in _PREVIOUS_UBUNTU_MAINTAINER:
             if verbose:
-                print("The old maintainer was: %s" % original_maintainer)
-                print("Resetting as: %s" % _UBUNTU_MAINTAINER)
+                print(f"The old maintainer was: {original_maintainer}")
+                print(f"Resetting as: {_UBUNTU_MAINTAINER}")
             control.set_maintainer(_UBUNTU_MAINTAINER)
             control.save()
             continue
@@ -182,8 +182,8 @@ def update_maintainer(debian_directory, verbose=False):
             )
 
         if verbose:
-            print("The original maintainer is: %s" % original_maintainer)
-            print("Resetting as: %s" % _UBUNTU_MAINTAINER)
+            print(f"The original maintainer is: {original_maintainer}")
+            print(f"Resetting as: {_UBUNTU_MAINTAINER}")
         control.set_original_maintainer(original_maintainer)
         control.set_maintainer(_UBUNTU_MAINTAINER)
         control.save()
@@ -205,7 +205,7 @@ def restore_maintainer(debian_directory, verbose=False):
         if not orig_maintainer:
             continue
         if verbose:
-            print("Restoring original maintainer: %s" % orig_maintainer)
+            print(f"Restoring original maintainer: {orig_maintainer}")
         control.set_maintainer(orig_maintainer)
         control.remove_original_maintainer()
         control.save()

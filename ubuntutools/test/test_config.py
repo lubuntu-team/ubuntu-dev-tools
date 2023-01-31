@@ -36,7 +36,7 @@ class ConfigTestCase(unittest.TestCase):
             os.path.expanduser("~/.devscripts"): self._config_files["user"],
         }
         if filename not in files:
-            raise IOError("No such file or directory: '%s'" % filename)
+            raise IOError(f"No such file or directory: '{filename}'")
         return StringIO(files[filename])
 
     def setUp(self):
@@ -209,7 +209,7 @@ class UbuEmailTestCase(unittest.TestCase):
         os.environ["DEBEMAIL"] = "joe@debian.org"
         name = "Joe Ubuntunista"
         email = "joe@ubuntu.com"
-        os.environ["UBUMAIL"] = "%s <%s>" % (name, email)
+        os.environ["UBUMAIL"] = f"{name} <{email}>"
         self.assertEqual(ubu_email(), (name, email))
         self.assertEqual(os.environ["DEBFULLNAME"], name)
         self.assertEqual(os.environ["DEBEMAIL"], email)
@@ -217,7 +217,7 @@ class UbuEmailTestCase(unittest.TestCase):
     def test_debemail_with_name(self):
         name = "Joe Developer"
         email = "joe@example.net"
-        os.environ["DEBEMAIL"] = orig = "%s <%s>" % (name, email)
+        os.environ["DEBEMAIL"] = orig = f"{name} <{email}>"
         self.assertEqual(ubu_email(), (name, email))
         self.assertEqual(os.environ["DEBEMAIL"], orig)
 

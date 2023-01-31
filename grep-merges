@@ -55,7 +55,7 @@ def main():
         "multiverse-manual",
     ):
 
-        url = "https://merges.ubuntu.com/%s.json" % component
+        url = f"https://merges.ubuntu.com/{component}.json"
         try:
             headers, page = Http().request(url)
         except HttpLib2Error as e:
@@ -71,10 +71,10 @@ def main():
             if merge.get("user"):
                 author = merge["user"]
             if merge.get("uploader"):
-                uploader = "(%s)" % merge["uploader"]
+                uploader = f"({merge['uploader']})"
             teams = merge.get("teams", [])
 
-            pretty_uploader = "{} {}".format(author, uploader)
+            pretty_uploader = f"{author} {uploader}"
             if (
                 args.string is None
                 or args.string in package

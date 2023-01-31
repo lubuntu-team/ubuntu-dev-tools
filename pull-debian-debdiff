@@ -36,7 +36,7 @@ Logger = getLogger()
 def previous_version(package, version, distance):
     "Given an (extracted) package, determine the version distance versions ago"
     upver = Version(version).upstream_version
-    filename = "%s-%s/debian/changelog" % (package, upver)
+    filename = f"{package}-{upver}/debian/changelog"
     changelog_file = open(filename, "r", encoding="utf-8")
     changelog = debian.changelog.Changelog(changelog_file.read())
     changelog_file.close()
