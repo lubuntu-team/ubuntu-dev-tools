@@ -52,7 +52,7 @@ UPLOAD_QUEUE_STATUSES = ("New", "Unapproved", "Accepted", "Done", "Rejected")
 
 DOWNLOAD_BLOCKSIZE_DEFAULT = 8192
 
-_SYSTEM_DISTRIBUTION_CHAIN = []
+_SYSTEM_DISTRIBUTION_CHAIN: list[str] = []
 
 
 class DownloadError(Exception):
