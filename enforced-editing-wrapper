@@ -25,7 +25,7 @@
 # pylint: disable=invalid-name
 # pylint: enable=invalid-name
 
-import optparse
+import argparse
 import os
 import re
 
@@ -33,14 +33,11 @@ from ubuntutools.question import EditFile
 
 
 def main():
-    parser = optparse.OptionParser("%prog [options] filename")
-    options, args = parser.parse_args()
-
-    if len(args) != 1:
-        parser.error("A filename must be specified")
-    body = args[0]
-    if not os.path.isfile(body):
-        parser.error("File %s does not exist" % body)
+    parser = argparse.ArgumentParser(usage="%(prog)s [options] filename")
+    parser.add_argument("filename", help=argparse.SUPPRESS)
+    args = parser.parse_args()
+    if not os.path.isfile(args.filename):
+        parser.error("File %s does not exist" % args.filename)
 
     if "UDT_EDIT_WRAPPER_EDITOR" in os.environ:
         os.environ["EDITOR"] = os.environ["UDT_EDIT_WRAPPER_EDITOR"]
@@ -58,7 +55,7 @@ def main():
 
     description = os.environ.get("UDT_EDIT_WRAPPER_FILE_DESCRIPTION", "file")
 
-    EditFile(body, description, placeholders).edit()
+    EditFile(args.filename, description, placeholders).edit()
 
 
 if __name__ == "__main__":

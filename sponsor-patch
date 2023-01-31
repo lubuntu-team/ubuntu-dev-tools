@@ -17,8 +17,8 @@
 # pylint: disable=invalid-name
 # pylint: enable=invalid-name
 
+import argparse
 import logging
-import optparse
 import os
 import shutil
 import sys
@@ -35,169 +35,132 @@ Logger = getLogger()
 def parse(script_name):
     """Parse the command line parameters."""
     usage = (
-        "%s [options] <bug number>\n" % (script_name)
-        + "One of --upload, --workdir, or --sponsor must be specified."
+        "%(prog)s [options] <bug number>\n"
+        "One of --upload, --workdir, or --sponsor must be specified."
     )
     epilog = "See %s(1) for more info." % (script_name)
-    parser = optparse.OptionParser(usage=usage, epilog=epilog)
+    parser = argparse.ArgumentParser(usage=usage, epilog=epilog)
 
-    parser.add_option(
+    parser.add_argument(
         "-b",
         "--build",
         dest="build",
         help="Build the package with the specified builder.",
         action="store_true",
-        default=False,
     )
-    parser.add_option(
-        "-B",
-        "--builder",
-        dest="builder",
-        default=None,
-        help="Specify the package builder (default pbuilder)",
+    parser.add_argument(
+        "-B", "--builder", dest="builder", help="Specify the package builder (default pbuilder)"
     )
-    parser.add_option(
+    parser.add_argument(
         "-e",
         "--edit",
         help="launch sub-shell to allow editing of the patch",
         dest="edit",
         action="store_true",
-        default=False,
     )
-    parser.add_option(
-        "-k",
-        "--key",
-        dest="keyid",
-        default=None,
-        help="Specify the key ID to be used for signing.",
+    parser.add_argument(
+        "-k", "--key", dest="keyid", help="Specify the key ID to be used for signing."
     )
-    parser.add_option(
+    parser.add_argument(
         "-l",
         "--lpinstance",
         dest="lpinstance",
-        default=None,
         help="Launchpad instance to connect to (default: production)",
         metavar="INSTANCE",
     )
-    parser.add_option(
+    parser.add_argument(
         "--no-conf",
         dest="no_conf",
-        default=False,
         help="Don't read config files or environment variables.",
         action="store_true",
     )
-    parser.add_option(
+    parser.add_argument(
         "-s",
         "--sponsor",
         help="sponsoring; equals -b -u ubuntu",
         dest="sponsoring",
         action="store_true",
-        default=False,
     )
-    parser.add_option(
-        "-u",
-        "--upload",
-        dest="upload",
-        default=None,
-        help="Specify an upload destination (default none).",
+    parser.add_argument(
+        "-u", "--upload", dest="upload", help="Specify an upload destination (default none)."
     )
-    parser.add_option(
+    parser.add_argument(
         "-U",
         "--update",
         dest="update",
-        default=False,
         action="store_true",
         help="Update the build environment before building.",
     )
-    parser.add_option(
-        "-v",
-        "--verbose",
-        help="print more information",
-        dest="verbose",
-        action="store_true",
-        default=False,
+    parser.add_argument(
+        "-v", "--verbose", help="print more information", dest="verbose", action="store_true"
     )
-    parser.add_option(
+    parser.add_argument(
         "-w",
         "--workdir",
         dest="workdir",
-        default=None,
         help="Specify a working directory (default is a "
         "temporary directory, deleted afterwards).",
     )
+    parser.add_argument("bug_number", type=int, help=argparse.SUPPRESS)
 
-    (options, args) = parser.parse_args()
-    if options.verbose:
+    args = parser.parse_args()
+    if args.verbose:
         Logger.setLevel(logging.DEBUG)
     check_dependencies()
 
-    if len(args) == 0:
-        Logger.error("No bug number specified.")
-        sys.exit(1)
-    elif len(args) > 1:
-        Logger.error("Multiple bug numbers specified: %s", ", ".join(args))
-        sys.exit(1)
+    config = UDTConfig(args.no_conf)
+    if args.builder is None:
+        args.builder = config.get_value("BUILDER")
+    if args.lpinstance is None:
+        args.lpinstance = config.get_value("LPINSTANCE")
+    if not args.update:
+        args.update = config.get_value("UPDATE_BUILDER", boolean=True)
+    if args.workdir is None:
+        args.workdir = config.get_value("WORKDIR")
+    if args.keyid is None:
+        args.keyid = config.get_value("KEYID")
 
-    bug_number = args[0]
-    if bug_number.isdigit():
-        bug_number = int(bug_number)
-    else:
-        Logger.error("Invalid bug number specified: %s", bug_number)
-        sys.exit(1)
+    if args.sponsoring:
+        args.build = True
+        args.upload = "ubuntu"
 
-    config = UDTConfig(options.no_conf)
-    if options.builder is None:
-        options.builder = config.get_value("BUILDER")
-    if options.lpinstance is None:
-        options.lpinstance = config.get_value("LPINSTANCE")
-    if not options.update:
-        options.update = config.get_value("UPDATE_BUILDER", boolean=True)
-    if options.workdir is None:
-        options.workdir = config.get_value("WORKDIR")
-    if options.keyid is None:
-        options.keyid = config.get_value("KEYID")
-
-    if options.sponsoring:
-        options.build = True
-        options.upload = "ubuntu"
-
-    return (options, bug_number)
+    return args
 
 
 def main():
     script_name = os.path.basename(sys.argv[0])
-    (options, bug_number) = parse(script_name)
+    args = parse(script_name)
 
-    builder = get_builder(options.builder)
+    builder = get_builder(args.builder)
     if not builder:
         sys.exit(1)
 
-    if not options.upload and not options.workdir:
+    if not args.upload and not args.workdir:
         Logger.error("Please specify either a working directory or an upload target!")
         sys.exit(1)
 
-    if options.workdir is None:
+    if args.workdir is None:
         workdir = tempfile.mkdtemp(prefix=script_name + "-")
     else:
-        workdir = options.workdir
+        workdir = args.workdir
 
     try:
         sponsor_patch(
-            bug_number,
-            options.build,
+            args.bug_number,
+            args.build,
             builder,
-            options.edit,
-            options.keyid,
-            options.lpinstance,
-            options.update,
-            options.upload,
+            args.edit,
+            args.keyid,
+            args.lpinstance,
+            args.update,
+            args.upload,
             workdir,
         )
     except KeyboardInterrupt:
         Logger.error("User abort.")
         sys.exit(2)
     finally:
-        if options.workdir is None:
+        if args.workdir is None:
             shutil.rmtree(workdir)
 
 

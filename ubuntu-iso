@@ -23,7 +23,7 @@
 # pylint: disable=invalid-name
 # pylint: enable=invalid-name
 
-import optparse
+import argparse
 import subprocess
 import sys
 
@@ -46,13 +46,14 @@ def extract(iso, path):
 
 
 def main():
-    desc = "Given an ISO, %prog will display the Ubuntu version information"
-    parser = optparse.OptionParser(usage="%prog [options] iso...", description=desc)
-    isos = parser.parse_args()[1]
+    desc = "Given an ISO, %(prog)s will display the Ubuntu version information"
+    parser = argparse.ArgumentParser(usage="%(prog)s [options] iso...", description=desc)
+    parser.add_argument("isos", nargs="*", help=argparse.SUPPRESS)
+    args = parser.parse_args()
     err = False
 
-    for iso in isos:
-        if len(isos) > 1:
+    for iso in args.isos:
+        if len(args.isos) > 1:
             prefix = "%s:" % iso
         else:
             prefix = ""

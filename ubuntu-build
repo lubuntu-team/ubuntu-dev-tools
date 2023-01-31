@@ -25,8 +25,8 @@
 # pylint: disable=invalid-name
 # pylint: enable=invalid-name
 
+import argparse
 import sys
-from optparse import OptionGroup, OptionParser
 
 from launchpadlib.credentials import TokenAuthorizationException
 
@@ -44,7 +44,7 @@ Logger = getLogger()
 
 def main():
     # Usage.
-    usage = "%prog <srcpackage> <release> <operation>\n\n"
+    usage = "%(prog)s <srcpackage> <release> <operation>\n\n"
     usage += "Where operation may be one of: rescore, retry, or status.\n"
     usage += "Only Launchpad Buildd Admins may rescore package builds."
 
@@ -68,18 +68,16 @@ def main():
     )
 
     # Prepare our option parser.
-    opt_parser = OptionParser(usage)
+    parser = argparse.ArgumentParser(usage=usage)
 
     # Retry options
-    retry_rescore_options = OptionGroup(
-        opt_parser,
+    retry_rescore_options = parser.add_argument_group(
         "Retry and rescore options",
         "These options may only be used with the 'retry' and 'rescore' operations.",
     )
-    retry_rescore_options.add_option(
+    retry_rescore_options.add_argument(
         "-a",
         "--arch",
-        type="string",
         action="append",
         dest="architecture",
         help="Rebuild or rescore a specific "
@@ -88,69 +86,54 @@ def main():
     )
 
     # Batch processing options
-    batch_options = OptionGroup(
-        opt_parser,
+    batch_options = parser.add_argument_group(
         "Batch processing",
         "These options and parameter ordering is only "
         "available in --batch mode.\nUsage: "
         "ubuntu-build --batch [options] <package>...",
     )
-    batch_options.add_option(
-        "--batch", action="store_true", dest="batch", default=False, help="Enable batch mode"
+    batch_options.add_argument(
+        "--batch", action="store_true", dest="batch", help="Enable batch mode"
     )
-    batch_options.add_option(
+    batch_options.add_argument(
         "--series",
         action="store",
         dest="series",
-        type="string",
         help="Selects the Ubuntu series to operate on (default: current development series)",
     )
-    batch_options.add_option(
-        "--retry",
-        action="store_true",
-        dest="retry",
-        default=False,
-        help="Retry builds (give-back).",
+    batch_options.add_argument(
+        "--retry", action="store_true", dest="retry", help="Retry builds (give-back)."
     )
-    batch_options.add_option(
+    batch_options.add_argument(
         "--rescore",
         action="store",
         dest="priority",
-        type="int",
+        type=int,
         help="Rescore builds to <priority>.",
     )
-    batch_options.add_option(
+    batch_options.add_argument(
         "--arch2",
         action="append",
         dest="architecture",
-        type="string",
         help="Affect only 'architecture' (can be used "
         "several times). Valid architectures are: %s." % ", ".join(valid_archs),
     )
-
-    # Add the retry options to the main group.
-    opt_parser.add_option_group(retry_rescore_options)
-    # Add the batch mode to the main group.
-    opt_parser.add_option_group(batch_options)
+    parser.add_argument("packages", metavar="package", nargs="+", help=argparse.SUPPRESS)
 
     # Parse our options.
-    (options, args) = opt_parser.parse_args()
+    args = parser.parse_args()
 
-    if not len(args):
-        opt_parser.print_help()
-        sys.exit(1)
-
-    if not options.batch:
+    if not args.batch:
         # Check we have the correct number of arguments.
-        if len(args) < 3:
-            opt_parser.error("Incorrect number of arguments.")
+        if len(args.packages) < 3:
+            parser.error("Incorrect number of arguments.")
 
         try:
-            package = str(args[0]).lower()
-            release = str(args[1]).lower()
-            operation = str(args[2]).lower()
+            package = str(args.packages[0]).lower()
+            release = str(args.packages[1]).lower()
+            operation = str(args.packages[2]).lower()
         except IndexError:
-            opt_parser.print_help()
+            parser.print_help()
             sys.exit(1)
 
         # Check our operation.
@@ -160,9 +143,9 @@ def main():
 
         # If the user has specified an architecture to build, we only wish to
         # rebuild it and nothing else.
-        if options.architecture:
-            if options.architecture[0] not in valid_archs:
-                Logger.error("Invalid architecture specified: %s.", options.architecture[0])
+        if args.architecture:
+            if args.architecture[0] not in valid_archs:
+                Logger.error("Invalid architecture specified: %s.", args.architecture[0])
                 sys.exit(1)
             else:
                 one_arch = True
@@ -236,7 +219,7 @@ def main():
         # Output list of arches for package and their status.
         done = False
         for build in builds:
-            if one_arch and build.arch_tag != options.architecture[0]:
+            if one_arch and build.arch_tag != args.architecture[0]:
                 # Skip this architecture.
                 continue
 
@@ -267,16 +250,16 @@ def main():
 
     # Batch mode
 
-    if not options.architecture:
+    if not args.architecture:
         # no specific architectures specified, assume all valid ones
         archs = valid_archs
     else:
-        archs = set(options.architecture)
+        archs = set(args.architecture)
 
     # filter out duplicate and invalid architectures
     archs.intersection_update(valid_archs)
 
-    release = options.series
+    release = args.series
     if not release:
         release = Distribution("ubuntu").getDevelopmentSeries().name + "-proposed"
     try:
@@ -294,13 +277,13 @@ def main():
     me = PersonTeam.me
 
     # Check permisions (part 1): Rescoring can only be done by buildd admins
-    can_rescore = (options.priority and me.isLpTeamMember("launchpad-buildd-admins")) or False
-    if options.priority and not can_rescore:
+    can_rescore = (args.priority and me.isLpTeamMember("launchpad-buildd-admins")) or False
+    if args.priority and not can_rescore:
         Logger.error(
             "You don't have the permissions to rescore builds. Ignoring your rescore request."
         )
 
-    for pkg in args:
+    for pkg in args.packages:
         try:
             pkg = ubuntu_archive.getSourcePackage(pkg, release, pocket)
         except PackageNotFoundException as error:
@@ -309,10 +292,10 @@ def main():
 
         # Check permissions (part 2): check upload permissions for the source
         # package
-        can_retry = options.retry and me.canUploadPackage(
+        can_retry = args.retry and me.canUploadPackage(
             ubuntu_archive, distroseries, pkg.getPackageName(), pkg.getComponent()
         )
-        if options.retry and not can_retry:
+        if args.retry and not can_retry:
             Logger.error(
                 "You don't have the permissions to retry the "
                 "build of '%s'. Ignoring your request.",
@@ -330,8 +313,8 @@ def main():
         Logger.info(pkg.getBuildStates(archs))
         if can_retry:
             Logger.info(pkg.retryBuilds(archs))
-        if options.priority and can_rescore:
-            Logger.info(pkg.rescoreBuilds(archs, options.priority))
+        if args.priority and can_rescore:
+            Logger.info(pkg.rescoreBuilds(archs, args.priority))
 
         Logger.info("")
 

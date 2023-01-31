@@ -18,8 +18,8 @@
 #
 # ##################################################################
 
+import argparse
 import glob
-import optparse
 import os
 import shutil
 import subprocess
@@ -62,10 +62,10 @@ def check_call(cmd, *args, **kwargs):
         error("%s returned %d.", cmd[0], ret)
 
 
-def parse(args):
-    usage = "Usage: %prog [options] <source package name or .dsc URL/file>"
-    parser = optparse.OptionParser(usage)
-    parser.add_option(
+def parse(argv):
+    usage = "%(prog)s [options] <source package name or .dsc URL/file>"
+    parser = argparse.ArgumentParser(usage=usage)
+    parser.add_argument(
         "-d",
         "--destination",
         metavar="DEST",
@@ -74,20 +74,20 @@ def parse(args):
         action="append",
         help="Backport to DEST release (default: current release)",
     )
-    parser.add_option(
+    parser.add_argument(
         "-s",
         "--source",
         metavar="SOURCE",
         dest="source_release",
         help="Backport from SOURCE release (default: devel release)",
     )
-    parser.add_option(
+    parser.add_argument(
         "-S",
         "--suffix",
         metavar="SUFFIX",
         help="Suffix to append to version number (default: ~ppa1 when uploading to a PPA)",
     )
-    parser.add_option(
+    parser.add_argument(
         "-e",
         "--message",
         metavar="MESSAGE",
@@ -95,34 +95,34 @@ def parse(args):
         help='Changelog message to use instead of "No-change" '
         "(default: No-change backport to DEST.)",
     )
-    parser.add_option(
+    parser.add_argument(
         "-b",
         "--build",
         default=False,
         action="store_true",
-        help="Build the package before uploading (default: %default)",
+        help="Build the package before uploading (default: %(default)s)",
     )
-    parser.add_option(
+    parser.add_argument(
         "-B",
         "--builder",
         metavar="BUILDER",
         help="Specify the package builder (default: pbuilder)",
     )
-    parser.add_option(
+    parser.add_argument(
         "-U",
         "--update",
         default=False,
         action="store_true",
         help="Update the build environment before attempting to build",
     )
-    parser.add_option("-u", "--upload", metavar="UPLOAD", help="Specify an upload destination")
-    parser.add_option(
+    parser.add_argument("-u", "--upload", metavar="UPLOAD", help="Specify an upload destination")
+    parser.add_argument(
         "-k", "--key", dest="keyid", help="Specify the key ID to be used for signing."
     )
-    parser.add_option(
+    parser.add_argument(
         "--dont-sign", dest="keyid", action="store_false", help="Do not sign the upload."
     )
-    parser.add_option(
+    parser.add_argument(
         "-y",
         "--yes",
         dest="prompt",
@@ -130,16 +130,16 @@ def parse(args):
         action="store_false",
         help="Do not prompt before uploading to a PPA",
     )
-    parser.add_option(
+    parser.add_argument(
         "-v", "--version", metavar="VERSION", help="Package version to backport (or verify)"
     )
-    parser.add_option(
+    parser.add_argument(
         "-w",
         "--workdir",
         metavar="WORKDIR",
         help="Specify a working directory (default: temporary dir)",
     )
-    parser.add_option(
+    parser.add_argument(
         "-r",
         "--release-pocket",
         default=False,
@@ -147,45 +147,46 @@ def parse(args):
         help="Target the release pocket in the .changes file. "
         "Necessary (and default) for uploads to PPAs",
     )
-    parser.add_option("-c", "--close", metavar="BUG", help="Bug to close in the changelog entry.")
-    parser.add_option(
+    parser.add_argument(
+        "-c", "--close", metavar="BUG", help="Bug to close in the changelog entry."
+    )
+    parser.add_argument(
         "-m", "--mirror", metavar="URL", help="Preferred mirror (default: Launchpad)"
     )
-    parser.add_option(
+    parser.add_argument(
         "-l",
         "--lpinstance",
         metavar="INSTANCE",
         help="Launchpad instance to connect to (default: production)",
     )
-    parser.add_option(
+    parser.add_argument(
         "--no-conf",
         default=False,
         action="store_true",
         help="Don't read config files or environment variables",
     )
+    parser.add_argument("package_or_dsc", help=argparse.SUPPRESS)
 
-    opts, args = parser.parse_args(args)
-    if len(args) != 1:
-        parser.error("You must specify a single source package or a .dsc URL/path.")
-    config = UDTConfig(opts.no_conf)
-    if opts.builder is None:
-        opts.builder = config.get_value("BUILDER")
-    if not opts.update:
-        opts.update = config.get_value("UPDATE_BUILDER", boolean=True)
-    if opts.workdir is None:
-        opts.workdir = config.get_value("WORKDIR")
-    if opts.lpinstance is None:
-        opts.lpinstance = config.get_value("LPINSTANCE")
-    if opts.upload is None:
-        opts.upload = config.get_value("UPLOAD")
-    if opts.keyid is None:
-        opts.keyid = config.get_value("KEYID")
-    if not opts.upload and not opts.workdir:
+    args = parser.parse_args(argv)
+    config = UDTConfig(args.no_conf)
+    if args.builder is None:
+        args.builder = config.get_value("BUILDER")
+    if not args.update:
+        args.update = config.get_value("UPDATE_BUILDER", boolean=True)
+    if args.workdir is None:
+        args.workdir = config.get_value("WORKDIR")
+    if args.lpinstance is None:
+        args.lpinstance = config.get_value("LPINSTANCE")
+    if args.upload is None:
+        args.upload = config.get_value("UPLOAD")
+    if args.keyid is None:
+        args.keyid = config.get_value("KEYID")
+    if not args.upload and not args.workdir:
         parser.error("Please specify either a working dir or an upload target!")
-    if opts.upload and opts.upload.startswith("ppa:"):
-        opts.release_pocket = True
+    if args.upload and args.upload.startswith("ppa:"):
+        args.release_pocket = True
 
-    return opts, args, config
+    return args, config
 
 
 def find_release_package(mirror, workdir, package, version, source_release, config):
@@ -429,14 +430,14 @@ def do_backport(
     shutil.rmtree(srcdir)
 
 
-def main(args):
+def main(argv):
     ubu_email()
 
-    opts, (package_or_dsc,), config = parse(args[1:])
+    args, config = parse(argv[1:])
 
-    Launchpad.login_anonymously(service=opts.lpinstance)
+    Launchpad.login_anonymously(service=args.lpinstance)
 
-    if not opts.dest_releases:
+    if not args.dest_releases:
         if lsb_release:
             distinfo = lsb_release.get_distro_information()
             try:
@@ -449,14 +450,14 @@ def main(args):
                 error("Could not run lsb_release to retrieve distribution")
 
         if current_distro == "Ubuntu":
-            opts.dest_releases = [UbuntuDistroInfo().lts()]
+            args.dest_releases = [UbuntuDistroInfo().lts()]
         if current_distro == "Debian":
-            opts.dest_releases = [DebianDistroInfo().stable()]
+            args.dest_releases = [DebianDistroInfo().stable()]
         else:
             error("Unknown distribution %s, can't guess target release", current_distro)
 
-    if opts.workdir:
-        workdir = os.path.expanduser(opts.workdir)
+    if args.workdir:
+        workdir = os.path.expanduser(args.workdir)
     else:
         workdir = tempfile.mkdtemp(prefix="backportpackage-")
 
@@ -465,30 +466,30 @@ def main(args):
 
     try:
         pkg = find_package(
-            opts.mirror, workdir, package_or_dsc, opts.version, opts.source_release, config
+            args.mirror, workdir, args.package_or_dsc, args.version, args.source_release, config
         )
         pkg.pull()
 
-        for release in opts.dest_releases:
+        for release in args.dest_releases:
             do_backport(
                 workdir,
                 pkg,
-                opts.suffix,
-                opts.message,
-                opts.close,
+                args.suffix,
+                args.message,
+                args.close,
                 release,
-                opts.release_pocket,
-                opts.build,
-                opts.builder,
-                opts.update,
-                opts.upload,
-                opts.keyid,
-                opts.prompt,
+                args.release_pocket,
+                args.build,
+                args.builder,
+                args.update,
+                args.upload,
+                args.keyid,
+                args.prompt,
             )
     except DownloadError as e:
         error("%s", str(e))
     finally:
-        if not opts.workdir:
+        if not args.workdir:
             shutil.rmtree(workdir)
 
 

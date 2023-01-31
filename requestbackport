@@ -14,7 +14,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-import optparse
+import argparse
 import sys
 from collections import defaultdict
 
@@ -269,8 +269,8 @@ def request_backport(package_spph, source, destinations):
 
 
 def main():
-    parser = optparse.OptionParser("%prog [options] package")
-    parser.add_option(
+    parser = argparse.ArgumentParser(usage="%(prog)s [options] package")
+    parser.add_argument(
         "-d",
         "--destination",
         metavar="DEST",
@@ -278,53 +278,50 @@ def main():
         "intermediate releases "
         "(default: current LTS release)",
     )
-    parser.add_option(
+    parser.add_argument(
         "-s",
         "--source",
         metavar="SOURCE",
         help="Backport from SOURCE release (default: current devel release)",
     )
-    parser.add_option(
+    parser.add_argument(
         "-l",
         "--lpinstance",
         metavar="INSTANCE",
         default=None,
         help="Launchpad instance to connect to (default: production).",
     )
-    parser.add_option(
+    parser.add_argument(
         "--no-conf",
         action="store_true",
         dest="no_conf",
         default=False,
         help="Don't read config files or environment variables",
     )
-    options, args = parser.parse_args()
+    parser.add_argument("package", help=argparse.SUPPRESS)
+    args = parser.parse_args()
 
-    if len(args) != 1:
-        parser.error("One (and only one) package must be specified")
-    package = args[0]
+    config = UDTConfig(args.no_conf)
 
-    config = UDTConfig(options.no_conf)
+    if args.lpinstance is None:
+        args.lpinstance = config.get_value("LPINSTANCE")
+    Launchpad.login(args.lpinstance)
 
-    if options.lpinstance is None:
-        options.lpinstance = config.get_value("LPINSTANCE")
-    Launchpad.login(options.lpinstance)
-
-    if options.source is None:
-        options.source = Distribution("ubuntu").getDevelopmentSeries().name
+    if args.source is None:
+        args.source = Distribution("ubuntu").getDevelopmentSeries().name
 
     try:
-        destinations = determine_destinations(options.source, options.destination)
+        destinations = determine_destinations(args.source, args.destination)
     except DestinationException as e:
         Logger.error(str(e))
         sys.exit(1)
 
     disclaimer()
 
-    package_spph = locate_package(package, options.source)
+    package_spph = locate_package(args.package, args.source)
 
     check_existing(package_spph)
-    request_backport(package_spph, options.source, destinations)
+    request_backport(package_spph, args.source, destinations)
 
 
 if __name__ == "__main__":

@@ -26,7 +26,7 @@
 #
 # ##################################################################
 
-import optparse
+import argparse
 import os
 import sys
 
@@ -48,45 +48,40 @@ Logger = getLogger()
 
 def main():
     # Our usage options.
-    usage = "Usage: %prog [options] <source package> [<target release> [base version]]"
-    parser = optparse.OptionParser(usage)
+    usage = "%(prog)s [options] <source package> [<target release> [base version]]"
+    parser = argparse.ArgumentParser(usage=usage)
 
-    parser.add_option(
-        "-d",
-        type="string",
-        dest="dist",
-        default="unstable",
-        help="Debian distribution to sync from.",
+    parser.add_argument(
+        "-d", dest="dist", default="unstable", help="Debian distribution to sync from."
     )
-    parser.add_option(
+    parser.add_argument(
         "-k",
-        type="string",
         dest="keyid",
         default=None,
         help="GnuPG key ID to use for signing report "
         "(only used when emailing the sync request).",
     )
-    parser.add_option(
+    parser.add_argument(
         "-n",
         action="store_true",
         dest="newpkg",
         default=False,
         help="Whether package to sync is a new package in Ubuntu.",
     )
-    parser.add_option(
+    parser.add_argument(
         "--email",
         action="store_true",
         default=False,
         help="Use a PGP-signed email for filing the sync request, rather than the LP API.",
     )
-    parser.add_option(
+    parser.add_argument(
         "--lp",
         dest="deprecated_lp_flag",
         action="store_true",
         default=False,
-        help=optparse.SUPPRESS_HELP,
+        help=argparse.SUPPRESS,
     )
-    parser.add_option(
+    parser.add_argument(
         "-l",
         "--lpinstance",
         metavar="INSTANCE",
@@ -94,17 +89,17 @@ def main():
         default=None,
         help="Launchpad instance to connect to (default: production).",
     )
-    parser.add_option(
+    parser.add_argument(
         "-s", action="store_true", dest="sponsorship", default=False, help="Force sponsorship"
     )
-    parser.add_option(
+    parser.add_argument(
         "-C",
         action="store_true",
         dest="missing_changelog_ok",
         default=False,
         help="Allow changelog to be manually filled in when missing",
     )
-    parser.add_option(
+    parser.add_argument(
         "-e",
         action="store_true",
         dest="ffe",
@@ -113,49 +108,47 @@ def main():
         "syncs, changes default subscription to the "
         "appropriate release team.",
     )
-    parser.add_option(
+    parser.add_argument(
         "--no-conf",
         action="store_true",
         dest="no_conf",
         default=False,
         help="Don't read config files or environment variables",
     )
-
-    (options, args) = parser.parse_args()
-
-    if not len(args):
-        parser.print_help()
-        sys.exit(1)
+    parser.add_argument("source_package", help=argparse.SUPPRESS)
+    parser.add_argument("release", nargs="?", help=argparse.SUPPRESS)
+    parser.add_argument("base_version", nargs="?", type=Version, help=argparse.SUPPRESS)
+    args = parser.parse_args()
 
     require_utf8()
 
-    config = UDTConfig(options.no_conf)
+    config = UDTConfig(args.no_conf)
 
-    if options.deprecated_lp_flag:
+    if args.deprecated_lp_flag:
         Logger.info("The --lp flag is now default, ignored.")
-    if options.email:
-        options.lpapi = False
+    if args.email:
+        args.lpapi = False
     else:
-        options.lpapi = config.get_value("USE_LPAPI", default=True, boolean=True)
-    if options.lpinstance is None:
-        options.lpinstance = config.get_value("LPINSTANCE")
+        args.lpapi = config.get_value("USE_LPAPI", default=True, boolean=True)
+    if args.lpinstance is None:
+        args.lpinstance = config.get_value("LPINSTANCE")
 
-    if options.keyid is None:
-        options.keyid = config.get_value("KEYID")
+    if args.keyid is None:
+        args.keyid = config.get_value("KEYID")
 
-    if not options.lpapi:
-        if options.lpinstance == "production":
+    if not args.lpapi:
+        if args.lpinstance == "production":
             bug_mail_domain = "bugs.launchpad.net"
-        elif options.lpinstance == "staging":
+        elif args.lpinstance == "staging":
             bug_mail_domain = "bugs.staging.launchpad.net"
         else:
-            Logger.error("Error: Unknown launchpad instance: %s", options.lpinstance)
+            Logger.error("Error: Unknown launchpad instance: %s", args.lpinstance)
             sys.exit(1)
 
     mailserver_host = config.get_value(
         "SMTP_SERVER", default=None, compat_keys=["UBUSMTP", "DEBSMTP"]
     )
-    if not options.lpapi and not mailserver_host:
+    if not args.lpapi and not mailserver_host:
         try:
             import DNS
 
@@ -174,7 +167,7 @@ def main():
     mailserver_pass = config.get_value("SMTP_PASS", compat_keys=["UBUSMTP_PASS", "DEBSMTP_PASS"])
 
     # import the needed requestsync module
-    if options.lpapi:
+    if args.lpapi:
         from ubuntutools.lp.lpapicache import Distribution, Launchpad
         from ubuntutools.requestsync.lp import (
             check_existing_reports,
@@ -190,7 +183,7 @@ def main():
 
         try:
             # devel for changelogUrl()
-            Launchpad.login(service=options.lpinstance, api_version="devel")
+            Launchpad.login(service=args.lpinstance, api_version="devel")
         except IOError:
             sys.exit(1)
     else:
@@ -210,35 +203,25 @@ def main():
             )
             sys.exit(1)
 
-    newsource = options.newpkg
-    sponsorship = options.sponsorship
-    distro = options.dist
-    ffe = options.ffe
-    lpapi = options.lpapi
+    newsource = args.newpkg
+    sponsorship = args.sponsorship
+    distro = args.dist
+    ffe = args.ffe
+    lpapi = args.lpapi
     need_interaction = False
-    force_base_version = None
-    srcpkg = args[0]
+    srcpkg = args.source_package
 
-    if len(args) == 1:
+    if not args.release:
         if lpapi:
-            release = Distribution("ubuntu").getDevelopmentSeries().name
+            args.release = Distribution("ubuntu").getDevelopmentSeries().name
         else:
             ubu_info = UbuntuDistroInfo()
-            release = ubu_info.devel()
-        Logger.warning("Target release missing - assuming %s", release)
-    elif len(args) == 2:
-        release = args[1]
-    elif len(args) == 3:
-        release = args[1]
-        force_base_version = Version(args[2])
-    else:
-        Logger.error("Too many arguments.")
-        parser.print_help()
-        sys.exit(1)
+            args.release = ubu_info.devel()
+        Logger.warning("Target release missing - assuming %s", args.release)
 
     # Get the current Ubuntu source package
     try:
-        ubuntu_srcpkg = get_ubuntu_srcpkg(srcpkg, release, "Proposed")
+        ubuntu_srcpkg = get_ubuntu_srcpkg(srcpkg, args.release, "Proposed")
         ubuntu_version = Version(ubuntu_srcpkg.getVersion())
         ubuntu_component = ubuntu_srcpkg.getComponent()
         newsource = False  # override the -n flag
@@ -247,7 +230,7 @@ def main():
         ubuntu_version = Version("~")
         ubuntu_component = None  # Set after getting the Debian info
         if not newsource:
-            Logger.info("'%s' doesn't exist in 'Ubuntu %s'.", srcpkg, release)
+            Logger.info("'%s' doesn't exist in 'Ubuntu %s'.", srcpkg, args.release)
             Logger.info("Do you want to sync a new package?")
             confirmation_prompt()
             newsource = True
@@ -274,7 +257,7 @@ def main():
             ubuntu_component = "multiverse"
 
     # Stop if Ubuntu has already the version from Debian or a newer version
-    if (ubuntu_version >= debian_version) and options.lpapi:
+    if (ubuntu_version >= debian_version) and args.lpapi:
         # try rmadison
         import ubuntutools.requestsync.mail
 
@@ -302,7 +285,7 @@ def main():
 
     # -s flag not specified - check if we do need sponsorship
     if not sponsorship:
-        sponsorship = need_sponsorship(srcpkg, ubuntu_component, release)
+        sponsorship = need_sponsorship(srcpkg, ubuntu_component, args.release)
 
     if not sponsorship and not ffe:
         Logger.error(
@@ -350,15 +333,18 @@ def main():
     if need_interaction:
         confirmation_prompt()
 
-    base_version = force_base_version or ubuntu_version
+    base_version = args.base_version or ubuntu_version
 
     if newsource:
         report += "All changelog entries:\n\n"
     else:
-        report += "Changelog entries since current %s version %s:\n\n" % (release, ubuntu_version)
+        report += "Changelog entries since current %s version %s:\n\n" % (
+            args.release,
+            ubuntu_version,
+        )
     changelog = debian_srcpkg.getChangelog(since_version=base_version)
     if not changelog:
-        if not options.missing_changelog_ok:
+        if not args.missing_changelog_ok:
             Logger.error(
                 "Did not retrieve any changelog entries. "
                 "Do you need to specify '-C'? "
@@ -408,7 +394,7 @@ def main():
             title,
             report,
             bug_mail_domain,
-            options.keyid,
+            args.keyid,
             email_from,
             mailserver_host,
             mailserver_port,

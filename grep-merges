@@ -22,8 +22,8 @@
 # pylint: disable=invalid-name
 # pylint: enable=invalid-name
 
+import argparse
 import json
-import optparse
 import sys
 
 from httplib2 import Http, HttpLib2Error
@@ -35,18 +35,12 @@ Logger = getLogger()
 
 
 def main():
-    parser = optparse.OptionParser(
-        usage="%prog [options] [string]",
+    parser = argparse.ArgumentParser(
+        usage="%(prog)s [options] [string]",
         description="List pending merges from Debian matching string",
     )
-    args = parser.parse_args()[1]
-
-    if len(args) > 1:
-        parser.error("Too many arguments")
-    elif len(args) == 1:
-        match = args[0]
-    else:
-        match = None
+    parser.add_argument("string", nargs="?", help=argparse.SUPPRESS)
+    args = parser.parse_args()
 
     ubuntutools.misc.require_utf8()
 
@@ -82,11 +76,11 @@ def main():
 
             pretty_uploader = "{} {}".format(author, uploader)
             if (
-                match is None
-                or match in package
-                or match in author
-                or match in uploader
-                or match in teams
+                args.string is None
+                or args.string in package
+                or args.string in author
+                or args.string in uploader
+                or args.string in teams
             ):
                 Logger.info("%s\t%s", package, pretty_uploader)
 

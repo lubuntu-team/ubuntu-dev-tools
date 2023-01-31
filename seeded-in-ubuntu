@@ -17,10 +17,10 @@
 # pylint: disable=invalid-name
 # pylint: enable=invalid-name
 
+import argparse
 import collections
 import gzip
 import json
-import optparse
 import os
 import time
 import urllib.request
@@ -117,34 +117,32 @@ def output_by_source(index, by_source):
 
 def main():
     """Query which images the specified packages are on"""
-    parser = optparse.OptionParser("%prog [options] package...")
-    parser.add_option(
+    parser = argparse.ArgumentParser(usage="%(prog)s [options] package...")
+    parser.add_argument(
         "-b",
         "--binary",
         default=False,
         action="store_true",
         help="Binary packages are being specified, not source packages (fast)",
     )
-    parser.add_option(
+    parser.add_argument(
         "-u",
         "--data-url",
         metavar="URL",
         default=DATA_URL,
         help="URL for the seeded packages index. Default: UbuntuWire",
     )
-    options, args = parser.parse_args()
-
-    if len(args) < 1:
-        parser.error("At least one package must be specified")
+    parser.add_argument("packages", metavar="package", nargs="+", help=argparse.SUPPRESS)
+    args = parser.parse_args()
 
     # Login anonymously to LP
     Launchpad.login_anonymously()
 
-    index = load_index(options.data_url)
-    if options.binary:
-        output_binaries(index, args)
+    index = load_index(args.data_url)
+    if args.binary:
+        output_binaries(index, args.packages)
     else:
-        binaries = resolve_binaries(args)
+        binaries = resolve_binaries(args.packages)
         output_by_source(index, binaries)
 
 

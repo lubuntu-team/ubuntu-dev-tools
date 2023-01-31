@@ -51,7 +51,7 @@ def main():
         "-r",
         "--release",
         default=default_release,
-        help="Query dependencies in RELEASE. Default: %s" % default_release,
+        help="Query dependencies in RELEASE. Default: %(default)s",
     )
     parser.add_argument(
         "-R",

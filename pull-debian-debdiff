@@ -20,7 +20,7 @@
 # pylint: disable=invalid-name
 # pylint: enable=invalid-name
 
-import optparse
+import argparse
 import sys
 
 import debian.changelog
@@ -51,8 +51,8 @@ def previous_version(package, version, distance):
 
 
 def main():
-    parser = optparse.OptionParser("%prog [options] <package> <version> [distance]")
-    parser.add_option(
+    parser = argparse.ArgumentParser(usage="%(prog)s [options] <package> <version> [distance]")
+    parser.add_argument(
         "-f",
         "--fetch",
         dest="fetch_only",
@@ -60,47 +60,42 @@ def main():
         action="store_true",
         help="Only fetch the source packages, don't diff.",
     )
-    parser.add_option(
+    parser.add_argument(
         "-d",
         "--debian-mirror",
         metavar="DEBIAN_MIRROR",
         dest="debian_mirror",
         help="Preferred Debian mirror (default: http://deb.debian.org/debian)",
     )
-    parser.add_option(
+    parser.add_argument(
         "-s",
         "--debsec-mirror",
         metavar="DEBSEC_MIRROR",
         dest="debsec_mirror",
         help="Preferred Debian Security mirror (default: http://security.debian.org)",
     )
-    parser.add_option(
+    parser.add_argument(
         "--no-conf",
         dest="no_conf",
         default=False,
         action="store_true",
         help="Don't read config files or environment variables",
     )
+    parser.add_argument("package", help=argparse.SUPPRESS)
+    parser.add_argument("version", help=argparse.SUPPRESS)
+    parser.add_argument("distance", default=1, type=int, nargs="?", help=argparse.SUPPRESS)
+    args = parser.parse_args()
 
-    opts, args = parser.parse_args()
-    if len(args) < 2:
-        parser.error("Must specify package and version")
-    elif len(args) > 3:
-        parser.error("Too many arguments")
-    package = args[0]
-    version = args[1]
-    distance = int(args[2]) if len(args) > 2 else 1
+    config = UDTConfig(args.no_conf)
+    if args.debian_mirror is None:
+        args.debian_mirror = config.get_value("DEBIAN_MIRROR")
+    if args.debsec_mirror is None:
+        args.debsec_mirror = config.get_value("DEBSEC_MIRROR")
+    mirrors = [args.debsec_mirror, args.debian_mirror]
 
-    config = UDTConfig(opts.no_conf)
-    if opts.debian_mirror is None:
-        opts.debian_mirror = config.get_value("DEBIAN_MIRROR")
-    if opts.debsec_mirror is None:
-        opts.debsec_mirror = config.get_value("DEBSEC_MIRROR")
-    mirrors = [opts.debsec_mirror, opts.debian_mirror]
+    Logger.info("Downloading %s %s", args.package, args.version)
 
-    Logger.info("Downloading %s %s", package, version)
-
-    newpkg = DebianSourcePackage(package, version, mirrors=mirrors)
+    newpkg = DebianSourcePackage(args.package, args.version, mirrors=mirrors)
     try:
         newpkg.pull()
     except DownloadError as e:
@@ -108,16 +103,16 @@ def main():
         sys.exit(1)
     newpkg.unpack()
 
-    if opts.fetch_only:
+    if args.fetch_only:
         sys.exit(0)
 
-    oldversion = previous_version(package, version, distance)
+    oldversion = previous_version(args.package, args.version, args.distance)
     if not oldversion:
         Logger.error("No previous version could be found")
         sys.exit(1)
-    Logger.info("Downloading %s %s", package, oldversion)
+    Logger.info("Downloading %s %s", args.package, oldversion)
 
-    oldpkg = DebianSourcePackage(package, oldversion, mirrors=mirrors)
+    oldpkg = DebianSourcePackage(args.package, oldversion, mirrors=mirrors)
     try:
         oldpkg.pull()
     except DownloadError as e:

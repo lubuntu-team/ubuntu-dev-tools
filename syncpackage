@@ -20,9 +20,9 @@
 #
 # ##################################################################
 
+import argparse
 import fnmatch
 import logging
-import optparse
 import os
 import shutil
 import subprocess
@@ -509,15 +509,15 @@ def close_bugs(bugs, package, version, changes, sponsoree):
 def parse():
     """Parse given command-line parameters."""
 
-    usage = "%prog [options] <.dsc URL/path or package name>"
+    usage = "%(prog)s [options] <.dsc URL/path or package name>"
     epilog = "See %s(1) for more info." % os.path.basename(sys.argv[0])
-    parser = optparse.OptionParser(usage=usage, epilog=epilog)
+    parser = argparse.ArgumentParser(usage=usage, epilog=epilog)
 
-    parser.add_option("-d", "--distribution", help="Debian distribution to sync from.")
-    parser.add_option("-r", "--release", help="Specify target Ubuntu release.")
-    parser.add_option("-V", "--debian-version", help="Specify the version to sync from.")
-    parser.add_option("-c", "--component", help="Specify the Debian component to sync from.")
-    parser.add_option(
+    parser.add_argument("-d", "--distribution", help="Debian distribution to sync from.")
+    parser.add_argument("-r", "--release", help="Specify target Ubuntu release.")
+    parser.add_argument("-V", "--debian-version", help="Specify the version to sync from.")
+    parser.add_argument("-c", "--component", help="Specify the Debian component to sync from.")
+    parser.add_argument(
         "-b",
         "--bug",
         metavar="BUG",
@@ -526,173 +526,151 @@ def parse():
         default=list(),
         help="Mark Launchpad bug BUG as being fixed by this upload.",
     )
-    parser.add_option(
+    parser.add_argument(
         "-s",
         "--sponsor",
         metavar="USERNAME",
         dest="sponsoree",
-        default=None,
         help="Sponsor the sync for USERNAME (a Launchpad username).",
     )
-    parser.add_option(
-        "-v",
-        "--verbose",
-        action="store_true",
-        default=False,
-        help="Display more progress information.",
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", help="Display more progress information."
     )
-    parser.add_option(
+    parser.add_argument(
         "-F",
         "--fakesync",
         action="store_true",
-        default=False,
         help="Perform a fakesync (a sync where Debian and "
         "Ubuntu have a .orig.tar mismatch). "
         "This implies --no-lp and will leave a signed "
         ".changes file for you to upload.",
     )
-    parser.add_option(
-        "-f",
-        "--force",
-        action="store_true",
-        default=False,
-        help="Force sync over the top of Ubuntu changes.",
+    parser.add_argument(
+        "-f", "--force", action="store_true", help="Force sync over the top of Ubuntu changes."
     )
-    parser.add_option(
-        "--no-conf",
-        default=False,
-        action="store_true",
-        help="Don't read config files or environment variables.",
+    parser.add_argument(
+        "--no-conf", action="store_true", help="Don't read config files or environment variables."
     )
-    parser.add_option(
+    parser.add_argument(
         "-l",
         "--lpinstance",
         metavar="INSTANCE",
         help="Launchpad instance to connect to (default: production).",
     )
-    parser.add_option(
+    parser.add_argument(
         "--simulate",
-        default=False,
         action="store_true",
         help="Show what would be done, but don't actually do it.",
     )
 
-    no_lp = optparse.OptionGroup(
-        parser,
+    no_lp = parser.add_argument_group(
         "Local sync preparation options",
         "Options that only apply when using --no-lp.  "
         "WARNING: The use of --no-lp is not recommended for uploads "
         "targeted at Ubuntu. "
         "The archive-admins discourage its use, except for fakesyncs.",
     )
-    no_lp.add_option(
+    no_lp.add_argument(
         "--no-lp",
         dest="lp",
         action="store_false",
-        default=True,
         help="Construct sync locally, rather than letting "
         "Launchpad copy the package directly. "
         "It will leave a signed .changes file for you to "
         "upload.",
     )
-    no_lp.add_option(
+    no_lp.add_argument(
         "-n",
         "--uploader-name",
         help="Use UPLOADER_NAME as the name of the maintainer for this upload.",
     )
-    no_lp.add_option(
+    no_lp.add_argument(
         "-e",
         "--uploader-email",
         help="Use UPLOADER_EMAIL as email address of the maintainer for this upload.",
     )
-    no_lp.add_option(
+    no_lp.add_argument(
         "-k", "--key", dest="keyid", help="Specify the key ID to be used for signing."
     )
-    no_lp.add_option(
+    no_lp.add_argument(
         "--dont-sign", dest="keyid", action="store_false", help="Do not sign the upload."
     )
-    no_lp.add_option(
+    no_lp.add_argument(
         "-D",
         "--debian-mirror",
         metavar="DEBIAN_MIRROR",
         help="Preferred Debian mirror (default: %s)" % UDTConfig.defaults["DEBIAN_MIRROR"],
     )
-    no_lp.add_option(
+    no_lp.add_argument(
         "-U",
         "--ubuntu-mirror",
         metavar="UBUNTU_MIRROR",
         help="Preferred Ubuntu mirror (default: %s)" % UDTConfig.defaults["UBUNTU_MIRROR"],
     )
-    parser.add_option_group(no_lp)
+    parser.add_argument("package", help=argparse.SUPPRESS)
+    args = parser.parse_args()
 
-    (options, args) = parser.parse_args()
-
-    if options.fakesync:
-        options.lp = False
-
-    if len(args) == 0:
-        parser.error("No .dsc URL/path or package name specified.")
-    if len(args) > 1:
-        parser.error("Multiple .dsc URLs/paths or package names specified: " + ", ".join(args))
+    if args.fakesync:
+        args.lp = False
 
     try:
-        options.bugs = [int(b) for b in options.bugs]
+        args.bugs = [int(b) for b in args.bugs]
     except TypeError:
         parser.error("Invalid bug number(s) specified.")
 
-    if options.component not in (None, "main", "contrib", "non-free"):
+    if args.component not in (None, "main", "contrib", "non-free"):
         parser.error(
             "%s is not a valid Debian component. "
-            "It should be one of main, contrib, or non-free." % options.component
+            "It should be one of main, contrib, or non-free." % args.component
         )
 
-    if options.lp and options.uploader_name:
+    if args.lp and args.uploader_name:
         parser.error("Uploader name can only be overridden using --no-lp.")
-    if options.lp and options.uploader_email:
+    if args.lp and args.uploader_email:
         parser.error("Uploader email address can only be overridden using --no-lp.")
     # --key, --dont-sign, --debian-mirror, and --ubuntu-mirror are just
-    # ignored with options.lp, and do not require warnings.
+    # ignored with args.lp, and do not require warnings.
 
-    if options.lp:
-        if args[0].endswith(".dsc"):
+    if args.lp:
+        if args.package.endswith(".dsc"):
             parser.error(".dsc files can only be synced using --no-lp.")
 
-    return (options, args[0])
+    return args
 
 
 def main():
     """Handle parameters and get the ball rolling"""
-    (options, package) = parse()
+    args = parse()
 
-    if options.verbose:
+    if args.verbose:
         Logger.setLevel("DEBUG")
-    config = UDTConfig(options.no_conf)
-    if options.debian_mirror is None:
-        options.debian_mirror = config.get_value("DEBIAN_MIRROR")
-    if options.ubuntu_mirror is None:
-        options.ubuntu_mirror = config.get_value("UBUNTU_MIRROR")
+    config = UDTConfig(args.no_conf)
+    if args.debian_mirror is None:
+        args.debian_mirror = config.get_value("DEBIAN_MIRROR")
+    if args.ubuntu_mirror is None:
+        args.ubuntu_mirror = config.get_value("UBUNTU_MIRROR")
 
-    if options.keyid is None:
-        options.keyid = config.get_value("KEYID")
+    if args.keyid is None:
+        args.keyid = config.get_value("KEYID")
 
-    if options.lpinstance is None:
-        options.lpinstance = config.get_value("LPINSTANCE")
+    if args.lpinstance is None:
+        args.lpinstance = config.get_value("LPINSTANCE")
 
     try:
         # devel for copyPackage and changelogUrl
-        kwargs = {"service": options.lpinstance, "api_version": "devel"}
-        if options.lp and not options.simulate:
+        kwargs = {"service": args.lpinstance, "api_version": "devel"}
+        if args.lp and not args.simulate:
             Launchpad.login(**kwargs)
         else:
             Launchpad.login_anonymously(**kwargs)
     except IOError:
         sys.exit(1)
 
-    if options.release is None:
+    if args.release is None:
         ubuntu = Launchpad.distributions["ubuntu"]
-        options.release = "%s-proposed" % ubuntu.current_series.name
+        args.release = "%s-proposed" % ubuntu.current_series.name
 
-    if not options.fakesync and not options.lp:
+    if not args.fakesync and not args.lp:
         Logger.warning(
             "The use of --no-lp is not recommended for uploads "
             "targeted at Ubuntu. "
@@ -701,23 +679,23 @@ def main():
         )
 
     sponsoree = None
-    if options.sponsoree:
+    if args.sponsoree:
         try:
-            sponsoree = PersonTeam(options.sponsoree)
+            sponsoree = PersonTeam(args.sponsoree)
         except KeyError:
-            Logger.error('Cannot find the username "%s" in Launchpad.', options.sponsoree)
+            Logger.error('Cannot find the username "%s" in Launchpad.', args.sponsoree)
             sys.exit(1)
 
-    if sponsoree and options.uploader_name is None:
-        options.uploader_name = sponsoree.display_name
-    elif options.uploader_name is None:
-        options.uploader_name = ubu_email(export=False)[0]
+    if sponsoree and args.uploader_name is None:
+        args.uploader_name = sponsoree.display_name
+    elif args.uploader_name is None:
+        args.uploader_name = ubu_email(export=False)[0]
 
-    if sponsoree and options.uploader_email is None:
+    if sponsoree and args.uploader_email is None:
         try:
-            options.uploader_email = sponsoree.preferred_email_address.email
+            args.uploader_email = sponsoree.preferred_email_address.email
         except ValueError:
-            if not options.lp:
+            if not args.lp:
                 Logger.error(
                     "%s doesn't have a publicly visible e-mail "
                     "address in LP, please provide one "
@@ -725,16 +703,16 @@ def main():
                     sponsoree.display_name,
                 )
                 sys.exit(1)
-    elif options.uploader_email is None:
-        options.uploader_email = ubu_email(export=False)[1]
+    elif args.uploader_email is None:
+        args.uploader_email = ubu_email(export=False)[1]
 
     src_pkg = fetch_source_pkg(
-        package,
-        options.distribution,
-        options.debian_version,
-        options.component,
-        options.release,
-        options.debian_mirror,
+        args.package,
+        args.distribution,
+        args.debian_version,
+        args.component,
+        args.release,
+        args.debian_mirror,
     )
 
     blacklisted, comments = is_blacklisted(src_pkg.source)
@@ -751,7 +729,7 @@ def main():
                 src_pkg.source,
             )
         else:
-            if options.fakesync:
+            if args.fakesync:
                 messages += ["Doing a fakesync, overriding blacklist."]
             else:
                 blacklist_fail = True
@@ -780,22 +758,22 @@ def main():
     if blacklist_fail:
         sys.exit(1)
 
-    if options.lp:
-        copy(src_pkg, options.release, options.bugs, sponsoree, options.simulate, options.force)
+    if args.lp:
+        copy(src_pkg, args.release, args.bugs, sponsoree, args.simulate, args.force)
     else:
         os.environ["DEB_VENDOR"] = "Ubuntu"
         sync_dsc(
             src_pkg,
-            options.distribution,
-            options.release,
-            options.uploader_name,
-            options.uploader_email,
-            options.bugs,
-            options.ubuntu_mirror,
-            options.keyid,
-            options.simulate,
-            options.force,
-            options.fakesync,
+            args.distribution,
+            args.release,
+            args.uploader_name,
+            args.uploader_email,
+            args.bugs,
+            args.ubuntu_mirror,
+            args.keyid,
+            args.simulate,
+            args.force,
+            args.fakesync,
         )
 
 

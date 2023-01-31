@@ -17,7 +17,7 @@
 # pylint: disable=invalid-name
 # pylint: enable=invalid-name
 
-import optparse
+import argparse
 import os
 import sys
 
@@ -46,49 +46,31 @@ def find_debian_dir(depth=6):
 
 def main():
     script_name = os.path.basename(sys.argv[0])
-    usage = "%s [options]" % (script_name)
     epilog = "See %s(1) for more info." % (script_name)
-    parser = optparse.OptionParser(usage=usage, epilog=epilog)
-    parser.add_option(
+    parser = argparse.ArgumentParser(epilog=epilog)
+    parser.add_argument(
         "-d",
         "--debian-directory",
         dest="debian_directory",
-        help="location of the 'debian' directory (default: %default).",
+        help="location of the 'debian' directory (default: %(default)s).",
         metavar="PATH",
         default=find_debian_dir() or "./debian",
     )
-    parser.add_option(
-        "-r",
-        "--restore",
-        help="Restore the original maintainer",
-        action="store_true",
-        default=False,
+    parser.add_argument(
+        "-r", "--restore", help="Restore the original maintainer", action="store_true"
     )
-    parser.add_option(
-        "-q",
-        "--quiet",
-        help="print no informational messages",
-        dest="quiet",
-        action="store_true",
-        default=False,
+    parser.add_argument(
+        "-q", "--quiet", help="print no informational messages", dest="quiet", action="store_true"
     )
-    (options, args) = parser.parse_args()
+    args = parser.parse_args()
 
-    if len(args) != 0:
-        print(
-            "%s: Error: Unsupported additional parameters specified: %s"
-            % (script_name, ", ".join(args)),
-            file=sys.stderr,
-        )
-        sys.exit(1)
-
-    if not options.restore:
+    if not args.restore:
         operation = update_maintainer
     else:
         operation = restore_maintainer
 
     try:
-        operation(options.debian_directory, not options.quiet)
+        operation(args.debian_directory, not args.quiet)
     except MaintainerUpdateException:
         sys.exit(1)
 

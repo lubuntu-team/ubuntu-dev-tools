@@ -24,7 +24,12 @@
 # pylint: disable=invalid-name
 # pylint: enable=invalid-name
 
-import optparse
+"""Check if any of a package's build or binary dependencies are in universe or multiverse.
+
+Run this inside an unpacked source package
+"""
+
+import argparse
 import os.path
 import sys
 
@@ -128,12 +133,7 @@ def check_binary_dependencies(apt_cache, control):
 
 
 def main():
-    description = (
-        "Check if any of a package's build or binary "
-        + "dependencies are in universe or multiverse. "
-        + "Run this inside an unpacked source package"
-    )
-    parser = optparse.OptionParser(description=description)
+    parser = argparse.ArgumentParser(description=__doc__)
     parser.parse_args()
     apt_cache = apt.Cache()
 

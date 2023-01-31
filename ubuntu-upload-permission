@@ -17,7 +17,7 @@
 # pylint: disable=invalid-name
 # pylint: enable=invalid-name
 
-import optparse
+import argparse
 import sys
 
 from ubuntutools import getLogger
@@ -36,77 +36,71 @@ Logger = getLogger()
 
 def parse_arguments():
     """Parse arguments and return (options, package)"""
-    parser = optparse.OptionParser("%prog [options] package")
-    parser.add_option(
+    parser = argparse.ArgumentParser(usage="%(prog)s [options] package")
+    parser.add_argument(
         "-r",
         "--release",
-        default=None,
         metavar="RELEASE",
         help="Use RELEASE, rather than the current development release",
     )
-    parser.add_option(
+    parser.add_argument(
         "-a",
         "--list-uploaders",
-        default=False,
         action="store_true",
         help="List all the people/teams with upload rights",
     )
-    parser.add_option(
+    parser.add_argument(
         "-t",
         "--list-team-members",
-        default=False,
         action="store_true",
         help="List all team members of teams with upload rights (implies --list-uploaders)",
     )
-    options, args = parser.parse_args()
+    parser.add_argument("package", help=argparse.SUPPRESS)
+    args = parser.parse_args()
 
-    if len(args) != 1:
-        parser.error("One (and only one) package must be specified")
-    package = args[0]
+    if args.list_team_members:
+        args.list_uploaders = True
 
-    if options.list_team_members:
-        options.list_uploaders = True
-
-    return (options, package)
+    return args
 
 
 def main():
     """Query upload permissions"""
-    options, package = parse_arguments()
+    args = parse_arguments()
     # Need to be logged in to see uploaders:
     Launchpad.login()
 
     ubuntu = Distribution("ubuntu")
     archive = ubuntu.getArchive()
-    if options.release is None:
-        options.release = ubuntu.getDevelopmentSeries().name
+    if args.release is None:
+        args.release = ubuntu.getDevelopmentSeries().name
     try:
-        release, pocket = split_release_pocket(options.release)
+        release, pocket = split_release_pocket(args.release)
         series = ubuntu.getSeries(release)
     except SeriesNotFoundException as e:
         Logger.error(str(e))
         sys.exit(2)
 
     try:
-        spph = archive.getSourcePackage(package)
+        spph = archive.getSourcePackage(args.package)
     except PackageNotFoundException as e:
         Logger.error(str(e))
         sys.exit(2)
     component = spph.getComponent()
-    if options.list_uploaders and (
+    if args.list_uploaders and (
         pocket != "Release"
         or series.status in ("Experimental", "Active Development", "Pre-release Freeze")
     ):
 
         component_uploader = archive.getUploadersForComponent(component_name=component)[0]
-        Logger.info("All upload permissions for %s:", package)
+        Logger.info("All upload permissions for %s:", args.package)
         Logger.info("")
         Logger.info("Component (%s)", component)
         Logger.info("============%s", "=" * len(component))
-        print_uploaders([component_uploader], options.list_team_members)
+        print_uploaders([component_uploader], args.list_team_members)
 
         packagesets = sorted(
-            Packageset.setsIncludingSource(distroseries=series, sourcepackagename=package),
+            Packageset.setsIncludingSource(distroseries=series, sourcepackagename=args.package),
             key=lambda p: p.name,
         )
         if packagesets:
@@ -118,22 +112,22 @@ def main():
                 Logger.info("%s:", packageset.name)
                 print_uploaders(
                     archive.getUploadersForPackageset(packageset=packageset),
-                    options.list_team_members,
+                    args.list_team_members,
                 )
 
-        ppu_uploaders = archive.getUploadersForPackage(source_package_name=package)
+        ppu_uploaders = archive.getUploadersForPackage(source_package_name=args.package)
         if ppu_uploaders:
             Logger.info("")
             Logger.info("Per-Package-Uploaders")
             Logger.info("=====================")
             Logger.info("")
-            print_uploaders(ppu_uploaders, options.list_team_members)
+            print_uploaders(ppu_uploaders, args.list_team_members)
         Logger.info("")
 
-    if PersonTeam.me.canUploadPackage(archive, series, package, component, pocket):
-        Logger.info("You can upload %s to %s.", package, options.release)
+    if PersonTeam.me.canUploadPackage(archive, series, args.package, component, pocket):
+        Logger.info("You can upload %s to %s.", args.package, args.release)
     else:
-        Logger.info("You can not upload %s to %s, yourself.", package, options.release)
+        Logger.info("You can not upload %s to %s, yourself.", args.package, args.release)
         if (
             series.status in ("Current Stable Release", "Supported", "Obsolete")
             and pocket == "Release"
@@ -149,7 +143,7 @@ def main():
                 "But you can still contribute to it via the sponsorship "
                 "process: https://wiki.ubuntu.com/SponsorshipProcess"
             )
-            if not options.list_uploaders:
+            if not args.list_uploaders:
                 Logger.info(
                     "To see who has the necessary upload rights, "
                     "use the --list-uploaders option."

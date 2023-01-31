@@ -22,7 +22,12 @@
 #
 # ##################################################################
 
-import optparse
+"""Submit the Ubuntu changes in a package to Debian.
+
+Run inside an unpacked Ubuntu source package.
+"""
+
+import argparse
 import os
 import re
 import shutil
@@ -235,11 +240,7 @@ reportbug --configure for its configuration wizard.
 
 
 def main():
-    description = (
-        "Submit the Ubuntu changes in a package to Debian. "
-        + "Run inside an unpacked Ubuntu source package."
-    )
-    parser = optparse.OptionParser(description=description)
+    parser = argparse.ArgumentParser(description=__doc__)
     parser.parse_args()
 
     if not os.path.exists("/usr/bin/reportbug"):

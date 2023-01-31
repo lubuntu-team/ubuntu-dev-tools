@@ -21,8 +21,8 @@
 # Authors:
 #  Daniel Holbach <daniel.holbach@canonical.com>
 
+import argparse
 import sys
-from optparse import OptionParser
 
 from launchpadlib.errors import HTTPError
 from launchpadlib.launchpad import Launchpad
@@ -51,9 +51,8 @@ def tag_bug(bug):
 
 
 def main():
-    usage = "Usage: %prog <bug number>"
-    opt_parser = OptionParser(usage)
-    opt_parser.add_option(
+    parser = argparse.ArgumentParser(usage="%(prog)s [options] <bug number>")
+    parser.add_argument(
         "-l",
         "--lpinstance",
         metavar="INSTANCE",
@@ -61,30 +60,33 @@ def main():
         dest="lpinstance",
         default=None,
     )
-    opt_parser.add_option(
+    parser.add_argument(
         "--no-conf",
         help="Don't read config files or environment variables.",
         dest="no_conf",
         default=False,
         action="store_true",
     )
-    (options, args) = opt_parser.parse_args()
-    config = UDTConfig(options.no_conf)
-    if options.lpinstance is None:
-        options.lpinstance = config.get_value("LPINSTANCE")
-    if len(args) < 1:
-        opt_parser.error("Need at least one bug number.")
+    parser.add_argument("bug_number", help=argparse.SUPPRESS)
+    args = parser.parse_args()
+    config = UDTConfig(args.no_conf)
+    if args.lpinstance is None:
+        args.lpinstance = config.get_value("LPINSTANCE")
 
-    launchpad = Launchpad.login_with("ubuntu-dev-tools", options.lpinstance)
+    launchpad = Launchpad.login_with("ubuntu-dev-tools", args.lpinstance)
     if launchpad is None:
         error_out("Couldn't authenticate to Launchpad.")
 
     # check that the new main bug isn't a duplicate
     try:
-        bug = launchpad.bugs[args[0]]
+        bug = launchpad.bugs[args.bug_number]
     except HTTPError as error:
         if error.response.status == 401:
-            error_out("Don't have enough permissions to access bug %s. %s", args[0], error.content)
+            error_out(
+                "Don't have enough permissions to access bug %s. %s",
+                args.bug_number,
+                error.content,
+            )
         else:
             raise
     if "bitesize" in bug.tags:
