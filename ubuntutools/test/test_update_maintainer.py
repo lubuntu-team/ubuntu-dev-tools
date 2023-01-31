@@ -207,8 +207,9 @@ class UpdateMaintainerTestCase(unittest.TestCase):
             directory == self._directory and base in self._files and self._files[base] is not None
         )
 
-    def _fake_open(self, filename, mode="r"):
+    def _fake_open(self, filename, mode="r", encoding=None):
         """Provide StringIO objects instead of real files."""
+        self.assertTrue(encoding, f"encoding for {filename} not specified")
         directory, base = os.path.split(filename)
         if (
             directory != self._directory

@@ -27,7 +27,8 @@ from ubuntutools.config import UDTConfig, ubu_email
 class ConfigTestCase(unittest.TestCase):
     _config_files = {"system": "", "user": ""}
 
-    def _fake_open(self, filename, mode="r"):
+    def _fake_open(self, filename, mode="r", encoding=None):
+        self.assertTrue(encoding, f"encoding for {filename} not specified")
         if mode != "r":
             raise IOError("Read only fake-file")
         files = {
@@ -219,7 +220,7 @@ class UbuEmailTestCase(unittest.TestCase):
         self.assertEqual(os.environ["DEBEMAIL"], orig)
 
     def test_unicode_name(self):
-        encoding = locale.getdefaultlocale()[1]
+        encoding = locale.getlocale()[1]
         if not encoding:
             encoding = "utf-8"
         name = "Jöe Déveloper"

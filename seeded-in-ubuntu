@@ -48,7 +48,7 @@ def load_index(url):
     try:
         with gzip.open(seeded, "r") as f:
             return json.load(f)
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         Logger.error(
             "Unable to parse seed data: %s. Deleting cached data, please try again.", str(e)
         )

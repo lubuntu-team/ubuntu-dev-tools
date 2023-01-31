@@ -43,7 +43,7 @@ class Control(object):
     def __init__(self, filename):
         assert os.path.isfile(filename), "%s does not exist." % (filename)
         self._filename = filename
-        self._content = open(filename).read()
+        self._content = open(filename, encoding="utf-8").read()
 
     def get_maintainer(self):
         """Returns the value of the Maintainer field."""
@@ -65,7 +65,7 @@ class Control(object):
         """Saves the control file."""
         if filename:
             self._filename = filename
-        control_file = open(self._filename, "w")
+        control_file = open(self._filename, "w", encoding="utf-8")
         control_file.write(self._content)
         control_file.close()
 
@@ -94,7 +94,9 @@ class Control(object):
 
 def _get_distribution(changelog_file):
     """get distribution of latest changelog entry"""
-    changelog = debian.changelog.Changelog(open(changelog_file), strict=False, max_blocks=1)
+    changelog = debian.changelog.Changelog(
+        open(changelog_file, encoding="utf-8"), strict=False, max_blocks=1
+    )
     distribution = changelog.distributions.split()[0]
     # Strip things like "-proposed-updates" or "-security" from distribution
     return distribution.split("-", 1)[0]
@@ -119,7 +121,10 @@ def _find_files(debian_directory, verbose):
     # If the rules file accounts for XSBC-Original-Maintainer, we should not
     # touch it in this package (e.g. the python package).
     rules_file = os.path.join(debian_directory, "rules")
-    if os.path.isfile(rules_file) and "XSBC-Original-" in open(rules_file).read():
+    if (
+        os.path.isfile(rules_file)
+        and "XSBC-Original-" in open(rules_file, encoding="utf-8").read()
+    ):
         if verbose:
             print("XSBC-Original is managed by 'rules' file. Doing nothing.")
         control_files = []
@@ -189,7 +194,7 @@ def update_maintainer(debian_directory, verbose=False):
 def restore_maintainer(debian_directory, verbose=False):
     """Restore the original maintainer"""
     try:
-        changelog_file, control_files = _find_files(debian_directory, verbose)
+        control_files = _find_files(debian_directory, verbose)[1]
     except MaintainerUpdateException as e:
         Logger.error(str(e))
         raise

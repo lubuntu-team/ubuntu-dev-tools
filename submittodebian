@@ -116,6 +116,7 @@ def gen_debdiff(tmpdir, changelog):
         with open(debdiff, "w", encoding="utf-8") as debdiff_f:
             run(
                 ["filterdiff", "-x", "*changelog*"],
+                check=False,
                 stdin=diff.stdout,
                 stdout=debdiff_f,
                 encoding="utf-8",
@@ -161,7 +162,7 @@ def submit_bugreport(body, debdiff, deb_version, changelog):
         cfgfile = os.path.expanduser(cfgfile)
         if not os.path.exists(cfgfile):
             continue
-        with open(cfgfile, "r") as f:
+        with open(cfgfile, "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if line in ("gnus", "mutt", "nmh") or line.startswith("mua "):
@@ -215,7 +216,7 @@ no-cc
         % email
     )
 
-    with open(reportbugrc_filename, "w") as f:
+    with open(reportbugrc_filename, "w", encoding="utf-8") as f:
         f.write(reportbugrc)
 
     Logger.info(
@@ -253,7 +254,7 @@ def main():
     changelog_file = check_file("debian/changelog", critical=False) or check_file(
         "../debian/changelog"
     )
-    with open(changelog_file) as f:
+    with open(changelog_file, encoding="utf-8") as f:
         changelog = Changelog(f.read())
 
     deb_version = get_most_recent_debian_version(changelog)

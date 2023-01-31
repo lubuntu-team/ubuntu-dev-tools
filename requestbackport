@@ -113,7 +113,7 @@ def find_rdepends(releases, published_binaries):
 
     # We want to display every pubilshed binary, even if it has no rdepends
     for binpkg in published_binaries:
-        intermediate[binpkg]
+        intermediate[binpkg]  # pylint: disable=pointless-statement
 
     for arch in ("any", "source"):
         for release in releases:
@@ -261,7 +261,7 @@ def request_backport(package_spph, source, destinations):
         series = distro.getSeries(dest)
         try:
             bug.addTask(target=series.getSourcePackage(name=pkgname))
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             break
 
     Logger.info("Backport request filed as %s", bug.web_link)

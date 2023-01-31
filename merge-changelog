@@ -51,9 +51,9 @@ Debian release of the package.
 def merge_changelog(left_changelog, right_changelog):
     """Merge a changelog file."""
 
-    with open(left_changelog) as f:
+    with open(left_changelog, encoding="utf-8") as f:
         left_cl = Changelog(f)
-    with open(right_changelog) as f:
+    with open(right_changelog, encoding="utf-8") as f:
         right_cl = Changelog(f)
 
     left_versions = set(left_cl.versions)

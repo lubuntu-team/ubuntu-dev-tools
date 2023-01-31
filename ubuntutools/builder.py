@@ -150,7 +150,7 @@ class Sbuild(Builder):
     def update(self, dist):
         cmd = ["schroot", "--list"]
         Logger.debug(" ".join(cmd))
-        process = subprocess.run(cmd, stdout=subprocess.PIPE, encoding="utf-8")
+        process = subprocess.run(cmd, check=False, stdout=subprocess.PIPE, encoding="utf-8")
         chroots, _ = process.stdout.strip().split()
         if process.returncode != 0:
             return process.returncode
@@ -182,9 +182,9 @@ class Sbuild(Builder):
 _SUPPORTED_BUILDERS = {
     "cowbuilder": lambda: Pbuilder("cowbuilder"),
     "cowbuilder-dist": lambda: Pbuilderdist("cowbuilder-dist"),
-    "pbuilder": lambda: Pbuilder(),
-    "pbuilder-dist": lambda: Pbuilderdist(),
-    "sbuild": lambda: Sbuild(),
+    "pbuilder": Pbuilder,
+    "pbuilder-dist": Pbuilderdist,
+    "sbuild": Sbuild,
 }
 
 

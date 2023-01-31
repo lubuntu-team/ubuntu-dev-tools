@@ -87,8 +87,6 @@ VALID_DISTROS = DISTRO_PKG_CLASS.keys()
 class InvalidPullValueError(ValueError):
     """Thrown when --pull value is invalid"""
 
-    pass
-
 
 class PullPkg(object):
     """Class used to pull file(s) associated with a specific package"""
@@ -124,13 +122,14 @@ class PullPkg(object):
             logger.error(str(error))
             sys.exit(errno.ENOENT)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):  # pylint: disable=unused-argument
         self._default_pull = kwargs.get("pull")
         self._default_distro = kwargs.get("distro")
         self._default_arch = kwargs.get("arch", host_architecture())
 
     def parse_args(self, args):
-        args = args[:]
+        if args is None:
+            args = sys.argv[1:]
 
         help_default_pull = "What to pull: " + ", ".join(VALID_PULLS)
         if self._default_pull:
@@ -403,7 +402,7 @@ class PullPkg(object):
 
         return params
 
-    def pull(self, args=sys.argv[1:]):
+    def pull(self, args=None):
         """Pull (download) specified package file(s)"""
         options = self.parse_args(args)
 
@@ -504,7 +503,7 @@ class PullPkg(object):
         status=None,
         download_only=None,
         **kwargs,
-    ):
+    ):  # pylint: disable=unused-argument
         if not series:
             Logger.error("Using --upload-queue requires specifying series")
             return
@@ -620,7 +619,11 @@ class PullPkg(object):
                 cmd = ["dpkg-source", "-x", dscfile.name]
                 Logger.debug(" ".join(cmd))
                 result = subprocess.run(
-                    cmd, encoding="utf-8", stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+                    cmd,
+                    check=False,
+                    encoding="utf-8",
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
                 )
                 if result.returncode != 0:
                     Logger.error("Source unpack failed.")

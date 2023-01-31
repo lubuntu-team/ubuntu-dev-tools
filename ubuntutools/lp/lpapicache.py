@@ -34,7 +34,7 @@ from launchpadlib.errors import HTTPError
 from launchpadlib.launchpad import Launchpad as LP
 from lazr.restfulclient.resource import Entry
 
-from ubuntutools.lp import api_version, service
+from ubuntutools.lp import API_VERSION, SERVICE
 from ubuntutools.lp.udtexceptions import (
     AlreadyLoggedInError,
     ArchiveNotFoundException,
@@ -76,7 +76,9 @@ __all__ = [
 class _Launchpad(object):
     """Singleton for LP API access."""
 
-    def login(self, service=service, api_version=api_version):
+    __lp = None
+
+    def login(self, service=SERVICE, api_version=API_VERSION):
         """Enforce a non-anonymous login."""
         if not self.logged_in:
             self.__lp = LP.login_with("ubuntu-dev-tools", service, version=api_version)
@@ -85,11 +87,11 @@ class _Launchpad(object):
             # are valid; which can lead to this 'login' not actually
             # logging in.
             # So, this forces actual LP access here, to force actual login.
-            self.__lp.me
+            self.__lp.me  # pylint: disable=pointless-statement
         else:
             raise AlreadyLoggedInError("Already logged in to Launchpad.")
 
-    def login_anonymously(self, service=service, api_version=api_version):
+    def login_anonymously(self, service=SERVICE, api_version=API_VERSION):
         """Enforce an anonymous login."""
         if not self.logged_in:
             self.__lp = LP.login_anonymously("ubuntu-dev-tools", service, version=api_version)
@@ -201,12 +203,13 @@ class Distribution(BaseWrapper):
 
     resource_type = "distribution"
 
-    def __init__(self, *args):
+    def __init__(self, *args):  # pylint: disable=unused-argument
         self._archives = dict()
         self._series_by_name = dict()
         self._series = dict()
         self._dev_series = None
         self._have_all_series = False
+        self._main_archive = None
 
     def cache(self):
         self._cache[self.name] = self
@@ -254,7 +257,7 @@ class Distribution(BaseWrapper):
                 message = "The Archive '%s' doesn't exist in %s" % (archive, self.display_name)
                 raise ArchiveNotFoundException(message)
         else:
-            if "_main_archive" not in self.__dict__:
+            if self._main_archive is None:
                 self._main_archive = Archive(self.main_archive_link)
             return self._main_archive
 
@@ -288,7 +291,7 @@ class Distribution(BaseWrapper):
             self._dev_series = series
         return self._dev_series
 
-    def getAllSeries(self, active=True):
+    def getAllSeries(self, active=True):  # pylint: disable=unused-argument
         """
         Returns a list of all DistroSeries objects.
         """
@@ -328,7 +331,7 @@ class DistroSeries(BaseWrapper):
 
     resource_type = "distro_series"
 
-    def __init__(self, *args):
+    def __init__(self, *args):  # pylint: disable=unused-argument
         if "_architectures" not in self.__dict__:
             self._architectures = dict()
 
@@ -372,7 +375,7 @@ class PackageUpload(BaseWrapper):
 
     resource_type = "package_upload"
 
-    def __init__(self, *args):
+    def __init__(self, *args):  # pylint: disable=unused-argument
         self._custom_urls = None
         self._source_urls = None
         self._binary_urls = None
@@ -431,7 +434,7 @@ class Archive(BaseWrapper):
 
     resource_type = "archive"
 
-    def __init__(self, *args):
+    def __init__(self, *args):  # pylint: disable=unused-argument
         self._binpkgs = {}
         self._srcpkgs = {}
         self._pkg_uploaders = {}
@@ -757,7 +760,7 @@ class Archive(BaseWrapper):
         immediately if the copy passes basic security checks and the copy
         will happen sometime later with full checking.
         """
-
+        # pylint: disable=protected-access
         if isinstance(sponsored, PersonTeam):
             sponsored = sponsored._lpobject
 
@@ -812,6 +815,7 @@ class Archive(BaseWrapper):
             self._pkgset_uploaders[key] = sorted(
                 set(
                     PersonTeam(permission.person_link)
+                    # pylint: disable=protected-access
                     for permission in self._lpobject.getUploadersForPackageset(
                         packageset=packageset._lpobject, direct_permissions=direct_permissions
                     )
@@ -838,7 +842,7 @@ class SourcePackagePublishingHistory(BaseWrapper):
 
     resource_type = "source_package_publishing_history"
 
-    def __init__(self, *args):
+    def __init__(self, *args):  # pylint: disable=unused-argument
         self._archive = None
         self._changelog = None
         self._binaries = {}
@@ -1158,7 +1162,7 @@ class BinaryPackagePublishingHistory(BaseWrapper):
 
     resource_type = "binary_package_publishing_history"
 
-    def __init__(self, *args):
+    def __init__(self, *args):  # pylint: disable=unused-argument
         self._arch = None
         self._ext = None
         self._binary_urls = None
@@ -1386,7 +1390,7 @@ class PersonTeam(BaseWrapper, metaclass=MetaPersonTeam):
 
     resource_type = ("person", "team")
 
-    def __init__(self, *args):
+    def __init__(self, *args):  # pylint: disable=unused-argument
         # Don't share _upload between different PersonTeams
         self._ppas = None
         if "_upload" not in self.__dict__:
@@ -1482,7 +1486,7 @@ class Project(BaseWrapper):
 
     resource_type = "project"
 
-    def __init__(self, *args):
+    def __init__(self, *args):  # pylint: disable=unused-argument
         self._series = None
 
     @property
@@ -1580,7 +1584,7 @@ class Packageset(BaseWrapper):
         if key not in cls._source_sets:
             params = {"sourcepackagename": sourcepackagename, "direct_inclusion": direct_inclusion}
             if distroseries is not None:
-                params["distroseries"] = distroseries._lpobject
+                params["distroseries"] = distroseries._lpobject  # pylint: disable=protected-access
 
             cls._source_sets[key] = [
                 Packageset(packageset)

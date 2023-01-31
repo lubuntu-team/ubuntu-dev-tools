@@ -145,7 +145,7 @@ def main():
         sys.exit(1)
 
     # get build dependencies from debian/control
-    control = apt.apt_pkg.TagFile(open("debian/control"))
+    control = apt.apt_pkg.TagFile(open("debian/control", encoding="utf-8"))
     next(control)
 
     unsupported_build_deps = check_build_dependencies(apt_cache, control)

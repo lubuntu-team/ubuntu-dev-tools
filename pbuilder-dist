@@ -220,7 +220,7 @@ class PbuilderDist(object):
             if self.operation == "build":
                 dsc_files = [a for a in remaining_arguments if a.strip().endswith(".dsc")]
                 assert len(dsc_files) == 1
-                dsc = debian.deb822.Dsc(open(dsc_files[0]))
+                dsc = debian.deb822.Dsc(open(dsc_files[0], encoding="utf-8"))
                 version = ubuntutools.version.Version(dsc["Version"])
                 name = (
                     dsc["Source"]
@@ -462,7 +462,10 @@ def main():
         requested_arch = parts[2]
     elif len(args) > 0:
         if shutil.which("arch-test") is not None:
-            if subprocess.run(["arch-test", args[0]], stdout=subprocess.DEVNULL).returncode == 0:
+            arch_test = subprocess.run(
+                ["arch-test", args[0]], check=False, stdout=subprocess.DEVNULL
+            )
+            if arch_test.returncode == 0:
                 requested_arch = args.pop(0)
             elif os.path.isdir("/usr/lib/arch-test") and args[0] in os.listdir(
                 "/usr/lib/arch-test/"

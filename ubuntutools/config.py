@@ -68,7 +68,7 @@ class UDTConfig(object):
         config = {}
         for filename in ("/etc/devscripts.conf", "~/.devscripts"):
             try:
-                f = open(os.path.expanduser(filename), "r")
+                f = open(os.path.expanduser(filename), "r", encoding="utf-8")
             except IOError:
                 continue
             for line in f:
@@ -179,7 +179,7 @@ def ubu_email(name=None, email=None, export=True):
     if not email:
         mailname = socket.getfqdn()
         if os.path.isfile("/etc/mailname"):
-            mailname = open("/etc/mailname", "r").read().strip()
+            mailname = open("/etc/mailname", "r", encoding="utf-8").read().strip()
         email = pwd.getpwuid(os.getuid()).pw_name + "@" + mailname
 
     if export:
@@ -187,7 +187,7 @@ def ubu_email(name=None, email=None, export=True):
         os.environ["DEBEMAIL"] = email
 
     # decode env var or gecos raw string with the current locale's encoding
-    encoding = locale.getdefaultlocale()[1]
+    encoding = locale.getlocale()[1]
     if not encoding:
         encoding = "utf-8"
     if name and isinstance(name, bytes):

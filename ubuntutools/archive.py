@@ -151,7 +151,7 @@ class SourcePackage(ABC):
     def spph_class(self):
         return SourcePackagePublishingHistory
 
-    def __init__(self, package=None, version=None, component=None, *args, **kwargs):
+    def __init__(self, package=None, version=None, component=None, **kwargs):
         """Can be initialised using either package or dscfile.
         If package is specified, either the version or series can also be
         specified; using version will get the specific package version,
@@ -526,6 +526,7 @@ class SourcePackage(ABC):
         Logger.debug(" ".join(cmd))
         result = subprocess.run(
             cmd,
+            check=False,
             cwd=str(self.workdir),
             encoding="utf-8",
             stdout=subprocess.PIPE,
@@ -543,7 +544,7 @@ class SourcePackage(ABC):
         cmd = ["debdiff", self.dsc_name, newpkg.dsc_name]
         difffn = newpkg.dsc_name[:-3] + "debdiff"
         Logger.debug("%s > %s", " ".join(cmd), difffn)
-        with open(difffn, "w") as f:
+        with open(difffn, "w", encoding="utf-8") as f:
             if subprocess.call(cmd, stdout=f, cwd=str(self.workdir)) > 2:
                 Logger.error("Debdiff failed.")
                 sys.exit(1)
@@ -692,7 +693,7 @@ class PersonalPackageArchiveSourcePackage(UbuntuSourcePackage):
         self.masters = []
 
     @property
-    @functools.lru_cache(maxsize=None)
+    @functools.lru_cache()
     def team(self):
         try:
             return PersonTeam.fetch(self._teamname)
@@ -1033,9 +1034,7 @@ class _Snapshot(_WebJSON):
         return self.getSourcePackages(name, version)[0]
 
     def getBinaryPackages(self, name, version):
-        return self._get_package(
-            name, "binary", lambda obj: SnapshotBinaryPackage(obj), version, "binary_version"
-        )
+        return self._get_package(name, "binary", SnapshotBinaryPackage, version, "binary_version")
 
     def getBinaryPackage(self, name, version):
         return self.getBinaryPackages(name, version)[0]
@@ -1121,10 +1120,6 @@ class SnapshotSourcePackage(SnapshotPackage):
 
 
 class SnapshotBinaryPackage(SnapshotPackage):
-    def __init__(self, obj):
-        # obj required fields: 'version', 'binary_version', 'name', 'source'
-        super(SnapshotBinaryPackage, self).__init__(obj)
-
     @property
     def name(self):
         return self._obj["name"]
@@ -1176,7 +1171,6 @@ class SnapshotFile(object):
         self._obj = obj
         self._hash = h
 
-    @property
     def getType(self):
         return None
 
@@ -1221,9 +1215,6 @@ class SnapshotFile(object):
 
 
 class SnapshotSourceFile(SnapshotFile):
-    def __init__(self, name, version, component, obj, h):
-        super(SnapshotSourceFile, self).__init__(name, version, component, obj, h)
-
     def getType(self):
         return "source"
 
@@ -1318,7 +1309,7 @@ class SnapshotSPPH(object):
                 return f["sha1"]
         return None
 
-    def sourceFileSha256(self, url_or_filename):
+    def sourceFileSha256(self, url_or_filename):  # pylint: disable=unused-argument
         return None
 
     def sourceFileSize(self, url_or_filename):
@@ -1448,7 +1439,7 @@ class SnapshotBPPH(object):
             return self._file.getHash()
         return None
 
-    def binaryFileSha256(self, url_or_filename):
+    def binaryFileSha256(self, url_or_filename):  # pylint: disable=unused-argument
         return None
 
     def binaryFileSize(self, url_or_filename):

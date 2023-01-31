@@ -340,7 +340,7 @@ class SourcePackage(object):
         if not Logger.isEnabledFor(logging.DEBUG):
             cmd.insert(1, "-q")
         Logger.debug("%s > %s", " ".join(cmd), self._debdiff_filename)
-        with open(self._debdiff_filename, "w") as debdiff_file:
+        with open(self._debdiff_filename, "w", encoding="utf-8") as debdiff_file:
             debdiff = subprocess.run(cmd, check=False, stdout=debdiff_file)
             assert debdiff.returncode in (0, 1)
 
@@ -352,7 +352,7 @@ class SourcePackage(object):
         """
 
         assert os.path.isfile(self._changes_file), "%s does not exist." % (self._changes_file)
-        changes = debian.deb822.Changes(open(self._changes_file))
+        changes = debian.deb822.Changes(open(self._changes_file, encoding="utf-8"))
         fixed_bugs = []
         if "Launchpad-Bugs-Fixed" in changes:
             fixed_bugs = changes["Launchpad-Bugs-Fixed"].split(" ")
@@ -389,7 +389,9 @@ class SourcePackage(object):
         # Check the changelog
         self._changelog = debian.changelog.Changelog()
         try:
-            self._changelog.parse_changelog(open("debian/changelog"), max_blocks=1, strict=True)
+            self._changelog.parse_changelog(
+                open("debian/changelog", encoding="utf-8"), max_blocks=1, strict=True
+            )
         except debian.changelog.ChangelogParseError as error:
             Logger.error("The changelog entry doesn't validate: %s", str(error))
             ask_for_manual_fixing()
@@ -438,7 +440,7 @@ class SourcePackage(object):
         report = subprocess.check_output(cmd, encoding="utf-8")
 
         # write lintian report file
-        lintian_file = open(lintian_filename, "w")
+        lintian_file = open(lintian_filename, "w", encoding="utf-8")
         lintian_file.writelines(report)
         lintian_file.close()
 

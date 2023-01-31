@@ -57,12 +57,10 @@ _SYSTEM_DISTRIBUTION_CHAIN: list[str] = []
 
 class DownloadError(Exception):
     "Unable to pull a source package"
-    pass
 
 
 class NotFoundError(DownloadError):
     "Source package not found"
-    pass
 
 
 def system_distribution_chain():
@@ -74,7 +72,6 @@ def system_distribution_chain():
     the distribution chain can't be determined, print an error message
     and return an empty list.
     """
-    global _SYSTEM_DISTRIBUTION_CHAIN
     if len(_SYSTEM_DISTRIBUTION_CHAIN) == 0:
         try:
             vendor = check_output(("dpkg-vendor", "--query", "Vendor"), encoding="utf-8").strip()
@@ -144,7 +141,7 @@ def readlist(filename, uniq=True):
         Logger.error("File %s does not exist.", path)
         return False
 
-    content = path.read_text().replace("\n", " ").replace(",", " ")
+    content = path.read_text(encoding="utf-8").replace("\n", " ").replace(",", " ")
 
     if not content.strip():
         Logger.error("File %s is empty.", path)
@@ -220,7 +217,7 @@ def codename_to_distribution(codename):
             return distro
 
 
-def verify_file_checksums(pathname, checksums={}, size=0):
+def verify_file_checksums(pathname, checksums=None, size=0):
     """verify checksums of file
 
     Any failure will log an error.
@@ -234,6 +231,8 @@ def verify_file_checksums(pathname, checksums={}, size=0):
 
     Returns True if all checks pass, False otherwise
     """
+    if checksums is None:
+        checksums = {}
     path = Path(pathname)
 
     if not path.is_file():
@@ -348,9 +347,10 @@ def download(src, dst, size=0, *, blocksize=DOWNLOAD_BLOCKSIZE_DEFAULT):
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdst = Path(tmpdir) / "dst"
         try:
-            with requests.get(src, stream=True, auth=auth) as fsrc, tmpdst.open("wb") as fdst:
-                fsrc.raise_for_status()
-                _download(fsrc, fdst, size, blocksize=blocksize)
+            with requests.get(src, stream=True, timeout=60, auth=auth) as fsrc:
+                with tmpdst.open("wb") as fdst:
+                    fsrc.raise_for_status()
+                    _download(fsrc, fdst, size, blocksize=blocksize)
         except requests.exceptions.HTTPError as error:
             if error.response is not None and error.response.status_code == 404:
                 raise NotFoundError(f"URL {src} not found: {error}") from error
@@ -426,7 +426,7 @@ def _download(fsrc, fdst, size, *, blocksize):
     if show_progress:
         try:
             terminal_width = os.get_terminal_size(sys.stderr.fileno()).columns
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-except
             Logger.error("Error finding stderr width, suppressing progress bar: %s", e)
     progress_bar = _StderrProgressBar(max_width=terminal_width)
 

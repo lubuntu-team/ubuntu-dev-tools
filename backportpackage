@@ -338,7 +338,7 @@ def orig_needed(upload, workdir, pkg):
             quote(os.path.basename(filename)),
         )
         try:
-            headers, body = http.request(url, "HEAD")
+            headers = http.request(url, "HEAD")[0]
             if headers.status != 200 or not headers["content-location"].startswith(
                 "https://launchpadlibrarian.net"
             ):

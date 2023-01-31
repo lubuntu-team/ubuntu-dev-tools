@@ -138,7 +138,7 @@ def get_ubuntu_delta_changelog(srcpkg):
             # Native sync
             break
         try:
-            response, body = Http().request(changes_url)
+            response = Http().request(changes_url)[0]
         except HttpLib2Error as e:
             Logger.error(str(e))
             break
@@ -172,6 +172,7 @@ def post_bug(srcpkg, subscribe, status, bugtitle, bugtext):
     confirmation_prompt()
 
     if srcpkg:
+        # pylint: disable=protected-access
         bug_target = DistributionSourcePackage(
             "%subuntu/+source/%s" % (Launchpad._root_uri, srcpkg)
         )
