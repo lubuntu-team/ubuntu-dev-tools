@@ -60,7 +60,7 @@ def main():
         version = extract(iso, "/.disk/info")
 
         if len(version) == 0:
-            Logger.error("%s does not appear to be an Ubuntu ISO" % iso)
+            Logger.error("%s does not appear to be an Ubuntu ISO", iso)
             err = True
             continue
 

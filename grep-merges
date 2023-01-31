@@ -68,7 +68,7 @@ def main():
             Logger.exception(e)
             sys.exit(1)
         if headers.status != 200:
-            Logger.error("%s: %s %s" % (url, headers.status, headers.reason))
+            Logger.error("%s: %s %s", url, headers.status, headers.reason)
             sys.exit(1)
 
         for merge in json.loads(page):
@@ -88,7 +88,7 @@ def main():
                 or match in uploader
                 or match in teams
             ):
-                Logger.info("%s\t%s" % (package, pretty_uploader))
+                Logger.info("%s\t%s", package, pretty_uploader)
 
 
 if __name__ == "__main__":

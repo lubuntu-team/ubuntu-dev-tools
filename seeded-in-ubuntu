@@ -89,10 +89,10 @@ def output_binaries(index, binaries):
     """Print binaries found in index"""
     for binary in binaries:
         if binary in index:
-            Logger.info("%s is seeded in:" % binary)
+            Logger.info("%s is seeded in:", binary)
             Logger.info(present_on(index[binary]))
         else:
-            Logger.info("%s is not seeded (and may not exist)." % binary)
+            Logger.info("%s is not seeded (and may not exist).", binary)
 
 
 def output_by_source(index, by_source):
@@ -102,16 +102,17 @@ def output_by_source(index, by_source):
         if not binaries:
             Logger.info(
                 "Status unknown: No binary packages built by the latest "
-                "%s.\nTry again using -b and the expected binary packages." % source
+                "%s.\nTry again using -b and the expected binary packages.",
+                source,
             )
             continue
         for binary in binaries:
             if binary in index:
                 seen = True
-                Logger.info("%s (from %s) is seeded in:" % (binary, source))
+                Logger.info("%s (from %s) is seeded in:", binary, source)
                 Logger.info(present_on(index[binary]))
         if not seen:
-            Logger.info("%s's binaries are not seeded." % source)
+            Logger.info("%s's binaries are not seeded.", source)
 
 
 def main():

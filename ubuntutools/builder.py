@@ -40,7 +40,7 @@ class Builder(object):
     def _build_failure(self, returncode, dsc_file):
         if returncode != 0:
             Logger.error(
-                "Failed to build %s from source with %s." % (os.path.basename(dsc_file), self.name)
+                "Failed to build %s from source with %s.", os.path.basename(dsc_file), self.name
             )
         return returncode
 
@@ -58,7 +58,7 @@ class Builder(object):
 
     def _update_failure(self, returncode, dist):
         if returncode != 0:
-            Logger.error("Failed to update %s chroot for %s." % (dist, self.name))
+            Logger.error("Failed to update %s chroot for %s.", dist, self.name)
         return returncode
 
 
@@ -138,12 +138,12 @@ class Sbuild(Builder):
     def build(self, dsc_file, dist, result_directory):
         _build_preparation(result_directory)
         workdir = os.getcwd()
-        Logger.debug("cd " + result_directory)
+        Logger.debug("cd %s", result_directory)
         os.chdir(result_directory)
         cmd = ["sbuild", "--arch-all", "--dist=" + dist, "--arch=" + self.architecture, dsc_file]
         Logger.debug(" ".join(cmd))
         returncode = subprocess.call(cmd)
-        Logger.debug("cd " + workdir)
+        Logger.debug("cd %s", workdir)
         os.chdir(workdir)
         return self._build_failure(returncode, dsc_file)
 
@@ -171,7 +171,7 @@ class Sbuild(Builder):
         commands = [["sbuild-update"], ["sbuild-distupgrade"], ["sbuild-clean", "-a", "-c"]]
         for cmd in commands:
             # pylint: disable=W0631
-            Logger.debug(" ".join(cmd) + " " + chroot)
+            Logger.debug("%s %s", " ".join(cmd), chroot)
             ret = subprocess.call(cmd + [chroot])
             # pylint: enable=W0631
             if ret != 0:

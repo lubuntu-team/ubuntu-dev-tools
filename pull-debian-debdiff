@@ -123,7 +123,7 @@ def main():
     except DownloadError as e:
         Logger.error("Failed to download: %s", str(e))
         sys.exit(1)
-    Logger.info("file://" + oldpkg.debdiff(newpkg, diffstat=True))
+    Logger.info("file://%s", oldpkg.debdiff(newpkg, diffstat=True))
 
 
 if __name__ == "__main__":

@@ -145,7 +145,7 @@ class SourcePackage(object):
             Logger.debug(" ".join(cmd))
             if subprocess.call(cmd) != 0:
                 Logger.error(
-                    "Upload of %s to %s failed." % (os.path.basename(self._changes_file), upload)
+                    "Upload of %s to %s failed.", os.path.basename(self._changes_file), upload
                 )
                 sys.exit(1)
 
@@ -274,16 +274,18 @@ class SourcePackage(object):
             )
             if self._changelog.distributions not in allowed:
                 Logger.error(
-                    "%s is not an allowed series. It needs to be one of %s."
-                    % (self._changelog.distributions, ", ".join(allowed))
+                    "%s is not an allowed series. It needs to be one of %s.",
+                    self._changelog.distributions,
+                    ", ".join(allowed),
                 )
                 return ask_for_ignoring_or_fixing()
         elif upload and upload.startswith("ppa/"):
             allowed = supported_series + [devel_series]
             if self._changelog.distributions not in allowed:
                 Logger.error(
-                    "%s is not an allowed series. It needs to be one of %s."
-                    % (self._changelog.distributions, ", ".join(allowed))
+                    "%s is not an allowed series. It needs to be one of %s.",
+                    self._changelog.distributions,
+                    ", ".join(allowed),
                 )
                 return ask_for_ignoring_or_fixing()
         return True
@@ -337,7 +339,7 @@ class SourcePackage(object):
         cmd = ["debdiff", dsc_file, self._dsc_file]
         if not Logger.isEnabledFor(logging.DEBUG):
             cmd.insert(1, "-q")
-        Logger.debug(" ".join(cmd) + " > " + self._debdiff_filename)
+        Logger.debug("%s > %s", " ".join(cmd), self._debdiff_filename)
         with open(self._debdiff_filename, "w") as debdiff_file:
             debdiff = subprocess.run(cmd, check=False, stdout=debdiff_file)
             assert debdiff.returncode in (0, 1)
@@ -362,7 +364,7 @@ class SourcePackage(object):
             lp_bug = lp_bug.duplicate_of
 
         if lp_bug.id not in fixed_bugs:
-            Logger.error("Launchpad bug #%i is not closed by new version." % (lp_bug.id))
+            Logger.error("Launchpad bug #%i is not closed by new version.", lp_bug.id)
             return ask_for_ignoring_or_fixing()
         return True
 
@@ -432,7 +434,7 @@ class SourcePackage(object):
         lintian_filename = os.path.join(
             self._workdir, self._package + "_" + strip_epoch(self._version) + ".lintian"
         )
-        Logger.debug(" ".join(cmd) + " > " + lintian_filename)
+        Logger.debug("%s > %s", " ".join(cmd), lintian_filename)
         report = subprocess.check_output(cmd, encoding="utf-8")
 
         # write lintian report file

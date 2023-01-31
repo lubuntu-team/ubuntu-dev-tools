@@ -136,8 +136,8 @@ def main():
         # LP limits descriptions to 50K chars
         description = (description[:49994] + " [...]") if len(description) > 50000 else description
 
-        Logger.debug("Target: %s" % target)
-        Logger.debug("Subject: %s" % subject)
+        Logger.debug("Target: %s", target)
+        Logger.debug("Subject: %s", subject)
         Logger.debug("Description: ")
         Logger.debug(description)
 

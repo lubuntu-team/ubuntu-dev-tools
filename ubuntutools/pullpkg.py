@@ -454,7 +454,7 @@ class PullPkg(object):
                 name = f.getFileName()
                 if name.rpartition(".")[0].endswith("all"):
                     archtext = f" ({f.arch})"
-                Logger.info(f"  {name}{archtext}")
+                Logger.info("  %s%s", name, archtext)
         elif pull == PULL_SOURCE:
             # allow DownloadError to flow up to caller
             srcpkg.pull()
@@ -576,7 +576,7 @@ class PullPkg(object):
                     Logger.info("Binary files:")
                     for url in urls:
                         Logger.info("  %s", url)
-                        Logger.info("    { %s }" % pkg.binaryFileProperties(url))
+                        Logger.info("    { %s }", pkg.binaryFileProperties(url))
                 else:
                     Logger.info("No binary files")
                 urls = pkg.customFileUrls()
@@ -594,7 +594,7 @@ class PullPkg(object):
                 msg += ", please specify the version"
             Logger.error("Available package versions/ids are:")
             for pkg in packages:
-                Logger.error("%s %s (id %s)" % (pkg.package_name, pkg.package_version, pkg.id))
+                Logger.error("%s %s (id %s)", pkg.package_name, pkg.package_version, pkg.id)
             raise PackageNotFoundException(msg)
 
         pkg = packages[0]

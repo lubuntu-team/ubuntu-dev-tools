@@ -248,7 +248,7 @@ class SourcePackage(ABC):
                 raise pnfe
 
             Logger.info(
-                "Source package lookup failed, trying lookup of binary package %s" % self.source
+                "Source package lookup failed, trying lookup of binary package %s", self.source
             )
 
             try:
@@ -262,9 +262,7 @@ class SourcePackage(ABC):
             self.binary = self.source
             self.source = bpph.getSourcePackageName()
             Logger.info(
-                "Using source package '{}' for binary package '{}'".format(
-                    self.source, self.binary
-                )
+                "Using source package '%s' for binary package '%s'", self.source, self.binary
             )
 
             spph = bpph.getBuild().getSourcePackagePublishingHistory()
@@ -381,17 +379,16 @@ class SourcePackage(ABC):
             )
         except IOError:
             Logger.debug(
-                "Signature on %s could not be verified, install debian-keyring" % self.dsc_name
+                "Signature on %s could not be verified, install debian-keyring", self.dsc_name
             )
             return
         if gpg_info.valid():
             if "GOODSIG" in gpg_info:
                 Logger.info(
-                    "Good signature by %s (0x%s)"
-                    % (gpg_info["GOODSIG"][1], gpg_info["GOODSIG"][0])
+                    "Good signature by %s (0x%s)", gpg_info["GOODSIG"][1], gpg_info["GOODSIG"][0]
                 )
             elif "VALIDSIG" in gpg_info:
-                Logger.info("Valid signature by 0x%s" % gpg_info["VALIDSIG"][0])
+                Logger.info("Valid signature by 0x%s", gpg_info["VALIDSIG"][0])
             else:
                 Logger.info("Valid signature")
         elif "NO_PUBKEY" in gpg_info:
@@ -399,7 +396,7 @@ class SourcePackage(ABC):
         elif "NODATA" in gpg_info:
             Logger.warning("Package is not signed")
         else:
-            Logger.warning("Signature on %s could not be verified" % self.dsc_name)
+            Logger.warning("Signature on %s could not be verified", self.dsc_name)
 
     def _verify_file(self, pathname, dscverify=False, sha1sum=None, sha256sum=None, size=0):
         path = Path(pathname)
@@ -425,7 +422,7 @@ class SourcePackage(ABC):
 
         can_verify = any((dscverify, sha1sum, sha256sum))
         if can_verify and self._verify_file(path, dscverify, sha1sum, sha256sum, size):
-            Logger.info(f"Using existing file {path}")
+            Logger.info("Using existing file %s", path)
             return True
 
         download(url, path, size)
@@ -444,9 +441,9 @@ class SourcePackage(ABC):
                     return
             except NotFoundError:
                 # It's ok if the file isn't found, just try the next url
-                Logger.debug(f"File not found at {url}")
+                Logger.debug("File not found at %s", url)
             except DownloadError as e:
-                Logger.error(f"Download Error: {e}")
+                Logger.error("Download Error: %s", e)
         raise DownloadError(f"Failed to download {filename}")
 
     def pull_dsc(self):
@@ -482,7 +479,7 @@ class SourcePackage(ABC):
 
         Returns the number of files downloaded.
         """
-        Logger.debug("pull_binaries(arch=%s, name=%s, ext=%s)" % (arch, name, ext))
+        Logger.debug("pull_binaries(arch=%s, name=%s, ext=%s)", arch, name, ext)
 
         if arch == "all":
             arch = None
@@ -545,7 +542,7 @@ class SourcePackage(ABC):
         """
         cmd = ["debdiff", self.dsc_name, newpkg.dsc_name]
         difffn = newpkg.dsc_name[:-3] + "debdiff"
-        Logger.debug(" ".join(cmd) + ("> %s" % difffn))
+        Logger.debug("%s > %s", " ".join(cmd), difffn)
         with open(difffn, "w") as f:
             if subprocess.call(cmd, stdout=f, cwd=str(self.workdir)) > 2:
                 Logger.error("Debdiff failed.")
@@ -705,7 +702,7 @@ class PersonalPackageArchiveSourcePackage(UbuntuSourcePackage):
     @functools.lru_cache()
     def getArchive(self):
         ppa = self.team.getPPAByName(self._ppaname)
-        Logger.debug(f"Using PPA '{ppa.web_link}'")
+        Logger.debug("Using PPA '%s'", ppa.web_link)
         return ppa
 
     def _private_ppa_url(self, filename):
@@ -750,8 +747,10 @@ class UbuntuCloudArchiveSourcePackage(PersonalPackageArchiveSourcePackage):
         orig_pocket = kwargs.pop("pocket", None)
         if orig_pocket and orig_pocket != pocket and pocket == "staging":
             Logger.info(
-                f"Ubuntu Cloud Archive release '{series}' pocket '{orig_pocket}'"
-                " PPA is not public, using 'staging' pocket instead"
+                "Ubuntu Cloud Archive release '%s' pocket '%s' PPA is not public,"
+                " using 'staging' pocket instead",
+                series,
+                orig_pocket,
             )
 
         kwargs["ppa"] = f"{self.TEAM}/{series}-{pocket}"
@@ -888,7 +887,7 @@ class UbuntuCloudArchiveSourcePackage(PersonalPackageArchiveSourcePackage):
                     )
                     pocket = "updates"
                 if cls.isValidRelease(uca_release) and (not pocket or pocket in cls.VALID_POCKETS):
-                    Logger.debug(f"Using Ubuntu Cloud Archive release '{uca_release}'")
+                    Logger.debug("Using Ubuntu Cloud Archive release '%s'", uca_release)
                     return (uca_release, pocket)
         raise SeriesNotFoundException(f"Ubuntu Cloud Archive release '{release}' not found")
 
@@ -932,7 +931,7 @@ class _WebJSON(object):
     def load(self, path=""):
         reader = codecs.getreader("utf-8")
         url = self.getHostUrl() + path
-        Logger.debug("Loading %s" % url)
+        Logger.debug("Loading %s", url)
         with closing(urlopen(url)) as data:
             return json.load(reader(data))
 
@@ -1006,10 +1005,10 @@ class _Snapshot(_WebJSON):
             if part.startswith("pool"):
                 found_pool = True
         if not component:
-            Logger.warning("could not determine component from path %s" % path)
+            Logger.warning("could not determine component from path %s", path)
             return self.DEBIAN_COMPONENTS[0]
         if component not in self.DEBIAN_COMPONENTS:
-            Logger.warning("unexpected component %s" % component)
+            Logger.warning("unexpected component %s", component)
         return component
 
     def _get_package(self, name, url, pkginit, version, sort_key):
@@ -1356,7 +1355,7 @@ class SnapshotSPPH(object):
                 with closing(urlopen(url)) as f:
                     self._changelog = f.read()
             except HTTPError as error:
-                Logger.error("{}: {}".format(url, error))
+                Logger.error("%s: %s", url, error)
                 return None
 
         if since_version is None:

@@ -99,10 +99,10 @@ def main():
     ):
 
         component_uploader = archive.getUploadersForComponent(component_name=component)[0]
-        Logger.info("All upload permissions for %s:" % package)
+        Logger.info("All upload permissions for %s:", package)
         Logger.info("")
-        Logger.info("Component (%s)" % component)
-        Logger.info("============" + ("=" * len(component)))
+        Logger.info("Component (%s)", component)
+        Logger.info("============%s", "=" * len(component))
         print_uploaders([component_uploader], options.list_team_members)
 
         packagesets = sorted(
@@ -115,7 +115,7 @@ def main():
             Logger.info("===========")
             for packageset in packagesets:
                 Logger.info("")
-                Logger.info("%s:" % packageset.name)
+                Logger.info("%s:", packageset.name)
                 print_uploaders(
                     archive.getUploadersForPackageset(packageset=packageset),
                     options.list_team_members,
@@ -131,16 +131,18 @@ def main():
         Logger.info("")
 
     if PersonTeam.me.canUploadPackage(archive, series, package, component, pocket):
-        Logger.info("You can upload %s to %s." % (package, options.release))
+        Logger.info("You can upload %s to %s.", package, options.release)
     else:
-        Logger.info("You can not upload %s to %s, yourself." % (package, options.release))
+        Logger.info("You can not upload %s to %s, yourself.", package, options.release)
         if (
             series.status in ("Current Stable Release", "Supported", "Obsolete")
             and pocket == "Release"
         ):
             Logger.info(
-                "%s is in the '%s' state. You may want to query the %s-proposed pocket."
-                % (release, series.status, release)
+                "%s is in the '%s' state. You may want to query the %s-proposed pocket.",
+                release,
+                series.status,
+                release,
             )
         else:
             Logger.info(
@@ -163,8 +165,11 @@ def print_uploaders(uploaders, expand_teams=False, prefix=""):
     """
     for uploader in sorted(uploaders, key=lambda p: p.display_name):
         Logger.info(
-            "%s* %s (%s)%s"
-            % (prefix, uploader.display_name, uploader.name, " [team]" if uploader.is_team else "")
+            "%s* %s (%s)%s",
+            prefix,
+            uploader.display_name,
+            uploader.name,
+            " [team]" if uploader.is_team else "",
         )
         if expand_teams and uploader.is_team:
             print_uploaders(uploader.participants, True, prefix=prefix + "  ")

@@ -74,7 +74,7 @@ def merge_changelog(left_changelog, right_changelog):
 
         assert block.version == version
 
-        Logger.info(str(block).strip() + ("\n" if remaining else ""))
+        Logger.info("%s%s", str(block).strip(), "\n" if remaining else "")
 
 
 def main():

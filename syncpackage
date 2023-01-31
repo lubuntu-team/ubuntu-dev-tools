@@ -184,7 +184,7 @@ def sync_dsc(
 
     # change into package directory
     directory = src_pkg.source + "-" + new_ver.upstream_version
-    Logger.debug("cd" + directory)
+    Logger.debug("cd %s", directory)
     os.chdir(directory)
 
     # read Debian distribution from debian/changelog if not specified
@@ -209,7 +209,7 @@ def sync_dsc(
             cmd.append("-sd")
         if not Logger.isEnabledFor(logging.DEBUG):
             cmd += ["-q"]
-        Logger.debug(" ".join(cmd) + "> ../" + changes_filename)
+        Logger.debug("%s> ../%s", " ".join(cmd), changes_filename)
         changes = subprocess.check_output(cmd, encoding="utf-8")
 
         # Add additional bug numbers
@@ -775,7 +775,7 @@ def main():
         Logger.info("Blacklist Comments:")
         for comment in comments:
             for line in textwrap.wrap(comment):
-                Logger.info("  " + line)
+                Logger.info("  %s", line)
 
     if blacklist_fail:
         sys.exit(1)

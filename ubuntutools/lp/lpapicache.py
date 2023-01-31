@@ -165,7 +165,7 @@ class BaseWrapper(object, metaclass=MetaWrapper):
                     cached._lpobject = data
                     # and add it to our cache
                     cls._cache[data.self_link] = cached
-                    Logger.debug("%s: %s" % (cls.__name__, data.self_link))
+                    Logger.debug("%s: %s", cls.__name__, data.self_link)
                     # add additional class specific caching (if available)
                     cache = getattr(cls, "cache", None)
                     if isinstance(cache, collections.abc.Callable):
@@ -301,8 +301,8 @@ class Distribution(BaseWrapper):
         allseries = filter(lambda s: s.active, self._series.values())
         allseries = sorted(allseries, key=lambda s: float(s.version), reverse=True)
         Logger.debug(
-            "Found series: %s"
-            % ", ".join(map(lambda s: "%s (%s)" % (s.name, s.version), allseries))
+            "Found series: %s",
+            ", ".join(map(lambda s: "%s (%s)" % (s.name, s.version), allseries)),
         )
         return collections.OrderedDict((s.name, s) for s in allseries)
 
@@ -663,8 +663,9 @@ class Archive(BaseWrapper):
                 params["version"] = version
 
             Logger.debug(
-                "Calling %s(%s)"
-                % (function, ", ".join(["%s=%s" % (k, v) for (k, v) in params.items()]))
+                "Calling %s(%s)",
+                function,
+                ", ".join(["%s=%s" % (k, v) for (k, v) in params.items()]),
             )
             records = getattr(self, function)(**params)
 
@@ -704,7 +705,7 @@ class Archive(BaseWrapper):
                 params["version"] = version_.full_version
                 if len(getattr(self, function)(**params)) > 0:
                     version_with_epoch = version_.full_version
-                    Logger.debug("Found version with epoch %s" % version_with_epoch)
+                    Logger.debug("Found version with epoch %s", version_with_epoch)
                     break
 
         if name_key == "binary_name":
@@ -911,14 +912,14 @@ class SourcePackagePublishingHistory(BaseWrapper):
             url = self._lpobject.changelogUrl()
             if url is None:
                 Logger.error(
-                    "No changelog available for %s %s" % (self.getPackageName(), self.getVersion())
+                    "No changelog available for %s %s", self.getPackageName(), self.getVersion()
                 )
                 return None
 
             try:
                 self._changelog = download_text(url)
             except URLError as e:
-                Logger.error(f"Exception while downloading '{url}': {e}")
+                Logger.error("Exception while downloading '%s': %s", url, e)
                 return None
 
         if since_version is None:
@@ -955,7 +956,7 @@ class SourcePackagePublishingHistory(BaseWrapper):
             urls = self._lpobject.sourceFileUrls(include_meta=True)
             if not urls:
                 Logger.warning(
-                    "SPPH %s_%s has no sourceFileUrls" % (self.getPackageName(), self.getVersion())
+                    "SPPH %s_%s has no sourceFileUrls", self.getPackageName(), self.getVersion()
                 )
             for url in urls:
                 # make sure mandatory fields are present
@@ -1076,7 +1077,7 @@ class SourcePackagePublishingHistory(BaseWrapper):
                 try:
                     bpph = archive.getBinaryPackage(**params)
                 except PackageNotFoundException:
-                    Logger.debug("Could not find pkg in archive: %s" % filename)
+                    Logger.debug("Could not find pkg in archive: %s", filename)
                     continue
                 if arch_ not in self._binaries:
                     self._binaries[arch_] = {}
@@ -1222,7 +1223,7 @@ class BinaryPackagePublishingHistory(BaseWrapper):
                 ) from error
             if not urls:
                 Logger.warning(
-                    "BPPH %s_%s has no binaryFileUrls" % (self.getPackageName(), self.getVersion())
+                    "BPPH %s_%s has no binaryFileUrls", self.getPackageName(), self.getVersion()
                 )
             for url in urls:
                 # make sure mandatory fields are present

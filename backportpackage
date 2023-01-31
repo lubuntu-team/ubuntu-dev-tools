@@ -50,8 +50,8 @@ from ubuntutools.question import YesNoQuestion
 Logger = getLogger()
 
 
-def error(msg):
-    Logger.error(msg)
+def error(msg, *args):
+    Logger.error(msg, *args)
     sys.exit(1)
 
 
@@ -59,7 +59,7 @@ def check_call(cmd, *args, **kwargs):
     Logger.debug(" ".join(cmd))
     ret = subprocess.call(cmd, *args, **kwargs)
     if ret != 0:
-        error("%s returned %d." % (cmd[0], ret))
+        error("%s returned %d.", cmd[0], ret)
 
 
 def parse(args):
@@ -194,7 +194,7 @@ def find_release_package(mirror, workdir, package, version, source_release, conf
     if source_release:
         distribution = codename_to_distribution(source_release)
         if not distribution:
-            error("Unknown release codename %s" % source_release)
+            error("Unknown release codename %s", source_release)
         info = vendor_to_distroinfo(distribution)()
         source_release = info.codename(source_release, default=source_release)
     else:
@@ -208,7 +208,7 @@ def find_release_package(mirror, workdir, package, version, source_release, conf
         try:
             spph = archive.getSourcePackage(package, source_release)
         except (SeriesNotFoundException, PackageNotFoundException) as e:
-            error(str(e))
+            error("%s", str(e))
         version = spph.getVersion()
 
     if distribution == "Debian":
@@ -237,8 +237,11 @@ def find_package(mirror, workdir, package, version, source_release, config):
     srcpkg = find_release_package(mirror, workdir, package, version, source_release, config)
     if version and srcpkg.version != version:
         error(
-            "Requested backport of version %s but version of %s in %s is %s"
-            % (version, package, source_release, srcpkg.version)
+            "Requested backport of version %s but version of %s in %s is %s",
+            version,
+            package,
+            source_release,
+            srcpkg.version,
         )
 
     return srcpkg
@@ -247,23 +250,23 @@ def find_package(mirror, workdir, package, version, source_release, config):
 def get_backport_version(version, suffix, upload, release):
     distribution = codename_to_distribution(release)
     if not distribution:
-        error("Unknown release codename %s" % release)
+        error("Unknown release codename %s", release)
     if distribution == "Debian":
         debian_distro_info = DebianDistroInfo()
         debian_codenames = debian_distro_info.supported()
         if release in debian_codenames:
             release_version = debian_distro_info.version(release)
             if not release_version:
-                error(f"Can't find the release version for {release}")
+                error("Can't find the release version for %s", release)
             backport_version = "{}~bpo{}+1".format(version, release_version)
         else:
-            error(f"{release} is not a supported release ({debian_codenames})")
+            error("%s is not a supported release (%s)", release, debian_codenames)
     elif distribution == "Ubuntu":
         series = Distribution(distribution.lower()).getSeries(name_or_version=release)
 
         backport_version = version + ("~bpo%s.1" % (series.version))
     else:
-        error("Unknown distribution «%s» for release «%s»" % (distribution, release))
+        error("Unknown distribution «%s» for release «%s»", distribution, release)
     if suffix is not None:
         backport_version += suffix
     elif upload and upload.startswith("ppa:"):
@@ -450,7 +453,7 @@ def main(args):
         if current_distro == "Debian":
             opts.dest_releases = [DebianDistroInfo().stable()]
         else:
-            error(f"Unknown distribution {current_distro}, can't guess target release")
+            error("Unknown distribution %s, can't guess target release", current_distro)
 
     if opts.workdir:
         workdir = os.path.expanduser(opts.workdir)
@@ -483,7 +486,7 @@ def main(args):
                 opts.prompt,
             )
     except DownloadError as e:
-        error(str(e))
+        error("%s", str(e))
     finally:
         if not opts.workdir:
             shutil.rmtree(workdir)

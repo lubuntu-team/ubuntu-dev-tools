@@ -91,7 +91,7 @@ def gen_debdiff(tmpdir, changelog):
 
     diff_cmd = ["bzr", "diff", "-r", "tag:" + str(oldver)]
     if call(diff_cmd, stdout=DEVNULL, stderr=DEVNULL) == 1:
-        Logger.info("Extracting bzr diff between %s and %s" % (oldver, newver))
+        Logger.info("Extracting bzr diff between %s and %s", oldver, newver)
     else:
         if oldver.epoch is not None:
             oldver = str(oldver)[str(oldver).index(":") + 1 :]
@@ -104,7 +104,7 @@ def gen_debdiff(tmpdir, changelog):
         check_file(olddsc)
         check_file(newdsc)
 
-        Logger.info("Generating debdiff between %s and %s" % (oldver, newver))
+        Logger.info("Generating debdiff between %s and %s", oldver, newver)
         diff_cmd = ["debdiff", olddsc, newdsc]
 
     with Popen(diff_cmd, stdout=PIPE, encoding="utf-8") as diff:
@@ -125,7 +125,7 @@ def check_file(fname, critical=True):
     else:
         if not critical:
             return False
-        Logger.info("Couldn't find «%s».\n" % fname)
+        Logger.info("Couldn't find «%s».\n", fname)
         sys.exit(1)
 
 
@@ -225,8 +225,9 @@ the bug to you at <%s>
 
 If this is not correct, please exit now and edit ~/.reportbugrc or run
 reportbug --configure for its configuration wizard.
-"""
-        % (email, reportbugrc.strip())
+""",
+        email,
+        reportbugrc.strip(),
     )
 
     if YesNoQuestion().ask("Continue submitting this bug", "yes") == "no":

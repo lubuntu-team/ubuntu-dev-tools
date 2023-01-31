@@ -93,7 +93,7 @@ process, exit the shell such that it returns an exit code other than zero.
     )
     returncode = subprocess.call(cmd)
     if returncode != 0:
-        Logger.error("Shell exited with exit value %i." % (returncode))
+        Logger.error("Shell exited with exit value %i.", returncode)
         sys.exit(1)
 
 
@@ -176,7 +176,7 @@ def download_branch(branch):
     cmd = ["bzr", "branch", branch]
     Logger.debug(" ".join(cmd))
     if subprocess.call(cmd) != 0:
-        Logger.error("Failed to download branch %s." % (branch))
+        Logger.error("Failed to download branch %s.", branch)
         sys.exit(1)
     return dir_name
 
@@ -186,7 +186,7 @@ def merge_branch(branch):
     cmd = ["bzr", "merge", branch]
     Logger.debug(" ".join(cmd))
     if subprocess.call(cmd) != 0:
-        Logger.error("Failed to merge branch %s." % (branch))
+        Logger.error("Failed to merge branch %s.", branch)
         ask_for_manual_fixing()
         edit = True
     return edit
@@ -198,7 +198,7 @@ def extract_source(dsc_file, verbose=False):
         cmd.insert(1, "-q")
     Logger.debug(" ".join(cmd))
     if subprocess.call(cmd) != 0:
-        Logger.error("Extraction of %s failed." % (os.path.basename(dsc_file)))
+        Logger.error("Extraction of %s failed.", os.path.basename(dsc_file))
         sys.exit(1)
 
 
@@ -219,7 +219,7 @@ def get_open_ubuntu_bug_task(launchpad, bug, branch=None):
             branch = branch[3:]
 
     if len(ubuntu_tasks) == 0:
-        Logger.error("No Ubuntu bug task found on bug #%i." % (bug_id))
+        Logger.error("No Ubuntu bug task found on bug #%i.", bug_id)
         sys.exit(1)
     elif len(ubuntu_tasks) == 1:
         task = ubuntu_tasks[0]
@@ -243,7 +243,7 @@ def get_open_ubuntu_bug_task(launchpad, bug, branch=None):
             task = open_ubuntu_tasks[0]
         else:
             Logger.info(
-                "https://launchpad.net/bugs/%i has %i Ubuntu tasks:" % (bug_id, len(ubuntu_tasks))
+                "https://launchpad.net/bugs/%i has %i Ubuntu tasks:", bug_id, len(ubuntu_tasks)
             )
             for i in range(len(ubuntu_tasks)):
                 print("%i) %s" % (i + 1, ubuntu_tasks[i].get_package_and_series()))
@@ -251,7 +251,7 @@ def get_open_ubuntu_bug_task(launchpad, bug, branch=None):
                 "To which Ubuntu task does the patch belong", 1, len(ubuntu_tasks)
             )
             task = ubuntu_tasks[selected - 1]
-    Logger.debug("Selected Ubuntu task: %s" % (task.get_short_info()))
+    Logger.debug("Selected Ubuntu task: %s", task.get_short_info())
     return task
 
 
@@ -263,12 +263,14 @@ def _create_and_change_into(workdir):
             os.makedirs(workdir)
         except os.error as error:
             Logger.error(
-                "Failed to create the working directory %s [Errno %i]: %s."
-                % (workdir, error.errno, error.strerror)
+                "Failed to create the working directory %s [Errno %i]: %s.",
+                workdir,
+                error.errno,
+                error.strerror,
             )
             sys.exit(1)
     if workdir != os.getcwd():
-        Logger.debug("cd " + workdir)
+        Logger.debug("cd %s", workdir)
         os.chdir(workdir)
 
 
@@ -297,13 +299,13 @@ def _download_and_change_into(task, dsc_file, patch, branch):
         branch_dir = download_branch(task.get_branch_link())
 
         # change directory
-        Logger.debug("cd " + branch_dir)
+        Logger.debug("cd %s", branch_dir)
         os.chdir(branch_dir)
     else:
         if patch:
             patch.download()
 
-        Logger.debug("Ubuntu package: %s" % (task.package))
+        Logger.debug("Ubuntu package: %s", task.package)
         if task.is_merge():
             Logger.debug("The task is a merge request.")
         if task.is_sync():
@@ -313,7 +315,7 @@ def _download_and_change_into(task, dsc_file, patch, branch):
 
         # change directory
         directory = task.package + "-" + task.get_version().upstream_version
-        Logger.debug("cd " + directory)
+        Logger.debug("cd %s", directory)
         os.chdir(directory)
 
 

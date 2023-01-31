@@ -231,8 +231,8 @@ def display_verbose(package, values):
 
     if all_archs:
         Logger.info(
-            "Packages without architectures listed are "
-            "reverse-dependencies in: %s" % ", ".join(sorted(list(all_archs)))
+            "Packages without architectures listed are reverse-dependencies in: %s",
+            ", ".join(sorted(list(all_archs))),
         )
 
 

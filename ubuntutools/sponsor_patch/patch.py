@@ -35,7 +35,7 @@ class Patch(object):
         if not reduce(
             lambda r, x: r or self._patch.title.endswith(x), (".debdiff", ".diff", ".patch"), False
         ):
-            Logger.debug("Patch %s does not have a proper file extension." % (self._patch.title))
+            Logger.debug("Patch %s does not have a proper file extension.", self._patch.title)
             self._patch_file += ".patch"
         self._full_path = os.path.realpath(self._patch_file)
         self._changed_files = None
@@ -82,7 +82,7 @@ class Patch(object):
 
     def download(self):
         """Downloads the patch from Launchpad."""
-        Logger.debug("Downloading %s." % (self._patch_file))
+        Logger.debug("Downloading %s.", self._patch_file)
         patch_f = open(self._patch_file, "wb")
         patch_f.write(self._patch.data.open().read())
         patch_f.close()

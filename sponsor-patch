@@ -135,14 +135,14 @@ def parse(script_name):
         Logger.error("No bug number specified.")
         sys.exit(1)
     elif len(args) > 1:
-        Logger.error("Multiple bug numbers specified: %s" % (", ".join(args)))
+        Logger.error("Multiple bug numbers specified: %s", ", ".join(args))
         sys.exit(1)
 
     bug_number = args[0]
     if bug_number.isdigit():
         bug_number = int(bug_number)
     else:
-        Logger.error("Invalid bug number specified: %s" % (bug_number))
+        Logger.error("Invalid bug number specified: %s", bug_number)
         sys.exit(1)
 
     config = UDTConfig(options.no_conf)

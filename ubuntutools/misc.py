@@ -141,13 +141,13 @@ def readlist(filename, uniq=True):
     path = Path(filename)
 
     if not path.is_file():
-        Logger.error(f"File {path} does not exist.")
+        Logger.error("File %s does not exist.", path)
         return False
 
     content = path.read_text().replace("\n", " ").replace(",", " ")
 
     if not content.strip():
-        Logger.error(f"File {path} is empty.")
+        Logger.error("File %s is empty.", path)
         return False
 
     items = [item for item in content.split() if item]
@@ -237,11 +237,11 @@ def verify_file_checksums(pathname, checksums={}, size=0):
     path = Path(pathname)
 
     if not path.is_file():
-        Logger.error(f"File {path} not found")
+        Logger.error("File %s not found", path)
         return False
     filesize = path.stat().st_size
     if size and size != filesize:
-        Logger.error(f"File {path} incorrect size, got {filesize} expected {size}")
+        Logger.error("File %s incorrect size, got %s expected %s", path, filesize, size)
         return False
 
     for (alg, checksum) in checksums.items():
@@ -254,10 +254,10 @@ def verify_file_checksums(pathname, checksums={}, size=0):
                 hash_.update(block)
         digest = hash_.hexdigest()
         if digest == checksum:
-            Logger.debug(f"File {path} checksum ({alg}) verified: {checksum}")
+            Logger.debug("File %s checksum (%s) verified: %s", path, alg, checksum)
         else:
             Logger.error(
-                f"File {path} checksum ({alg}) mismatch: got {digest} expected {checksum}"
+                "File %s checksum (%s) mismatch: got %s expected %s", path, alg, digest, checksum
             )
             return False
     return True
@@ -330,15 +330,15 @@ def download(src, dst, size=0, *, blocksize=DOWNLOAD_BLOCKSIZE_DEFAULT):
     if parsedsrc.scheme in ["", "file"]:
         src = Path(parsedsrc.path).expanduser().resolve()
         if src != parsedsrc.path:
-            Logger.info(f"Parsed {parsedsrc.path} as {src}")
+            Logger.info("Parsed %s as %s", parsedsrc.path, src)
         if not src.exists():
             raise NotFoundError(f"Source file {src} not found")
         if dst.exists():
             if src.samefile(dst):
-                Logger.info(f"Using existing file {dst}")
+                Logger.info("Using existing file %s", dst)
                 return dst
-            Logger.info(f"Replacing existing file {dst}")
-        Logger.info(f"Copying file {src} to {dst}")
+            Logger.info("Replacing existing file %s", dst)
+        Logger.info("Copying file %s to %s", src, dst)
         shutil.copyfile(src, dst)
         return dst
 
@@ -396,7 +396,7 @@ class _StderrProgressBar(object):
 def _download(fsrc, fdst, size, *, blocksize):
     """helper method to download src to dst using requests library."""
     url = fsrc.url
-    Logger.debug(f"Using URL: {url}")
+    Logger.debug("Using URL: %s", url)
 
     if not size:
         with suppress(AttributeError, TypeError, ValueError):
@@ -406,7 +406,7 @@ def _download(fsrc, fdst, size, *, blocksize):
     filename = Path(parsed.path).name
     hostname = parsed.hostname
     sizemb = " (%0.3f MiB)" % (size / 1024.0 / 1024) if size else ""
-    Logger.info(f"Downloading {filename} from {hostname}{sizemb}")
+    Logger.info("Downloading %s from %s%s", filename, hostname, sizemb)
 
     # Don't show progress if:
     #   logging INFO is suppressed
@@ -427,7 +427,7 @@ def _download(fsrc, fdst, size, *, blocksize):
         try:
             terminal_width = os.get_terminal_size(sys.stderr.fileno()).columns
         except Exception as e:
-            Logger.error(f"Error finding stderr width, suppressing progress bar: {e}")
+            Logger.error("Error finding stderr width, suppressing progress bar: %s", e)
     progress_bar = _StderrProgressBar(max_width=terminal_width)
 
     downloaded = 0
@@ -440,8 +440,9 @@ def _download(fsrc, fdst, size, *, blocksize):
         progress_bar.finish()
         if size and size > downloaded:
             Logger.error(
-                "Partial download: %0.3f MiB of %0.3f MiB"
-                % (downloaded / 1024.0 / 1024, size / 1024.0 / 1024)
+                "Partial download: %0.3f MiB of %0.3f MiB",
+                downloaded / 1024.0 / 1024,
+                size / 1024.0 / 1024,
             )
 
 

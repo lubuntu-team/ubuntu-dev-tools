@@ -149,7 +149,7 @@ def main():
         elif options.lpinstance == "staging":
             bug_mail_domain = "bugs.staging.launchpad.net"
         else:
-            Logger.error("Error: Unknown launchpad instance: %s" % options.lpinstance)
+            Logger.error("Error: Unknown launchpad instance: %s", options.lpinstance)
             sys.exit(1)
 
     mailserver_host = config.get_value(
@@ -225,7 +225,7 @@ def main():
         else:
             ubu_info = UbuntuDistroInfo()
             release = ubu_info.devel()
-        Logger.warning("Target release missing - assuming %s" % release)
+        Logger.warning("Target release missing - assuming %s", release)
     elif len(args) == 2:
         release = args[1]
     elif len(args) == 3:
@@ -247,7 +247,7 @@ def main():
         ubuntu_version = Version("~")
         ubuntu_component = None  # Set after getting the Debian info
         if not newsource:
-            Logger.info("'%s' doesn't exist in 'Ubuntu %s'." % (srcpkg, release))
+            Logger.info("'%s' doesn't exist in 'Ubuntu %s'.", srcpkg, release)
             Logger.info("Do you want to sync a new package?")
             confirmation_prompt()
             newsource = True
@@ -288,14 +288,15 @@ def main():
 
     if ubuntu_version == debian_version:
         Logger.error(
-            "The versions in Debian and Ubuntu are the "
-            "same already (%s). Aborting." % ubuntu_version
+            "The versions in Debian and Ubuntu are the same already (%s). Aborting.",
+            ubuntu_version,
         )
         sys.exit(1)
     if ubuntu_version > debian_version:
         Logger.error(
-            "The version in Ubuntu (%s) is newer than "
-            "the version in Debian (%s). Aborting." % (ubuntu_version, debian_version)
+            "The version in Ubuntu (%s) is newer than the version in Debian (%s). Aborting.",
+            ubuntu_version,
+            debian_version,
         )
         sys.exit(1)
 
