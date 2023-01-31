@@ -75,7 +75,7 @@ class LocalSourcePackageTestCase(BaseVerificationTestCase):
         srcpkg.pull()
         return srcpkg
 
-    def test_pull(self, **kwargs):
+    def _test_pull(self, **kwargs):
         srcpkg = self.pull(**kwargs)
         self.assertTrue(filecmp.cmp(self.pkg.dsc, self.workdir / self.pkg.dsc.name))
         self.assertTrue(filecmp.cmp(self.pkg.orig, self.workdir / self.pkg.orig.name))
@@ -92,7 +92,7 @@ class LocalSourcePackageTestCase(BaseVerificationTestCase):
         self.assertTrue(debian.is_dir())
 
     def test_pull_and_unpack(self, **kwargs):
-        self.test_unpack(srcpkg=self.test_pull(**kwargs))
+        self.test_unpack(srcpkg=self._test_pull(**kwargs))
 
     def test_with_package(self):
         self.test_pull_and_unpack(package=self.pkg.source)
@@ -117,7 +117,7 @@ class LocalSourcePackageTestCase(BaseVerificationTestCase):
         testfile.write_bytes(corruption)
         self.assertEqual(testfile.read_bytes(), corruption)
 
-        self.test_pull()
+        self._test_pull()
         self.assertTrue(testfile.exists())
         self.assertTrue(testfile.is_file())
         self.assertNotEqual(testfile.read_bytes(), corruption)
