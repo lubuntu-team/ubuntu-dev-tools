@@ -164,20 +164,19 @@ def find_rdepends(releases, published_binaries):
 
 def locate_package(package, distribution):
     archive = Distribution("ubuntu").getArchive()
-    for pass_ in ("source", "binary"):
+    try:
+        package_spph = archive.getSourcePackage(package, distribution)
+        return package_spph
+    except PackageNotFoundException as e:
         try:
-            package_spph = archive.getSourcePackage(package, distribution)
-            return package_spph
-        except PackageNotFoundException as e:
-            try:
-                apt_pkg = apt.Cache()[package]
-            except KeyError:
-                Logger.error(str(e))
-                sys.exit(1)
-            package = apt_pkg.candidate.source_name
-            Logger.info(
-                "Binary package specified, considering its source package instead: %s", package
-            )
+            apt_pkg = apt.Cache()[package]
+        except KeyError:
+            Logger.error(str(e))
+            sys.exit(1)
+        package = apt_pkg.candidate.source_name
+        Logger.info(
+            "Binary package specified, considering its source package instead: %s", package
+        )
 
 
 def request_backport(package_spph, source, destinations):
