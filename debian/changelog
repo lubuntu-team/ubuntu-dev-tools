@@ -1,6 +1,4 @@
-ubuntu-dev-tools (0.192) UNRELEASED; urgency=medium
-
-  * WIP
+ubuntu-dev-tools (0.192) unstable; urgency=medium
 
   [ Benjamin Drung ]
   * sponsor-patch:
@@ -8,6 +6,19 @@ ubuntu-dev-tools (0.192) UNRELEASED; urgency=medium
     + Use --skip-patches instead of --no-preparation with dpkg-source -x.
   * Demote bzr/brz from Recommends to Suggests, as nowadays git is the way.
     Closes: #940531
+  * Use PEP440 compliant version in setup.py (LP: #1991606)
+  * Fix issues found by flake8 on the Python scripts
+  * Check Python scripts with flake8 again
+  * Format Python code with black and run black during package build
+  * Sort Python imports with isort and run isort during package build
+  * Replace deprecated optparse with argparse
+  * requestbackport: Remove useless loop from locate_package
+  * reverse-depends: Restore field titles format
+  * test: Fix deprecated return value for test case
+  * Fix all errors and warnings found by pylint and implement most refactorings
+    and conventions. Run pylint during package build again.
+  * Bump Standards-Version to 4.6.2
+  * Drop unneeded X-Python3-Version from d/control
 
   [ Masahiro Yamada ]
   * mk-sbuild:
@@ -20,7 +31,7 @@ ubuntu-dev-tools (0.192) UNRELEASED; urgency=medium
       workflow after the new Ubuntu Backport process has been established.
       LP: #1959115
 
- -- Mattia Rizzolo <mattia@debian.org>  Tue, 11 Oct 2022 13:57:46 +0200
+ -- Benjamin Drung <bdrung@debian.org>  Wed, 01 Feb 2023 12:45:15 +0100
 
 ubuntu-dev-tools (0.191) unstable; urgency=medium
 
