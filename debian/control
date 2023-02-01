@@ -33,7 +33,6 @@ Rules-Requires-Root: no
 Vcs-Git: https://git.launchpad.net/ubuntu-dev-tools
 Vcs-Browser: https://git.launchpad.net/ubuntu-dev-tools
 Homepage: https://launchpad.net/ubuntu-dev-tools
-X-Python3-Version: >= 3.6
 
 Package: ubuntu-dev-tools
 Architecture: all
