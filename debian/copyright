@@ -20,7 +20,7 @@ Files: backportpackage
        ubuntutools/requestsync/*.py
 Copyright: 2007,      Albert Damen <albrt@gmx.net>
            2010-2022, Benjamin Drung <bdrung@ubuntu.com>
-           2007-2010, Canonical Ltd.
+           2007-2023, Canonical Ltd.
            2006-2007, Daniel Holbach <daniel.holbach@ubuntu.com>
            2010,      Evan Broder <evan@ebroder.net>
            2006-2007, Luke Yelavich <themuso@ubuntu.com>
