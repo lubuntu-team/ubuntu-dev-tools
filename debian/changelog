@@ -1,3 +1,9 @@
+ubuntu-dev-tools (0.193) UNRELEASED; urgency=medium
+
+  * Don't run linters at build time, or in autopkgtests. (Closes: #1031436).
+
+ -- Stefano Rivera <stefanor@debian.org>  Sat, 25 Feb 2023 12:51:46 -0400
+
 ubuntu-dev-tools (0.192) unstable; urgency=medium
 
   [ Benjamin Drung ]

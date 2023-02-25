@@ -1,8 +1,3 @@
-Test-Command: flake8 -v --max-line-length=99
-Depends:
- flake8,
-Restrictions: allow-stderr
-
 Test-Command: python3 -m pytest -v ubuntutools
 Depends:
  dh-make,
