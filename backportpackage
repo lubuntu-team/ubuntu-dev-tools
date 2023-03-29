@@ -449,7 +449,7 @@ def main(argv):
 
         if current_distro == "Ubuntu":
             args.dest_releases = [UbuntuDistroInfo().lts()]
-        if current_distro == "Debian":
+        elif current_distro == "Debian":
             args.dest_releases = [DebianDistroInfo().stable()]
         else:
             error("Unknown distribution %s, can't guess target release", current_distro)
