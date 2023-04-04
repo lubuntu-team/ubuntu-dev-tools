@@ -412,7 +412,7 @@ class PackageUpload(BaseWrapper):
             urls = self.binaryFileUrls()
             props = self.getBinaryProperties()
             self._binary_prop_dict = dict(zip(urls, props))
-            for (key, value) in copy(self._binary_prop_dict).items():
+            for key, value in copy(self._binary_prop_dict).items():
                 filename = os.path.basename(urlparse(key).path)
                 self._binary_prop_dict[filename] = value
         return self._binary_prop_dict.get(filename_or_url, {})

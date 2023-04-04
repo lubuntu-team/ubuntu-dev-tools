@@ -91,7 +91,6 @@ def main():
         pocket != "Release"
         or series.status in ("Experimental", "Active Development", "Pre-release Freeze")
     ):
-
         component_uploader = archive.getUploadersForComponent(component_name=component)[0]
         Logger.info("All upload permissions for %s:", args.package)
         Logger.info("")

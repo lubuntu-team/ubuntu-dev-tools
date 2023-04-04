@@ -54,7 +54,6 @@ def main():
         "multiverse",
         "multiverse-manual",
     ):
-
         url = f"https://merges.ubuntu.com/{component}.json"
         try:
             headers, page = Http().request(url)

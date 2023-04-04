@@ -244,7 +244,7 @@ def verify_file_checksums(pathname, checksums=None, size=0):
         Logger.error("File %s incorrect size, got %s expected %s", path, filesize, size)
         return False
 
-    for (alg, checksum) in checksums.items():
+    for alg, checksum in checksums.items():
         hash_ = hashlib.new(alg)
         with path.open("rb") as f:
             while True:
