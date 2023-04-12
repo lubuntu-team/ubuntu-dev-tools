@@ -862,8 +862,8 @@ EOM
         cat >> "$TEMP_PREFERENCES" <<EOM
 # override for NotAutomatic: yes
 Package: *
-Pin: release a=$SOURCES_PROPOSED_SUITE
-Pin-Priority: 990
+Pin: release a=*-proposed
+Pin-Priority: 500
 EOM
         cat >> "$TEMP_SOURCES" <<EOM
 deb ${MIRROR_ARCHS}${DEBOOTSTRAP_MIRROR} $SOURCES_PROPOSED_SUITE ${COMPONENTS}
@@ -892,7 +892,7 @@ cat "$TEMP_SOURCES" | sed -e "s|RELEASE|$RELEASE|g" | \
 rm -f "$TEMP_SOURCES"
 if [ -n "$TEMP_PREFERENCES" ]; then
     sed -e "s|RELEASE|$RELEASE|g" < "$TEMP_PREFERENCES" | \
-        sudo bash -c "cat > $MNT/etc/apt/preferences"
+        sudo bash -c "cat > $MNT/etc/apt/preferences.d/proposed.pref"
     rm -f "$TEMP_PREFERENCES"
 fi
 
