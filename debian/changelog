@@ -1,3 +1,10 @@
+ubuntu-dev-tools (0.193ubuntu1) UNRELEASED; urgency=medium
+
+  * Set apt preferences for the -proposed pocket in mk-sbuild so that
+    it works as expected for lunar and forward.
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Wed, 12 Apr 2023 09:44:22 -0700
+
 ubuntu-dev-tools (0.193) unstable; urgency=medium
 
   * Don't run linters at build time, or in autopkgtests. (Closes: #1031436).

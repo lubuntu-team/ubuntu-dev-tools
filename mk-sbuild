@@ -874,6 +874,13 @@ EOM
         fi
     fi
     if [ -z "$SKIP_PROPOSED" ]; then
+	TEMP_PREFERENCES=`mktemp -t preferences-XXXXXX`
+        cat >> "$TEMP_PREFERENCES" <<EOM
+# override for NotAutomatic: yes
+Package: *
+Pin: release a=*-proposed
+Pin-Priority: 500
+EOM
         cat >> "$TEMP_SOURCES" <<EOM
 deb ${MIRROR_ARCHS}${DEBOOTSTRAP_MIRROR} $SOURCES_PROPOSED_SUITE ${COMPONENTS}
 deb-src ${DEBOOTSTRAP_MIRROR} $SOURCES_PROPOSED_SUITE ${COMPONENTS}
@@ -899,6 +906,9 @@ fi
 cat "$TEMP_SOURCES" | sed -e "s|RELEASE|$RELEASE|g" | \
     sudo bash -c "cat > $MNT/etc/apt/sources.list"
 rm -f "$TEMP_SOURCES"
+if [ -n "$TEMP_PREFERENCES" ]; then
+    sudo mv "TEMP_PREFERENCES" $MNT/etc/apt/preferences.d/proposed.pref
+fi
 
 # Copy the timezone (comment this out if you want to leave the chroot at UTC)
 sudo cp -P --remove-destination /etc/localtime /etc/timezone "$MNT"/etc/
