@@ -891,9 +891,7 @@ cat "$TEMP_SOURCES" | sed -e "s|RELEASE|$RELEASE|g" | \
     sudo bash -c "cat > $MNT/etc/apt/sources.list"
 rm -f "$TEMP_SOURCES"
 if [ -n "$TEMP_PREFERENCES" ]; then
-    sed -e "s|RELEASE|$RELEASE|g" < "$TEMP_PREFERENCES" | \
-        sudo bash -c "cat > $MNT/etc/apt/preferences.d/proposed.pref"
-    rm -f "$TEMP_PREFERENCES"
+    sudo mv "TEMP_PREFERENCES" $MNT/etc/apt/preferences.d/proposed.pref
 fi
 
 # Copy the timezone (comment this out if you want to leave the chroot at UTC)
