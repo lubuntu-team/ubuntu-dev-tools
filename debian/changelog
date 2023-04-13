@@ -1,3 +1,12 @@
+ubuntu-dev-tools (0.193ubuntu2) UNRELEASED; urgency=medium
+
+  * Remove references to ftpmaster.internal.  When this name is resolvable
+    but firewalled, syncpackage hangs; and these are tools for developers,
+    not for running in an automated context in the DCs where
+    ftpmaster.internal is reachable.
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Wed, 12 Apr 2023 17:57:35 -0700
+
 ubuntu-dev-tools (0.193ubuntu1) lunar; urgency=medium
 
   * Set apt preferences for the -proposed pocket in mk-sbuild so that
