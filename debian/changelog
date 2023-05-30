@@ -1,3 +1,12 @@
+ubuntu-dev-tools (0.193ubuntu4) UNRELEASED; urgency=medium
+
+  * Remove references to ftpmaster.internal.  When this name is resolvable
+    but firewalled, syncpackage hangs; and these are tools for developers,
+    not for running in an automated context in the DCs where
+    ftpmaster.internal is reachable.
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Wed, 12 Apr 2023 17:57:35 -0700
+
 ubuntu-dev-tools (0.193ubuntu3) mantic; urgency=medium
 
   * Excise all references to cdbs (including in test cases)
