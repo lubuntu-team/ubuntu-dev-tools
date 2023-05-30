@@ -1,11 +1,11 @@
-ubuntu-dev-tools (0.193ubuntu4) UNRELEASED; urgency=medium
+ubuntu-dev-tools (0.193ubuntu4) mantic; urgency=medium
 
   * Remove references to ftpmaster.internal.  When this name is resolvable
     but firewalled, syncpackage hangs; and these are tools for developers,
     not for running in an automated context in the DCs where
     ftpmaster.internal is reachable.
 
- -- Steve Langasek <steve.langasek@ubuntu.com>  Wed, 12 Apr 2023 17:57:35 -0700
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Tue, 30 May 2023 10:02:43 -0700
 
 ubuntu-dev-tools (0.193ubuntu3) mantic; urgency=medium
 
