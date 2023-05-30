@@ -1,3 +1,11 @@
+ubuntu-dev-tools (0.193ubuntu2) lunar; urgency=medium
+
+  [ Vladimir Petko ]
+  * Fix a typo introduced in the last upload that made mk-sbuild fail
+    unconditionally.  LP: #2017177.
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Fri, 21 Apr 2023 02:23:08 +0000
+
 ubuntu-dev-tools (0.193ubuntu1) lunar; urgency=medium
 
   * Set apt preferences for the -proposed pocket in mk-sbuild so that
