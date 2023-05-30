@@ -1,3 +1,9 @@
+ubuntu-dev-tools (0.193ubuntu3) mantic; urgency=medium
+
+  * Excise all references to cdbs (including in test cases)
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Tue, 30 May 2023 09:45:12 -0700
+
 ubuntu-dev-tools (0.193ubuntu2) lunar; urgency=medium
 
   [ Vladimir Petko ]

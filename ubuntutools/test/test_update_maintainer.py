@@ -165,8 +165,7 @@ Source: seahorse-plugins
 Section: gnome
 Priority: optional
 Maintainer: Emilio Pozuelo Monfort <pochu@debian.org>
-Build-Depends: debhelper (>= 5),
-               cdbs (>= 0.4.41)
+Build-Depends: debhelper (>= 5)
 Standards-Version: 3.8.3
 Homepage: http://live.gnome.org/Seahorse
 
@@ -184,8 +183,7 @@ Section: gnome
 Priority: optional
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 XSBC-Original-Maintainer: Emilio Pozuelo Monfort <pochu@debian.org>
-Build-Depends: debhelper (>= 5),
-               cdbs (>= 0.4.41)
+Build-Depends: debhelper (>= 5)
 Standards-Version: 3.8.3
 Homepage: http://live.gnome.org/Seahorse
 
