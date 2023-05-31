@@ -946,7 +946,7 @@ class _WebJSON:
 class Madison(_WebJSON):
     urls = {
         "debian": "https://api.ftp-master.debian.org/madison",
-        "ubuntu": "http://people.canonical.com/~ubuntu-archive/madison.cgi",
+        "ubuntu": "https://ubuntu-archive-team.ubuntu.com/madison.cgi",
     }
 
     def __init__(self, distro="debian"):

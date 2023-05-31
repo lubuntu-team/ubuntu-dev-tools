@@ -452,7 +452,7 @@ def is_blacklisted(query):
             blacklisted = "ALWAYS"
 
     # Old blacklist:
-    url = "http://people.canonical.com/~ubuntu-archive/sync-blacklist.txt"
+    url = "https://ubuntu-archive-team.ubuntu.com/sync-blacklist.txt"
     with urllib.request.urlopen(url) as f:
         applicable_lines = []
         for line in f:

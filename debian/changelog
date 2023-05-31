@@ -1,3 +1,10 @@
+ubuntu-dev-tools (0.193ubuntu5) UNRELEASED; urgency=medium
+
+  * Remove references to deprecated
+    http://people.canonical.com/~ubuntu-archive.
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Tue, 30 May 2023 19:35:57 -0700
+
 ubuntu-dev-tools (0.193ubuntu4) mantic; urgency=medium
 
   * Remove references to ftpmaster.internal.  When this name is resolvable
