@@ -166,7 +166,7 @@ while :; do
         --arch)
             CHROOT_ARCH="$2"
             case $2 in
-                armel|armhf|i386|lpia)
+                armhf|i386)
                     if [ -z "$personality" ]; then
                         personality="linux32"
                     fi
@@ -750,7 +750,7 @@ DEBOOTSTRAP_COMMAND=debootstrap
 if [ "$CHROOT_ARCH" != "$HOST_ARCH" ] ; then
     case "$CHROOT_ARCH-$HOST_ARCH" in
     # Sometimes we don't need qemu
-    amd64-i386|amd64-lpia|armel-armhf|armhf-armel|arm64-armel|arm64-armhf|armel-arm64|armhf-arm64|i386-amd64|i386-lpia|lpia-i386|powerpc-ppc64|ppc64-powerpc|sparc-sparc64|sparc64-sparc)
+    amd64-i386|arm64-armhf|armhf-arm64|i386-amd64|powerpc-ppc64|ppc64-powerpc)
         ;;
     # Sometimes we do
     *)

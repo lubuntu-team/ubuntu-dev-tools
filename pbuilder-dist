@@ -487,20 +487,10 @@ def main():
             requested_arch,
         ) not in [
             ("amd64", "i386"),
-            ("amd64", "lpia"),
-            ("arm", "armel"),
-            ("armel", "arm"),
-            ("armel", "armhf"),
-            ("armhf", "armel"),
             ("arm64", "arm"),
             ("arm64", "armhf"),
-            ("arm64", "armel"),
-            ("i386", "lpia"),
-            ("lpia", "i386"),
             ("powerpc", "ppc64"),
             ("ppc64", "powerpc"),
-            ("sparc", "sparc64"),
-            ("sparc64", "sparc"),
         ]:
             args += ["--debootstrap", "qemu-debootstrap"]
 

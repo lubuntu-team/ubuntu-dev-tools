@@ -36,7 +36,7 @@ _pbuilder-dist()
     for distro in $(ubuntu-distro-info --all; debian-distro-info --all) stable testing unstable; do
         for builder in pbuilder cowbuilder; do
             echo "$builder-$distro"
-            for arch in i386 amd64 armel armhf; do
+            for arch in i386 amd64 armhf; do
                 echo "$builder-$distro-$arch"
             done
         done
