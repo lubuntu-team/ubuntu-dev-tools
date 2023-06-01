@@ -652,14 +652,15 @@ def main():
     if args.lpinstance is None:
         args.lpinstance = config.get_value("LPINSTANCE")
 
+    # devel for copyPackage and changelogUrl
+    kwargs = {"service": args.lpinstance, "api_version": "devel"}
     try:
-        # devel for copyPackage and changelogUrl
-        kwargs = {"service": args.lpinstance, "api_version": "devel"}
         if args.lp and not args.simulate:
             Launchpad.login(**kwargs)
         else:
             Launchpad.login_anonymously(**kwargs)
-    except IOError:
+    except IOError as e:
+        Logger.error("Could not authenticate to LP: %s", str(e))
         sys.exit(1)
 
     if args.release is None:
