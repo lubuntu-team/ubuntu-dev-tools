@@ -1,0 +1,145 @@
+#!/usr/bin/python3
+# Find the next thing to work on for proposed-migration
+# Copyright (C) 2023 Canonical Ltd.
+# Author: Steve Langasek <steve.langasek@ubuntu.com>
+
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License, version 3.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+
+# You should have received a copy of the GNU General Public License 
+# along with this library; if not, write to the Free Software 
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 
+# 02110-1301 USA
+
+import lzma
+from optparse import OptionParser
+import sys
+import webbrowser
+import yaml
+
+from launchpadlib.launchpad import Launchpad
+
+from utils import get_url, get_cache_dir
+
+
+# proposed-migration is only concerned with the devel series; unlike other
+# tools, don't make this configurable
+excuses_url = 'https://ubuntu-archive-team.ubuntu.com/proposed-migration/' \
+              + 'update_excuses.yaml.xz'
+
+
+def get_proposed_version(excuses, package):
+    for k in excuses['sources']:
+        if k['source'] == package:
+            excuse = k
+            break
+
+    if not excuse:
+        return False
+
+    return excuse['new-version']
+
+
+def claim_excuses_bug(launchpad, bug, package):
+    print("LP: #%d: %s" % (bug.id, bug.title))
+    ubuntu = launchpad.distributions['ubuntu']
+    series = ubuntu.current_series.fullseriesname
+
+    for task in bug.bug_tasks:
+        # targeting to a series doesn't make the default task disappear,
+        # it just makes it useless
+        if task.bug_target_name == "%s (%s)" % (package, series):
+            our_task = task
+            break
+        elif task.bug_target_name == "%s (Ubuntu)" % package:
+            our_task = task
+
+    if our_task.assignee == launchpad.me:
+        print("Bug already assigned to you.")
+        return True
+    elif our_task.assignee:
+        print("Currently assigned to %s" % our_task.assignee.name)
+
+    print('''Do you want to claim this bug? [yN] ''', end="")
+    sys.stdout.flush()
+    response = sys.stdin.readline()
+    if response.strip().lower().startswith('y'):
+        our_task.assignee = launchpad.me
+        our_task.lp_save()
+        return True
+
+    return False
+
+
+def create_excuses_bug(launchpad, package, version):
+    print("Will open a new bug")
+    bug = launchpad.bugs.createBug(
+        title = 'proposed-migration for %s %s' % (package, version),
+        tags = ('update-excuse'),
+        target = 'https://api.launchpad.net/devel/ubuntu/+source/%s' % package,
+        description = '%s %s is stuck in -proposed.' % (package, version)
+    )
+
+    task = bug.bug_tasks[0]
+    task.assignee = launchpad.me
+    task.lp_save()
+
+    print("Opening %s in browser" % bug.web_link)
+    webbrowser.open(bug.web_link)
+    return bug
+
+
+def find_excuses_bugs(launchpad, package):
+    ubuntu = launchpad.distributions['ubuntu']
+    tasks = ubuntu.getSourcePackage(name=package).searchTasks(
+                tags=['update-excuse'], order_by=['id'])
+
+    bugs = [task.bug for task in tasks]
+    if not bugs:
+        return False
+
+    if len(bugs) == 1:
+        print("There is 1 open update-excuse bug against %s" % package)
+    else:
+        print("There are %d open update-excuses bugs against %s" \
+              % (len(bugs), package))
+
+    for bug in bugs:
+        if claim_excuses_bug(launchpad, bug, package):
+            return True
+
+    return True
+
+
+def main():
+    parser = OptionParser(usage="usage: %prog [options] [package]")
+    parser.add_option(
+        "-l", "--launchpad", dest="launchpad_instance", default="production")
+    parser.add_option(
+        "-v", "--verbose", default=False, action="store_true",
+        help="be more verbose (redundant in --dry-run mode)")
+    options, args = parser.parse_args()
+
+    options.launchpad = Launchpad.login_with(
+        "pm-helper", options.launchpad_instance, version="devel")
+
+    f = get_url(excuses_url, False)
+    lzma_f = lzma.open(f)
+    excuses = yaml.load(lzma_f, Loader=yaml.CSafeLoader)
+    lzma_f.close()
+
+    if args:
+        if not find_excuses_bugs(options.launchpad, args[0]):
+            create_excuses_bug(options.launchpad, args[0],
+                               get_proposed_version(excuses, args[0]))
+    else:
+        pass # for now
+
+
+if __name__ == '__main__':
+    sys.exit(main())
