@@ -20,6 +20,7 @@ Build-Depends:
  pylint <!nocheck>,
  python3-all,
  python3-apt,
+ python3-dateutil,
  python3-debian,
  python3-debianbts,
  python3-distro-info,
@@ -132,6 +133,7 @@ Package: python3-ubuntutools
 Architecture: all
 Section: python
 Depends:
+ python3-dateutil,
  python3-debian,
  python3-distro-info,
  python3-httplib2,
