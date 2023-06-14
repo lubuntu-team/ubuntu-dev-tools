@@ -132,8 +132,12 @@ def main():
 
     if args.package:
         if not find_excuses_bugs(args.launchpad, args.package):
+            proposed_version = get_proposed_version(excuses, args.package)
+            if not proposed_version:
+                print("Package %s not found in -proposed." % args.package)
+                sys.exit(1)
             create_excuses_bug(args.launchpad, args.package,
-                               get_proposed_version(excuses, args.package))
+                               proposed_version)
     else:
         pass # for now
 
