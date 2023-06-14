@@ -36,13 +36,8 @@ excuses_url = 'https://ubuntu-archive-team.ubuntu.com/proposed-migration/' \
 def get_proposed_version(excuses, package):
     for k in excuses['sources']:
         if k['source'] == package:
-            excuse = k
-            break
-
-    if not excuse:
-        return False
-
-    return excuse['new-version']
+            return k.get('new-version')
+    return None
 
 
 def claim_excuses_bug(launchpad, bug, package):
