@@ -104,7 +104,7 @@ def has_excuses_bugs(launchpad, package):
     if len(bugs) == 1:
         print("There is 1 open update-excuse bug against %s" % package)
     else:
-        print("There are %d open update-excuses bugs against %s" \
+        print("There are %d open update-excuse bugs against %s" \
               % (len(bugs), package))
 
     for bug in bugs:
