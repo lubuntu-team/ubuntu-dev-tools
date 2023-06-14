@@ -91,8 +91,11 @@ def create_excuses_bug(launchpad, package, version):
 
 def has_excuses_bugs(launchpad, package):
     ubuntu = launchpad.distributions['ubuntu']
-    tasks = ubuntu.getSourcePackage(name=package).searchTasks(
-                tags=['update-excuse'], order_by=['id'])
+    pkg = ubuntu.getSourcePackage(name=package)
+    if not pkg:
+        raise ValueError(f"No such source package: {package}")
+
+    tasks = pkg.searchTasks(tags=['update-excuse'], order_by=['id'])
 
     bugs = [task.bug for task in tasks]
     if not bugs:
@@ -131,13 +134,16 @@ def main():
     lzma_f.close()
 
     if args.package:
-        if not has_excuses_bugs(args.launchpad, args.package):
-            proposed_version = get_proposed_version(excuses, args.package)
-            if not proposed_version:
-                print("Package %s not found in -proposed." % args.package)
-                sys.exit(1)
-            create_excuses_bug(args.launchpad, args.package,
-                               proposed_version)
+        try:
+            if not has_excuses_bugs(args.launchpad, args.package):
+                proposed_version = get_proposed_version(excuses, args.package)
+                if not proposed_version:
+                    print("Package %s not found in -proposed." % args.package)
+                    sys.exit(1)
+                create_excuses_bug(args.launchpad, args.package,
+                                   proposed_version)
+        except ValueError as e:
+            sys.stderr.write(f"{e}\n")
     else:
         pass # for now
 
