@@ -17,7 +17,7 @@
 # 02110-1301 USA
 
 import lzma
-from optparse import OptionParser
+from argparse import ArgumentParser
 import sys
 import webbrowser
 import yaml
@@ -117,26 +117,28 @@ def find_excuses_bugs(launchpad, package):
 
 
 def main():
-    parser = OptionParser(usage="usage: %prog [options] [package]")
-    parser.add_option(
+    parser = ArgumentParser()
+    parser.add_argument(
         "-l", "--launchpad", dest="launchpad_instance", default="production")
-    parser.add_option(
+    parser.add_argument(
         "-v", "--verbose", default=False, action="store_true",
         help="be more verbose (redundant in --dry-run mode)")
-    options, args = parser.parse_args()
+    parser.add_argument(
+        'package', nargs='?', help="act on this package only")
+    args = parser.parse_args()
 
-    options.launchpad = Launchpad.login_with(
-        "pm-helper", options.launchpad_instance, version="devel")
+    args.launchpad = Launchpad.login_with(
+        "pm-helper", args.launchpad_instance, version="devel")
 
     f = get_url(excuses_url, False)
     lzma_f = lzma.open(f)
     excuses = yaml.load(lzma_f, Loader=yaml.CSafeLoader)
     lzma_f.close()
 
-    if args:
-        if not find_excuses_bugs(options.launchpad, args[0]):
-            create_excuses_bug(options.launchpad, args[0],
-                               get_proposed_version(excuses, args[0]))
+    if args.package:
+        if not find_excuses_bugs(args.launchpad, args.package):
+            create_excuses_bug(args.launchpad, args.package,
+                               get_proposed_version(excuses, args.package))
     else:
         pass # for now
 
