@@ -129,9 +129,8 @@ def main():
         "pm-helper", args.launchpad_instance, version="devel")
 
     f = get_url(excuses_url, False)
-    lzma_f = lzma.open(f)
-    excuses = yaml.load(lzma_f, Loader=yaml.CSafeLoader)
-    lzma_f.close()
+    with lzma.open(f) as lzma_f:
+        excuses = yaml.load(lzma_f, Loader=yaml.CSafeLoader)
 
     if args.package:
         try:
