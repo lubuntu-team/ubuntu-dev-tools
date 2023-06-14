@@ -89,7 +89,7 @@ def create_excuses_bug(launchpad, package, version):
     return bug
 
 
-def find_excuses_bugs(launchpad, package):
+def has_excuses_bugs(launchpad, package):
     ubuntu = launchpad.distributions['ubuntu']
     tasks = ubuntu.getSourcePackage(name=package).searchTasks(
                 tags=['update-excuse'], order_by=['id'])
@@ -131,7 +131,7 @@ def main():
     lzma_f.close()
 
     if args.package:
-        if not find_excuses_bugs(args.launchpad, args.package):
+        if not has_excuses_bugs(args.launchpad, args.package):
             proposed_version = get_proposed_version(excuses, args.package)
             if not proposed_version:
                 print("Package %s not found in -proposed." % args.package)
