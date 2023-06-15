@@ -1,0 +1,44 @@
+.\" Copyright (C) 2023, Canonical Ltd.
+.\"
+.\" This program is free software; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License, version 3.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+.\" General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program.  If not, see <http://www.gnu.org/licenses/>.
+.TH pm\-helper 1 "June 2023" ubuntu\-dev\-tools
+
+.SH NAME
+pm\-helper \- helper to guide a developer through proposed\-migration work
+
+.SH SYNOPSIS
+.B pm\-helper \fR[\fIoptions\fR] [\fIpackage\fR]
+
+.SH DESCRIPTION
+Claim a package from proposed\-migration to work on and get additional
+information (such as the state of the package in Debian) that may be helpful
+in unblocking it.
+.PP
+This tool is incomplete and under development.
+
+.SH OPTIONS
+.TP
+.B \-l \fIINSTANCE\fR, \fB\-\-launchpad\fR=\fIINSTANCE\fR
+Use the specified instance of Launchpad (e.g. "staging"), instead of
+the default of "production".
+.TP
+.B \-v\fR, \fB--verbose\fR
+be more verbose
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Display a help message and exit
+
+.SH AUTHORS
+\fBpm\-helper\fR and this manpage were written by Steve Langasek
+<steve.langasek@ubuntu.com>.
+.PP
+Both are released under the GPLv3 license.
