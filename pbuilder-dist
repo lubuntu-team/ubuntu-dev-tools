@@ -95,7 +95,11 @@ class PbuilderDist:
         # Builder
         self.builder = builder
 
-        self._debian_distros = DebianDistroInfo().all + ["stable", "testing", "unstable"]
+        # Distro info
+        self.debian_distro_info = DebianDistroInfo()
+        self.ubuntu_distro_info = UbuntuDistroInfo()
+
+        self._debian_distros = self.debian_distro_info.all + ["stable", "testing", "unstable"]
 
         # Ensure that the used builder is installed
         paths = set(os.environ["PATH"].split(":"))
@@ -151,8 +155,9 @@ class PbuilderDist:
         if not os.path.isfile(os.path.join("/usr/share/debootstrap/scripts/", distro)):
             if os.path.isdir("/usr/share/debootstrap/scripts/"):
                 # Debian experimental doesn't have a debootstrap file but
-                # should work nevertheless.
-                if distro not in self._debian_distros:
+                # should work nevertheless. Ubuntu releases automatically use
+                # the gutsy script as of debootstrap 1.0.128+nmu2ubuntu1.1.
+                if distro not in (self._debian_distros + self.ubuntu_distro_info.all):
                     question = (
                         f'Warning: Unknown distribution "{distro}". ' "Do you want to continue"
                     )
@@ -288,23 +293,22 @@ class PbuilderDist:
             othermirrors.append(repo)
 
         if self.target_distro in self._debian_distros:
-            debian_info = DebianDistroInfo()
             try:
-                codename = debian_info.codename(self.target_distro, default=self.target_distro)
+                codename = self.debian_distro_info.codename(self.target_distro, default=self.target_distro)
             except DistroDataOutdated as error:
                 Logger.warning(error)
-            if codename in (debian_info.devel(), "experimental"):
+            if codename in (self.debian_distro_info.devel(), "experimental"):
                 self.enable_security = False
                 self.enable_updates = False
                 self.enable_proposed = False
-            elif codename in (debian_info.testing(), "testing"):
+            elif codename in (self.debian_distro_info.testing(), "testing"):
                 self.enable_updates = False
 
             if self.enable_security:
                 pocket = "-security"
                 with suppress(ValueError):
                     # before bullseye (version 11) security suite is /updates
-                    if float(debian_info.version(codename)) < 11.0:
+                    if float(self.debian_distro_info.version(codename)) < 11.0:
                         pocket = "/updates"
                 othermirrors.append(
                     f"deb {config.get_value('DEBSEC_MIRROR')}"
@@ -322,7 +326,7 @@ class PbuilderDist:
             aptcache = os.path.join(self.base, "aptcache", "debian")
         else:
             try:
-                dev_release = self.target_distro == UbuntuDistroInfo().devel()
+                dev_release = self.target_distro == self.ubuntu_distro_info.devel()
             except DistroDataOutdated as error:
                 Logger.warning(error)
                 dev_release = True
