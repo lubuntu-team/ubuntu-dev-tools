@@ -348,7 +348,11 @@ def download(src, dst, size=0, *, blocksize=DOWNLOAD_BLOCKSIZE_DEFAULT):
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdst = Path(tmpdir) / "dst"
         try:
-            with requests.get(src, stream=True, timeout=60, auth=auth) as fsrc:
+            # We must use "Accept-Encoding: identity" so that Launchpad doesn't
+            # compress changes files. See LP: #2025748.
+            with requests.get(
+                src, stream=True, timeout=60, auth=auth, headers={"accept-encoding": "identity"}
+            ) as fsrc:
                 with tmpdst.open("wb") as fdst:
                     fsrc.raise_for_status()
                     _download(fsrc, fdst, size, blocksize=blocksize)
@@ -433,7 +437,16 @@ def _download(fsrc, fdst, size, *, blocksize):
 
     downloaded = 0
     try:
-        for block in fsrc.iter_content(blocksize):
+        while True:
+            # We use fsrc.raw so that compressed files stay compressed as we
+            # write them to disk. For example, if this is a .diff.gz, then it
+            # needs to remain compressed and unmodified to remain valid as part
+            # of a source package later, even though Launchpad sends
+            # "Content-Encoding: gzip" and the requests library therefore would
+            # want to decompress it. See LP: #2025748.
+            block = fsrc.raw.read(blocksize)
+            if not block:
+                break
             fdst.write(block)
             downloaded += len(block)
             progress_bar.update(downloaded, size)
