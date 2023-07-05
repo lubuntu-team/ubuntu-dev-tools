@@ -1,11 +1,16 @@
-ubuntu-dev-tools (0.193ubuntu5) UNRELEASED; urgency=medium
+ubuntu-dev-tools (0.193ubuntu5) mantic; urgency=medium
 
+  [ Steve Langasek ]
   * Remove references to deprecated
     http://people.canonical.com/~ubuntu-archive.
   * Remove references to architectures not supported in any active
     Ubuntu release.
 
- -- Steve Langasek <steve.langasek@ubuntu.com>  Tue, 30 May 2023 19:35:57 -0700
+  [ Robie Basak ]
+  * ubuntutools/misc: swap iter_content for raw stream with "Accept-Encoding:
+    identity" to fix .diff.gz downloads (LP: #2025748).
+
+ -- Robie Basak <robie.basak@ubuntu.com>  Wed, 05 Jul 2023 15:32:43 +0100
 
 ubuntu-dev-tools (0.193ubuntu4) mantic; urgency=medium
 
