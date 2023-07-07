@@ -117,6 +117,13 @@ def main():
     # Parse our options.
     args = parser.parse_args()
 
+    try:
+        # Will fail here if we have no credentials, bail out
+        Launchpad.login()
+    except TokenAuthorizationException:
+        sys.exit(1)
+    me = PersonTeam.me
+
     if not args.batch:
         # Check we have the correct number of arguments.
         if len(args.packages) < 3:
@@ -153,13 +160,6 @@ def main():
             Logger.error(error)
             sys.exit(1)
 
-        try:
-            # Will fail here if we have no credentials, bail out
-            Launchpad.login()
-        except TokenAuthorizationException:
-            sys.exit(1)
-
-        # Get the ubuntu archive
         ubuntu_archive = Distribution("ubuntu").getArchive()
         # Get list of published sources for package in question.
         try:
@@ -178,7 +178,6 @@ def main():
         # Operations that are remaining may only be done by Ubuntu developers
         # (retry) or buildd admins (rescore). Check if the proper permissions
         # are in place.
-        me = PersonTeam.me
         if operation == "rescore":
             necessary_privs = me.isLpTeamMember("launchpad-buildd-admins")
         if operation == "retry":
@@ -268,7 +267,6 @@ def main():
     except SeriesNotFoundException as error:
         Logger.error(error)
         sys.exit(1)
-    me = PersonTeam.me
 
     # Check permisions (part 1): Rescoring can only be done by buildd admins
     can_rescore = args.priority and me.isLpTeamMember("launchpad-buildd-admins")
