@@ -1,46 +1,33 @@
-ubuntu-dev-tools (0.193ubuntu5) mantic; urgency=medium
+ubuntu-dev-tools (0.194) unstable; urgency=medium
+
+  [ Gianfranco Costamagna ]
+  * ubuntu-build: For some reasons, now you need to be authenticated before
+    trying to use the "PersonTeam" class features.
+    Do it at the begin instead of replicating the same code inside the
+    tool itself.
 
   [ Steve Langasek ]
   * Remove references to deprecated
     http://people.canonical.com/~ubuntu-archive.
   * Remove references to architectures not supported in any active
     Ubuntu release.
+  * Remove references to ftpmaster.internal.  When this name is resolvable
+    but firewalled, syncpackage hangs; and these are tools for developers,
+    not for running in an automated context in the DCs where
+    ftpmaster.internal is reachable.
+  * Excise all references to cdbs (including in test cases)
+  * Set apt preferences for the -proposed pocket in mk-sbuild so that
+    it works as expected for lunar and forward.
 
   [ Robie Basak ]
   * ubuntutools/misc: swap iter_content for raw stream with "Accept-Encoding:
     identity" to fix .diff.gz downloads (LP: #2025748).
 
- -- Robie Basak <robie.basak@ubuntu.com>  Wed, 05 Jul 2023 15:32:43 +0100
-
-ubuntu-dev-tools (0.193ubuntu4) mantic; urgency=medium
-
-  * Remove references to ftpmaster.internal.  When this name is resolvable
-    but firewalled, syncpackage hangs; and these are tools for developers,
-    not for running in an automated context in the DCs where
-    ftpmaster.internal is reachable.
-
- -- Steve Langasek <steve.langasek@ubuntu.com>  Tue, 30 May 2023 10:02:43 -0700
-
-ubuntu-dev-tools (0.193ubuntu3) mantic; urgency=medium
-
-  * Excise all references to cdbs (including in test cases)
-
- -- Steve Langasek <steve.langasek@ubuntu.com>  Tue, 30 May 2023 09:45:12 -0700
-
-ubuntu-dev-tools (0.193ubuntu2) lunar; urgency=medium
-
   [ Vladimir Petko ]
   * Fix a typo introduced in the last upload that made mk-sbuild fail
     unconditionally.  LP: #2017177.
 
- -- Steve Langasek <steve.langasek@ubuntu.com>  Fri, 21 Apr 2023 02:23:08 +0000
-
-ubuntu-dev-tools (0.193ubuntu1) lunar; urgency=medium
-
-  * Set apt preferences for the -proposed pocket in mk-sbuild so that
-    it works as expected for lunar and forward.
-
- -- Steve Langasek <steve.langasek@ubuntu.com>  Wed, 12 Apr 2023 09:45:19 -0700
+ -- Gianfranco Costamagna <locutusofborg@debian.org>  Sat, 08 Jul 2023 08:42:05 +0200
 
 ubuntu-dev-tools (0.193) unstable; urgency=medium
 
