@@ -1,3 +1,10 @@
+ubuntu-dev-tools (0.195) unstable; urgency=medium
+
+  * Add support for the non-free-firmware components in all tools already
+    referencing non-free.
+
+ -- Simon Quigley <tsimonq2@debian.org>  Wed, 26 Jul 2023 13:03:31 -0500
+
 ubuntu-dev-tools (0.194) unstable; urgency=medium
 
   [ Gianfranco Costamagna ]

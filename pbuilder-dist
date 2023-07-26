@@ -270,7 +270,7 @@ class PbuilderDist:
             mirror = os.environ.get("MIRRORSITE", config.get_value("DEBIAN_MIRROR"))
             components = "main"
             if self.extra_components:
-                components += " contrib non-free"
+                components += " contrib non-free non-free-firmware"
         else:
             mirror = os.environ.get("MIRRORSITE", config.get_value("UBUNTU_MIRROR"))
             if self.build_architecture not in ("amd64", "i386"):

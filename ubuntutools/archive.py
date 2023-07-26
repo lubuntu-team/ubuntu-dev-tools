@@ -976,7 +976,7 @@ class Madison(_WebJSON):
 # Snapshot API
 # https://anonscm.debian.org/cgit/mirror/snapshot.debian.org.git/plain/API
 class _Snapshot(_WebJSON):
-    DEBIAN_COMPONENTS = ["main", "contrib", "non-free"]
+    DEBIAN_COMPONENTS = ["main", "contrib", "non-free", "non-free-firmware"]
 
     def getHostUrl(self):
         return "http://snapshot.debian.org"

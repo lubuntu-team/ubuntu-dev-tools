@@ -324,7 +324,7 @@ def fetch_source_pkg(package, dist, version, component, ubuntu_release, mirror):
         if component is None:
             component = debian_srcpkg.getComponent()
 
-    assert component in ("main", "contrib", "non-free")
+    assert component in ("main", "contrib", "non-free", "non-free-firmware")
 
     return DebianSourcePackage(package, version.full_version, component, mirrors=mirrors)
 
@@ -613,10 +613,10 @@ def parse():
     except TypeError:
         parser.error("Invalid bug number(s) specified.")
 
-    if args.component not in (None, "main", "contrib", "non-free"):
+    if args.component not in (None, "main", "contrib", "non-free", "non-free-firmware"):
         parser.error(
             f"{args.component} is not a valid Debian component. "
-            f"It should be one of main, contrib, or non-free."
+            f"It should be one of main, contrib, non-free, or non-free-firmware."
         )
 
     if args.lp and args.uploader_name:

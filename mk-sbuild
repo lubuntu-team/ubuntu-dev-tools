@@ -667,7 +667,7 @@ debian)
         DEBOOTSTRAP_MIRROR="http://deb.debian.org/debian"
     fi
     if [ -z "$COMPONENTS" ]; then
-        COMPONENTS="main non-free contrib"
+        COMPONENTS="main non-free non-free-firmware contrib"
     fi
     if [ -z "$SOURCES_PROPOSED_SUITE" ]; then
         SOURCES_PROPOSED_SUITE="RELEASE-proposed-updates"
