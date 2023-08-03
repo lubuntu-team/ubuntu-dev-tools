@@ -754,8 +754,8 @@ if [ "$CHROOT_ARCH" != "$HOST_ARCH" ] ; then
         ;;
     # Sometimes we do
     *)
-        DEBOOTSTRAP_COMMAND=qemu-debootstrap
-        if ! which "$DEBOOTSTRAP_COMMAND"; then
+        DEBOOTSTRAP_COMMAND=debootstrap
+        if ! which "qemu-x86_64-static"; then
             sudo apt-get install qemu-user-static
         fi
         ;;

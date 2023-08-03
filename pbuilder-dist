@@ -492,7 +492,7 @@ def main():
             ("powerpc", "ppc64"),
             ("ppc64", "powerpc"),
         ]:
-            args += ["--debootstrap", "qemu-debootstrap"]
+            args += ["--debootstrap", "debootstrap"]
 
     if "mainonly" in sys.argv or "--main-only" in sys.argv:
         app.extra_components = False
