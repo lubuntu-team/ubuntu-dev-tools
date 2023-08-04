@@ -602,7 +602,7 @@ def parse():
         metavar="UBUNTU_MIRROR",
         help=f"Preferred Ubuntu mirror (default: {UDTConfig.defaults['UBUNTU_MIRROR']})",
     )
-    parser.add_argument("package", help=argparse.SUPPRESS)
+    parser.add_argument("package", nargs="*", help=argparse.SUPPRESS)
     args = parser.parse_args()
 
     if args.fakesync:
@@ -627,8 +627,9 @@ def parse():
     # ignored with args.lp, and do not require warnings.
 
     if args.lp:
-        if args.package.endswith(".dsc"):
-            parser.error(".dsc files can only be synced using --no-lp.")
+        for package in args.package:
+            if package.endswith(".dsc"):
+                parser.error(".dsc files can only be synced using --no-lp.")
 
     return args
 
@@ -701,75 +702,76 @@ def main():
     elif args.uploader_email is None:
         args.uploader_email = ubu_email(export=False)[1]
 
-    src_pkg = fetch_source_pkg(
-        args.package,
-        args.distribution,
-        args.debian_version,
-        args.component,
-        args.release,
-        args.debian_mirror,
-    )
+    for package in args.package:
+        src_pkg = fetch_source_pkg(
+            package,
+            args.distribution,
+            args.debian_version,
+            args.component,
+            args.release,
+            args.debian_mirror,
+        )
 
-    blacklisted, comments = is_blacklisted(src_pkg.source)
-    blacklist_fail = False
-    if blacklisted:
-        messages = []
+        blacklisted, comments = is_blacklisted(src_pkg.source)
+        blacklist_fail = False
+        if blacklisted:
+            messages = []
 
-        if blacklisted == "CURRENT":
-            Logger.debug(
-                "Source package %s is temporarily blacklisted "
-                "(blacklisted_current). "
-                "Ubuntu ignores these for now. "
-                "See also LP: #841372",
-                src_pkg.source,
-            )
-        else:
-            if args.fakesync:
-                messages += ["Doing a fakesync, overriding blacklist."]
+            if blacklisted == "CURRENT":
+                Logger.debug(
+                    "Source package %s is temporarily blacklisted "
+                    "(blacklisted_current). "
+                    "Ubuntu ignores these for now. "
+                    "See also LP: #841372",
+                    src_pkg.source,
+                )
             else:
-                blacklist_fail = True
-                messages += [
-                    "If this package needs a fakesync, use --fakesync",
-                    "If you think this package shouldn't be "
-                    "blacklisted, please file a bug explaining your "
-                    "reasoning and subscribe ~ubuntu-archive.",
-                ]
+                if args.fakesync:
+                    messages += ["Doing a fakesync, overriding blacklist."]
+                else:
+                    blacklist_fail = True
+                    messages += [
+                        "If this package needs a fakesync, use --fakesync",
+                        "If you think this package shouldn't be "
+                        "blacklisted, please file a bug explaining your "
+                        "reasoning and subscribe ~ubuntu-archive.",
+                    ]
+
+            if blacklist_fail:
+                Logger.error("Source package %s is blacklisted.", src_pkg.source)
+            elif blacklisted == "ALWAYS":
+                Logger.info("Source package %s is blacklisted.", src_pkg.source)
+            if messages:
+                for message in messages:
+                    for line in textwrap.wrap(message):
+                        Logger.info(line)
+
+        if comments:
+            Logger.info("Blacklist Comments:")
+            for comment in comments:
+                for line in textwrap.wrap(comment):
+                    Logger.info("  %s", line)
 
         if blacklist_fail:
-            Logger.error("Source package %s is blacklisted.", src_pkg.source)
-        elif blacklisted == "ALWAYS":
-            Logger.info("Source package %s is blacklisted.", src_pkg.source)
-        if messages:
-            for message in messages:
-                for line in textwrap.wrap(message):
-                    Logger.info(line)
+            sys.exit(1)
 
-    if comments:
-        Logger.info("Blacklist Comments:")
-        for comment in comments:
-            for line in textwrap.wrap(comment):
-                Logger.info("  %s", line)
-
-    if blacklist_fail:
-        sys.exit(1)
-
-    if args.lp:
-        copy(src_pkg, args.release, args.bugs, sponsoree, args.simulate, args.force)
-    else:
-        os.environ["DEB_VENDOR"] = "Ubuntu"
-        sync_dsc(
-            src_pkg,
-            args.distribution,
-            args.release,
-            args.uploader_name,
-            args.uploader_email,
-            args.bugs,
-            args.ubuntu_mirror,
-            args.keyid,
-            args.simulate,
-            args.force,
-            args.fakesync,
-        )
+        if args.lp:
+            copy(src_pkg, args.release, args.bugs, sponsoree, args.simulate, args.force)
+        else:
+            os.environ["DEB_VENDOR"] = "Ubuntu"
+            sync_dsc(
+                src_pkg,
+                args.distribution,
+                args.release,
+                args.uploader_name,
+                args.uploader_email,
+                args.bugs,
+                args.ubuntu_mirror,
+                args.keyid,
+                args.simulate,
+                args.force,
+                args.fakesync,
+            )
 
 
 if __name__ == "__main__":

@@ -1,3 +1,9 @@
+ubuntu-dev-tools (0.196) unstable; urgency=medium
+
+  * Allow the user to sync multiple packages at one time (LP: #1756748).
+
+ -- Simon Quigley <tsimonq2@debian.org>  Fri, 04 Aug 2023 14:37:59 -0500
+
 ubuntu-dev-tools (0.195) unstable; urgency=medium
 
   * Add support for the non-free-firmware components in all tools already
