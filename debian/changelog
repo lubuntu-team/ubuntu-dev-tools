@@ -1,3 +1,11 @@
+ubuntu-dev-tools (0.197) UNRELEASED; urgency=medium
+
+  [ Simon Quigley ]
+  * Update the manpage for syncpackage to reflect the ability to sync
+    multiple packages at once.
+
+ -- Ubuntu Tooling Warriors <ubuntu-devel@lists.ubuntu.com>  Thu, 10 Aug 2023 14:37:54 -0500
+
 ubuntu-dev-tools (0.196) unstable; urgency=medium
 
   * Allow the user to sync multiple packages at one time (LP: #1756748).
