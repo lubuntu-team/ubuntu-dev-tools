@@ -504,7 +504,7 @@ def close_bugs(bugs, package, version, changes, sponsoree):
 def parse():
     """Parse given command-line parameters."""
 
-    usage = "%(prog)s [options] <.dsc URL/path or package name>"
+    usage = "%(prog)s [options] <.dsc URL/path or package name(s)>"
     epilog = f"See {os.path.basename(sys.argv[0])}(1) for more info."
     parser = argparse.ArgumentParser(usage=usage, epilog=epilog)
 
