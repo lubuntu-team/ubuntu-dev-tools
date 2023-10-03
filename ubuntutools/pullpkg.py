@@ -445,6 +445,37 @@ class PullPkg:
 
         Logger.info("Found %s", spph.display_name)
 
+        # The VCS detection logic was modeled after `apt source`
+        for key in srcpkg.dsc.keys():
+            original_key = key
+            key = key.lower()
+
+            if key.startswith("vcs-"):
+                if key == "vcs-browser":
+                    continue
+                elif key == "vcs-git":
+                    vcs = "Git"
+                elif key == "vcs-bzr":
+                    vcs = "Bazaar"
+                else:
+                    continue
+
+                uri = srcpkg.dsc[original_key]
+
+                Logger.warning("\nNOTICE: '%s' packaging is maintained in "
+                               "the '%s' version control system at:\n"
+                               " %s\n" % (package, vcs, uri))
+
+                if vcs == "Bazaar":
+                    vcscmd = " $ bzr branch " + uri
+                elif vcs == "Git":
+                    vcscmd = " $ git clone " + uri
+
+                if vcscmd:
+                    Logger.info(f"Please use:\n{vcscmd}\n"
+                                "to retrieve the latest (possibly unreleased) "
+                                "updates to the package.\n")
+
         if pull == PULL_LIST:
             Logger.info("Source files:")
             for f in srcpkg.dsc["Files"]:
