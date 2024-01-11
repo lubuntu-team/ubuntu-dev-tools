@@ -1,3 +1,11 @@
+ubuntu-dev-tools (0.198) UNRELEASED; urgency=medium
+
+  * In check-mir, ignore debhelper-compat when checking the build
+    dependencies. This is expected to be a build dependency of all packages,
+    so warning about it in any way is surely a red herring.
+
+ -- Simon Quigley <tsimonq2@debian.org>  Wed, 10 Jan 2024 18:54:07 -0600
+
 ubuntu-dev-tools (0.197) unstable; urgency=medium
 
   * Update the manpage for syncpackage to reflect the ability to sync

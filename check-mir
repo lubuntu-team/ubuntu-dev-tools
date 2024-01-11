@@ -93,6 +93,13 @@ def check_build_dependencies(apt_cache, control):
             continue
         for or_group in apt.apt_pkg.parse_src_depends(control.section[field]):
             pkgname = or_group[0][0]
+
+            # debhelper-compat is expected to be a build dependency of every
+            # package, so it is a red herring to display it in this report.
+            # (src:debhelper is in Ubuntu Main anyway)
+            if pkgname == "debhelper-compat":
+                continue
+
             if not check_support(apt_cache, pkgname):
                 # check non-preferred alternatives
                 for altpkg in or_group[1:]:
