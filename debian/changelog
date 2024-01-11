@@ -3,6 +3,9 @@ ubuntu-dev-tools (0.198) UNRELEASED; urgency=medium
   * In check-mir, ignore debhelper-compat when checking the build
     dependencies. This is expected to be a build dependency of all packages,
     so warning about it in any way is surely a red herring.
+  * Add proper support for virtual packages in check-mir, basing the
+    determination solely off of binary packages. This is not expected to be a
+    typical case.
 
  -- Simon Quigley <tsimonq2@debian.org>  Wed, 10 Jan 2024 18:54:07 -0600
 

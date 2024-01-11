@@ -47,10 +47,41 @@ def check_support(apt_cache, pkgname, alt=False):
     else:
         prefix = " * " + pkgname
 
-    try:
+    prov_packages = apt_cache.get_providing_packages(pkgname)
+    if pkgname in apt_cache:
         pkg = apt_cache[pkgname]
-    except KeyError:
-        print(prefix, "does not exist (pure virtual?)", file=sys.stderr)
+
+    # If this is a virtual package, iterate through the binary packages that
+    # provide this, and ensure they are all in Main. Source packages in and of
+    # themselves cannot provide virtual packages, only binary packages can.
+    elif len(prov_packages) > 0:
+        supported, unsupported = [], []
+        for pkg in prov_packages:
+            candidate = pkg.candidate
+            if candidate:
+                section = candidate.section
+                if section.startswith("universe") or section.startswith("multiverse"):
+                    unsupported.append(pkg.name)
+                else:
+                    supported.append(pkg.name)
+
+        if len(supported) > 0:
+            msg = "is a virtual package, which is provided by the following "
+            msg += "candidates in Main: " + " ".join(supported)
+            print(prefix, msg)
+        elif len(unsupported) > 0:
+            msg = "is a virtual package, but is only provided by the "
+            msg += "following non-Main candidates: " + " ".join(unsupported)
+            print(prefix, msg, file=sys.stderr)
+            return False
+        else:
+            msg = "is a virtual package that exists but is not provided by "
+            msg += "package currently in the archive. Proceed with caution."
+            print(prefix, msg, file=sys.stderr)
+            return False
+
+    else:
+        print(prefix, "does not exist", file=sys.stderr)
         return False
 
     section = pkg.candidate.section
