@@ -6,6 +6,7 @@ Uploaders:
  Benjamin Drung <bdrung@debian.org>,
  Stefano Rivera <stefanor@debian.org>,
  Mattia Rizzolo <mattia@debian.org>,
+ Simon Quigley <tsimonq2@debian.org>,
 Build-Depends:
  black <!nocheck>,
  dctrl-tools,
