@@ -1,4 +1,4 @@
-ubuntu-dev-tools (0.198) UNRELEASED; urgency=medium
+ubuntu-dev-tools (0.198) unstable; urgency=medium
 
   * In check-mir, ignore debhelper-compat when checking the build
     dependencies. This is expected to be a build dependency of all packages,
@@ -7,7 +7,7 @@ ubuntu-dev-tools (0.198) UNRELEASED; urgency=medium
     determination solely off of binary packages. This is not expected to be a
     typical case.
 
- -- Simon Quigley <tsimonq2@debian.org>  Wed, 10 Jan 2024 18:54:07 -0600
+ -- Simon Quigley <tsimonq2@debian.org>  Wed, 10 Jan 2024 20:04:02 -0600
 
 ubuntu-dev-tools (0.197) unstable; urgency=medium
 
