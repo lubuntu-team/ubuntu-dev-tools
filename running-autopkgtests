@@ -5,76 +5,65 @@
 #   Andy P. Whitcroft
 #   Christian Ehrhardt
 
-'''Dumps a list of currently running tests in Autopkgtest'''
+"""Dumps a list of currently running tests in Autopkgtest"""
 
-__example__ = '''
+__example__ = """
 Display first listed test running on amd64 hardware:
   $ running-autopkgtests | grep amd64 | head -n1
   R     0:01:40 systemd-upstream               -          focal    amd64    upstream-systemd-ci/systemd-ci  - ['CFLAGS=-O0', 'DEB_BUILD_PROFILES=noudeb', 'TEST_UPSTREAM=1', 'CONFFLAGS_UPSTREAM=--werror -Dslow-tests=true', 'UPSTREAM_PULL_REQUEST=23153', 'GITHUB_STATUSES_URL=https://api.github.com/repos/systemd/systemd/statuses/cfb0935923dff8050315b5dd22ce8ab06461ff0e']
-'''
+"""
 
-import datetime
 import sys
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
-import urllib.request
-import json
-
-URL_RUNNING = 'http://autopkgtest.ubuntu.com/static/running.json'
-
-request = urllib.request.Request(URL_RUNNING)
-request.add_header('Cache-Control', 'max-age=0')
-with urllib.request.urlopen(request) as response:
-    data = response.read()
-    jobs = json.loads(data.decode('utf-8'))
+from ubuntutools.running_autopkgtests import get_queued, get_running
 
 
-running = []
-for pkg in jobs:
-    for handle in jobs[pkg]:
-        for series in jobs[pkg][handle]:
-            for arch in jobs[pkg][handle][series]:
-                jobinfo = jobs[pkg][handle][series][arch]
-                triggers = ','.join(jobinfo[0].get('triggers', '-'))
-                ppas = ','.join(jobinfo[0].get('ppas', '-'))
-                time = jobinfo[1]
-                env = jobinfo[0].get('env', '-')
-                time = str(datetime.timedelta(seconds=jobinfo[1]))
-                try:
-                    fmt = "R     {6:6} {0:30} {5:10} {1:8} {2:8} {3:31} {4} {7}"
-                    line = fmt.format(pkg, series, arch, ppas, triggers, '-', time, env)
-                    running.append((jobinfo[1], line))
-                except BrokenPipeError:
-                    sys.exit(1)
+def parse_args():
+    description = (
+        "Dumps a list of currently running and queued tests in Autopkgtest. "
+        "Pass --running to only see running tests, or --queued to only see "
+        "queued tests. Passing both will print both, which is the default behavior. "
+    )
 
-for (time, row) in sorted(running, reverse=True):
-    print(row)
+    parser = ArgumentParser(
+        prog="running-autopkgtests",
+        description=description,
+        epilog=f"example: {__example__}",
+        formatter_class=RawDescriptionHelpFormatter,
+    )
+    parser.add_argument(
+        "-r",
+        "--running",
+        action="store_true",
+        help="Print runnning autopkgtests (default: true)",
+    )
+    parser.add_argument(
+        "-q",
+        "--queued",
+        action="store_true",
+        help="Print queued autopkgtests (default: true)",
+    )
 
-request = urllib.request.Request('http://autopkgtest.ubuntu.com/queues.json')
-request.add_header('Cache-Control', 'max-age=0')
-with urllib.request.urlopen(request) as response:
-    data = response.read()
-    queues = json.loads(data.decode('utf-8'))
+    options = parser.parse_args()
 
-    for origin in queues:
-        for series in queues[origin]:
-            for arch in queues[origin][series]:
-                n = 0
-                for key in queues[origin][series][arch]:
-                    if key == "private job":
-                        pkg = triggers = ppas = "private job"
-                    else:
-                        (pkg, json_data) = key.split(maxsplit=1)
-                        try:
-                            jobinfo = json.loads(json_data)
-                            triggers = ','.join(jobinfo.get('triggers', '-'))
-                            ppas = ','.join(jobinfo.get('ppas', '-'))
-                        except json.decoder.JSONDecodeError:
-                            pkg = triggers = ppas = "failed to parse"
-                            continue
+    # If neither flag was specified, default to both not neither
+    if not options.running and not options.queued:
+        options.running = True
+        options.queued = True
 
-                    n = n + 1
-                    try:
-                        fmt = "Q{5:04d} {7:>6} {0:30} {6:10} {1:8} {2:8} {3:31} {4}"
-                        print(fmt.format(pkg, series, arch, ppas, triggers, n, origin, '-:--'))
-                    except BrokenPipeError:
-                        sys.exit(1)
+    return options
+
+
+def main() -> int:
+    args = parse_args()
+    if args.running:
+        print(get_running())
+    if args.queued:
+        print(get_queued())
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
