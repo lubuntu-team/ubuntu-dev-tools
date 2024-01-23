@@ -51,15 +51,14 @@ def get_running():
                     env = jobinfo[0].get("env", "-")
                     time = str(datetime.timedelta(seconds=jobinfo[1]))
                     try:
-                        fmt = "R     {6:6} {0:30} {5:10} {1:8} {2:8} {3:31} {4} {7}"
-                        line = fmt.format(pkg, series, arch, ppas, triggers, "-", time, env)
+                        line = f"R     {time:6} {pkg:30} {'-':10} {series:8} {arch:8} {ppas:31} {triggers} {env}\n"
                         running.append((jobinfo[1], line))
                     except BrokenPipeError:
                         sys.exit(1)
 
     output = ""
     for time, row in sorted(running, reverse=True):
-        output += f"{row}\n"
+        output += f"{row}"
 
     return output
 
@@ -86,9 +85,7 @@ def get_queued():
 
                     n = n + 1
                     try:
-                        fmt = "Q{5:04d} {7:>6} {0:30} {6:10} {1:8} {2:8} {3:31} {4}"
-                        line = fmt.format(pkg, series, arch, ppas, triggers, n, origin, "-:--")
-                        output += f"{line}\n"
+                        output += f"Q{n:04d} {'-:--':>6} {pkg:30} {origin:10} {series:8} {arch:8} {ppas:31} {triggers}\n"
                     except BrokenPipeError:
                         sys.exit(1)
     return output
