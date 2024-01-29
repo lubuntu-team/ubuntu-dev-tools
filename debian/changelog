@@ -1,3 +1,9 @@
+ubuntu-dev-tools (0.199) UNRELEASED; urgency=medium
+
+  * Add my name to Uploaders.
+
+ -- Simon Quigley <tsimonq2@debian.org>  Mon, 29 Jan 2024 09:58:13 -0600
+
 ubuntu-dev-tools (0.198) unstable; urgency=medium
 
   * In check-mir, ignore debhelper-compat when checking the build
