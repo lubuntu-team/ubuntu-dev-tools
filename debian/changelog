@@ -1,6 +1,10 @@
 ubuntu-dev-tools (0.199) UNRELEASED; urgency=medium
 
+  [ Simon Quigley ]
   * Add my name to Uploaders.
+
+  [ Steve Langasek ]
+  * Introduce a pm-helper tool.
 
  -- Simon Quigley <tsimonq2@debian.org>  Mon, 29 Jan 2024 09:58:13 -0600
 
