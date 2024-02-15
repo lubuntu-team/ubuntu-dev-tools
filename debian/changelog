@@ -1,4 +1,7 @@
-ubuntu-dev-tools (0.200) UNRELEASED; urgency=medium
+ubuntu-dev-tools (0.200) unstable; urgency=medium
+
+  [ Gianfranco Costamagna ]
+  * Team upload
 
   [ Chris Peterson ]
   * Add support to see currently running autopkgtests (running-autopkgtests)
