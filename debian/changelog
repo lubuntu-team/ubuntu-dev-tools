@@ -1,3 +1,10 @@
+ubuntu-dev-tools (0.201) UNRELEASED; urgency=medium
+
+  * running-autopkgtests: fix packaging to make the script available
+    (LP: #2055466)
+
+ -- Chris Peterson <chris.peterson@canonical.com>  Thu, 29 Feb 2024 11:09:14 -0800
+
 ubuntu-dev-tools (0.200) unstable; urgency=medium
 
   [ Gianfranco Costamagna ]
