@@ -64,6 +64,7 @@ scripts = [
     "requestbackport",
     "requestsync",
     "reverse-depends",
+    "running-autopkgtests",
     "seeded-in-ubuntu",
     "setup-packaging-environment",
     "sponsor-patch",

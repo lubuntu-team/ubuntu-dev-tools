@@ -116,6 +116,8 @@ Description: useful tools for Ubuntu developers
   - requestsync - files a sync request with Debian changelog and rationale.
   - reverse-depends - find the reverse dependencies (or build dependencies) of
     a package.
+  - running-autopkgtests - lists the currently running and/or queued
+    autopkgtests on the Ubuntu autopkgtest infrastructure
   - seeded-in-ubuntu - query if a package is safe to upload during a freeze.
   - setup-packaging-environment - assistant to get an Ubuntu installation
     ready for packaging work.
