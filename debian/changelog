@@ -1,4 +1,4 @@
-ubuntu-dev-tools (0.201) UNRELEASED; urgency=medium
+ubuntu-dev-tools (0.201) unstable; urgency=medium
 
   * running-autopkgtests: fix packaging to make the script available
     (LP: #2055466)
