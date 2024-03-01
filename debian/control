@@ -1,7 +1,8 @@
 Source: ubuntu-dev-tools
 Section: devel
 Priority: optional
-Maintainer: Ubuntu Developers <ubuntu-dev-tools@packages.debian.org>
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+XSBC-Original-Maintainer: Ubuntu Developers <ubuntu-dev-tools@packages.debian.org>
 Uploaders:
  Benjamin Drung <bdrung@debian.org>,
  Stefano Rivera <stefanor@debian.org>,
@@ -26,7 +27,7 @@ Build-Depends:
  python3-debianbts,
  python3-distro-info,
  python3-httplib2,
- python3-launchpadlib,
+ python3-launchpadlib-desktop,
  python3-pytest,
  python3-requests <!nocheck>,
  python3-setuptools,
@@ -53,7 +54,7 @@ Depends:
  python3-debianbts,
  python3-distro-info,
  python3-httplib2,
- python3-launchpadlib,
+ python3-launchpadlib-desktop,
  python3-lazr.restfulclient,
  python3-ubuntutools (= ${binary:Version}),
  sensible-utils,
@@ -140,7 +141,7 @@ Depends:
  python3-debian,
  python3-distro-info,
  python3-httplib2,
- python3-launchpadlib,
+ python3-launchpadlib-desktop,
  python3-lazr.restfulclient,
  python3-requests,
  sensible-utils,

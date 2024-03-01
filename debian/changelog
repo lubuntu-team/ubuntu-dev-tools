@@ -1,3 +1,10 @@
+ubuntu-dev-tools (0.201ubuntu1) noble; urgency=medium
+
+  * Replace Depends on python3-launchpadlib with Depends on
+    python3-launchpadlib-desktop (LP: #2049217)
+
+ -- Chris Peterson <chris.peterson@canonical.com>  Fri, 01 Mar 2024 14:08:07 -0800
+
 ubuntu-dev-tools (0.201) unstable; urgency=medium
 
   * running-autopkgtests: fix packaging to make the script available
