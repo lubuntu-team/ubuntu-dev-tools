@@ -276,6 +276,8 @@ def main():
         )
 
     if not args.packages:
+        retry_count = 0
+
         series = Distribution("ubuntu").getSeries(release)
         for build in series.getBuildRecords(
             build_state='Failed to build', pocket=pocket
@@ -309,6 +311,7 @@ def main():
             if can_retry:
                 Logger.info("Retrying build of %s on %s...",
                             build.source_package_name, build.arch_tag)
+                retry_count += 1
                 build.retry()
             else:
                 Logger.info("Cannot retry build of %s on %s.",
@@ -317,6 +320,7 @@ def main():
                 Logger.info(pkg.rescoreBuilds(archs, args.priority))
 
             Logger.info("")
+        Logger.info("%d package builds retried", retry_count)
         sys.exit(0)
 
 
