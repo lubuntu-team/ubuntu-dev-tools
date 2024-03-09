@@ -112,7 +112,7 @@ def main():
         help=f"Affect only 'architecture' (can be used several times)."
         f" Valid architectures are: {', '.join(valid_archs)}.",
     )
-    parser.add_argument("packages", metavar="package", nargs="+", help=argparse.SUPPRESS)
+    parser.add_argument("packages", metavar="package", nargs="*", help=argparse.SUPPRESS)
 
     # Parse our options.
     args = parser.parse_args()
@@ -274,6 +274,51 @@ def main():
         Logger.error(
             "You don't have the permissions to rescore builds. Ignoring your rescore request."
         )
+
+    if not args.packages:
+        series = Distribution("ubuntu").getSeries(release)
+        for build in series.getBuildRecords(
+            build_state='Failed to build', pocket=pocket
+        ):
+            if build.arch_tag not in archs:
+                continue
+            if not build.current_source_publication:
+                continue
+            # fixme: refactor
+            # Check permissions (part 2): check upload permissions for the
+            # source package
+            can_retry = args.retry and me.canUploadPackage(
+                ubuntu_archive, series, build.source_package_name,
+                build.current_source_publication.component_name
+            )
+            if args.retry and not can_retry:
+                Logger.error(
+                    "You don't have the permissions to retry the "
+                    "build of '%s', skipping.",
+                    build.source_package_name
+                )
+                continue
+            Logger.info(
+                "The source version for '%s' in '%s' (%s) is: %s",
+                 build.source_package_name,
+                 release,
+                 pocket,
+                 build.source_package_version
+            )
+
+            if can_retry:
+                Logger.info("Retrying build of %s on %s...",
+                            build.source_package_name, build.arch_tag)
+                build.retry()
+            else:
+                Logger.info("Cannot retry build of %s on %s.",
+                            build.source_package_name, build.arch_tag)
+            if args.priority and can_rescore:
+                Logger.info(pkg.rescoreBuilds(archs, args.priority))
+
+            Logger.info("")
+        sys.exit(0)
+
 
     for pkg in args.packages:
         try:
