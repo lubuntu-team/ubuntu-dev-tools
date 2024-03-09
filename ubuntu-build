@@ -65,12 +65,7 @@ def main():
     # Prepare our option parser.
     parser = argparse.ArgumentParser(usage=usage)
 
-    # Retry options
-    retry_rescore_options = parser.add_argument_group(
-        "Retry and rescore options",
-        "These options may only be used with the 'retry' and 'rescore' operations.",
-    )
-    retry_rescore_options.add_argument(
+    parser.add_argument(
         "-a",
         "--arch",
         action="append",
@@ -104,13 +99,6 @@ def main():
         dest="priority",
         type=int,
         help="Rescore builds to <priority>.",
-    )
-    batch_options.add_argument(
-        "--arch2",
-        action="append",
-        dest="architecture",
-        help=f"Affect only 'architecture' (can be used several times)."
-        f" Valid architectures are: {', '.join(valid_archs)}.",
     )
     parser.add_argument("packages", metavar="package", nargs="*", help=argparse.SUPPRESS)
 
