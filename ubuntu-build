@@ -212,6 +212,7 @@ def main():
         try:
             sources = archive.getPublishedSources(
                           distro_series=distroseries,
+                          exact_match=True,
                           pocket=pocket,
                           source_name=package,
                           status='Published')[0]
@@ -386,6 +387,7 @@ def main():
         try:
             pkg = archive.getPublishedSources(
                           distro_series=distroseries,
+                          exact_match=True,
                           pocket=pocket,
                           source_name=pkg,
                           status='Published')[0]
