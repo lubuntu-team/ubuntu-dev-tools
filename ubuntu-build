@@ -158,7 +158,7 @@ def main():
     if args.batch:
         release = args.series
         if not release:
-            release = ubuntu.getDevelopmentSeries().name + "-proposed"
+            release = ubuntu.getDevelopmentSeries()[0].name + "-proposed"
         try:
             (release, pocket) = split_release_pocket(release)
         except PocketDoesNotExistError as error:
