@@ -2,11 +2,12 @@
 #
 #   ubuntu-build - command line interface for Launchpad buildd operations.
 #
-#   Copyright (C) 2007 Canonical Ltd.
+#   Copyright (C) 2007-2024 Canonical Ltd.
 #   Authors:
 #    - Martin Pitt <martin.pitt@canonical.com>
 #    - Jonathan Davies <jpds@ubuntu.com>
 #    - Michael Bienia <geser@ubuntu.com>
+#    - Steve Langasek <steve.langasek@canonical.com>
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
