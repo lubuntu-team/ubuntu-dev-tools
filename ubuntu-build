@@ -54,10 +54,21 @@ def rescoreBuilds(pkg, archs, score):
     for build in pkg.getBuilds():
         arch = build.arch_tag
         if arch in archs:
-            if build.rescore(score):
+            if not build.can_be_rescored:
+                continue
+            try:
+                build.rescore(score=score)
                 res.append(f"  {arch}: done")
-            else:
+            except lazr.restfulclient.errors.Unauthorized:
+                Logger.error(
+                    "You don't have the permissions to rescore builds. Ignoring your rescore request."
+                )
+                return None
+            except lazr.restfulclient.errors.BadRequest:
+                Logger.info("Cannot rescore build of %s on %s.",
+                    build.source_package_name, arch)
                 res.append(f"  {arch}: failed")
+
     msg = "\n".join(res)
     return f"Rescoring builds of '{pkg.source_package_name}' to {score}:\n{msg}"
 
@@ -150,9 +161,6 @@ def main():
                                      version="devel")
     me = launchpad.me
 
-    is_buildd_admin = any(t.name == "launchpad-buildd-admins" \
-                          for t in me.super_teams)
-
     ubuntu = launchpad.distributions['ubuntu']
 
     if args.batch:
@@ -229,8 +237,6 @@ def main():
         # Operations that are remaining may only be done by Ubuntu developers
         # (retry) or buildd admins (rescore). Check if the proper permissions
         # are in place.
-        if operation == "rescore":
-            necessary_privs = is_buildd_admin
         if operation == "retry":
             necessary_privs = archive.checkUpload(
                     component=sources.getComponent(),
@@ -240,7 +246,7 @@ def main():
                     sourcepackagename=sources.getPackageName(),
             )
 
-        if operation in ("rescore", "retry") and not necessary_privs:
+        if operation == "retry" and not necessary_privs:
             Logger.error(
                 "You cannot perform the %s operation on a %s package as you"
                 " do not have the permissions to do this action.",
@@ -274,7 +280,13 @@ def main():
                     # FIXME: make priority an option
                     priority = 5000
                     Logger.info("Rescoring build %s to %d...", build.arch_tag, priority)
-                    build.rescore(score=priority)
+                    try:
+                        build.rescore(score=priority)
+                    except lazr.restfulclient.errors.Unauthorized:
+                        Logger.error(
+                            "You don't have the permissions to rescore builds. Ignoring your rescore request."
+                        )
+                        break
                 else:
                     Logger.info("Cannot rescore build on %s.", build.arch_tag)
             if operation == "retry":
@@ -303,15 +315,9 @@ def main():
     # filter out duplicate and invalid architectures
     archs.intersection_update(valid_archs)
 
-    # Check permisions (part 1): Rescoring can only be done by buildd admins
-    can_rescore = args.priority and is_buildd_admin
-    if args.priority and not can_rescore:
-        Logger.error(
-            "You don't have the permissions to rescore builds. Ignoring your rescore request."
-        )
-
     if not args.packages:
         retry_count = 0
+        can_rescore = True
 
         if not args.state:
             if args.retry:
@@ -372,9 +378,15 @@ def main():
 
             if args.priority and can_rescore:
                 if build.can_be_rescored:
-                    build.rescore(score=args.priority)
-                else:
-                    Logger.info("Cannot rescore build of %s on %s.",
+                    try:
+                        build.rescore(score=args.priority)
+                    except lazr.restfulclient.errors.Unauthorized:
+                        Logger.error(
+                            "You don't have the permissions to rescore builds. Ignoring your rescore request."
+                        )
+                        can_rescore = False
+                    except lazr.restfulclient.errors.BadRequest:
+                        Logger.info("Cannot rescore build of %s on %s.",
                             build.source_package_name, build.arch_tag)
 
             Logger.info("")
@@ -422,7 +434,7 @@ def main():
         Logger.info(getBuildStates(pkg, archs))
         if can_retry:
             Logger.info(retryBuilds(pkg, archs))
-        if args.priority and can_rescore:
+        if args.priority:
             Logger.info(rescoreBuilds(pkg, archs, args.priority))
 
         Logger.info("")
