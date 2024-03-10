@@ -100,6 +100,11 @@ def main():
         type=int,
         help="Rescore builds to <priority>.",
     )
+    batch_options.add_argument(
+        "--state", action="store", dest="state",
+        help="Act on builds that are in the specified state (default: Failed to build)",
+    )
+
     parser.add_argument("packages", metavar="package", nargs="*", help=argparse.SUPPRESS)
 
     # Parse our options.
@@ -266,9 +271,11 @@ def main():
     if not args.packages:
         retry_count = 0
 
+        if not args.state:
+            args.state='Failed to build'
         series = Distribution("ubuntu").getSeries(release)
         for build in series.getBuildRecords(
-            build_state='Failed to build', pocket=pocket
+            build_state=args.state, pocket=pocket
         ):
             if build.arch_tag not in archs:
                 continue
