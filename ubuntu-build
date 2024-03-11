@@ -166,7 +166,11 @@ def main():
     if args.batch:
         release = args.series
         if not release:
-            release = ubuntu.getDevelopmentSeries()[0].name + "-proposed"
+            # ppas don't have a proposed pocket so just use the release pocket;
+            # but for the main archive we default to -proposed
+            release = ubuntu.getDevelopmentSeries()[0].name
+            if args.archive == 'ubuntu':
+                release = release + "-proposed"
         try:
             (release, pocket) = split_release_pocket(release)
         except PocketDoesNotExistError as error:
