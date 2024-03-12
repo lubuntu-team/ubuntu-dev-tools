@@ -1097,51 +1097,6 @@ class SourcePackagePublishingHistory(BaseWrapper):
         for build in builds:
             self._builds[build.arch_tag] = Build(build)
 
-    def getBuildStates(self, archs):
-        res = []
-
-        if not self._builds:
-            self._fetch_builds()
-
-        for arch in archs:
-            build = self._builds.get(arch)
-            if build:
-                res.append(f"  {build}")
-        msg = "\n".join(res)
-        return f"Build state(s) for '{self.getPackageName()}':\n{msg}"
-
-    def rescoreBuilds(self, archs, score):
-        res = []
-
-        if not self._builds:
-            self._fetch_builds()
-
-        for arch in archs:
-            build = self._builds.get(arch)
-            if build:
-                if build.rescore(score):
-                    res.append(f"  {arch}: done")
-                else:
-                    res.append(f"  {arch}: failed")
-        msg = "\n".join(res)
-        return f"Rescoring builds of '{self.getPackageName()}' to {score}:\n{msg}"
-
-    def retryBuilds(self, archs):
-        res = []
-
-        if not self._builds:
-            self._fetch_builds()
-
-        for arch in archs:
-            build = self._builds.get(arch)
-            if build:
-                if build.retry():
-                    res.append(f"  {arch}: done")
-                else:
-                    res.append(f"  {arch}: failed")
-        msg = "\n".join(res)
-        return f"Retrying builds of '{self.getPackageName()}':\n{msg}"
-
 
 class BinaryPackagePublishingHistory(BaseWrapper):
     """
