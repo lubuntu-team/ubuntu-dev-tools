@@ -1,9 +1,14 @@
-.TH UBUNTU-BUILD "1" "June 2010" "ubuntu-dev-tools"
+.TH UBUNTU-BUILD "1" "Mar 2024" "ubuntu-dev-tools"
 .SH NAME
 ubuntu-build \- command-line interface to Launchpad build operations
 
 .SH SYNOPSIS
-.B ubuntu-build <srcpackage> <release> <operation>
+.nf
+\fBubuntu-build\fR <srcpackage> <release> <operation>
+\fBubuntu-build\fR --batch [--retry] [--rescore \fIPRIORITY\fR] [--arch \fIARCH\fR [...]]
+             [--series \fISERIES\fR] [--state \fIBUILD-STATE\fR]
+             [-A \fIARCHIVE\fR] [pkg]...
+.fi
 
 .SH DESCRIPTION
 \fBubuntu-build\fR provides a command line interface to the Launchpad build
@@ -58,10 +63,13 @@ Retry builds (give\-back).
 \fB\-\-rescore\fR=\fIPRIORITY\fR
 Rescore builds to <priority>.
 .IP
-\fB\-\-arch2\fR=\fIARCHITECTURE\fR
+\fB\-\-arch\fR=\fIARCHITECTURE\fR
 Affect only 'architecture' (can be used several
 times). Valid architectures are:
 arm64, amd64, i386, powerpc, ppc64el, riscv64, s390x.
+.IP
+\fB\-A=\fIARCHIVE\fR
+Act on the named archive (ppa) instead of on the main Ubuntu archive.
 
 .SH AUTHORS
 \fBubuntu-build\fR was written by Martin Pitt <martin.pitt@canonical.com>, and
