@@ -374,11 +374,11 @@ def main():
                  build.source_package_version
             )
 
-            if args.retry:
+            if args.retry and build.can_be_retried:
                 Logger.info("Retrying build of %s on %s...",
                             build.source_package_name, build.arch_tag)
-                retry_count += 1
                 build.retry()
+                retry_count += 1
 
             if args.priority and can_rescore:
                 if build.can_be_rescored:
