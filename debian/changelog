@@ -1,3 +1,15 @@
+ubuntu-dev-tools (0.202) UNRELEASED; urgency=medium
+
+  [ Steve Langasek ]
+  * ubuntu-build: support --batch with no package names to retry all
+  * ubuntu-build: in batch mode, print a count of packages retried
+  * ubuntu-build: make the --arch option top-level.
+    This gets rid of the fugly --arch2 option
+  * ubuntu-build: support retrying builds in other states that failed-to-build
+  * ubuntu-build: Handling of proposed vs release pocket default for ppas
+
+ -- Gianfranco Costamagna <locutusofborg@debian.org>  Tue, 12 Mar 2024 10:37:09 +0100
+
 ubuntu-dev-tools (0.201) unstable; urgency=medium
 
   * running-autopkgtests: fix packaging to make the script available
