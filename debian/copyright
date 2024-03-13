@@ -85,10 +85,12 @@ Files: doc/bitesize.1
        merge-changelog
        pyproject.toml
        run-linters
+       running-autopkgtests
        setup-packaging-environment
        syncpackage
+       ubuntutools/running_autopkgtests.py
 Copyright: 2010,      Benjamin Drung <bdrung@ubuntu.com>
-           2007-2023, Canonical Ltd.
+           2007-2024, Canonical Ltd.
            2008,      Jonathan Patrick Davies <jpds@ubuntu.com>
            2008-2010, Martin Pitt <martin.pitt@canonical.com>
            2009,      Siegfried-Angel Gevatter Pujals <rainct@ubuntu.com>
@@ -182,6 +184,7 @@ Copyright: 2009-2023, Benjamin Drung <bdrung@ubuntu.com>
            2008,      Siegfried-Angel Gevatter Pujals <rainct@ubuntu.com>
            2010-2011, Stefano Rivera <stefanor@ubuntu.com>
            2017-2021, Dan Streetman <ddstreet@canonical.com>
+           2024,      Canonical Ltd.
 License: ISC
  Permission to use, copy, modify, and/or distribute this software for any
  purpose with or without fee is hereby granted, provided that the above
