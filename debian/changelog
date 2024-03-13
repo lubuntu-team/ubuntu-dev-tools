@@ -1,4 +1,4 @@
-ubuntu-dev-tools (0.202) UNRELEASED; urgency=medium
+ubuntu-dev-tools (0.201ubuntu2) noble; urgency=medium
 
   [ Steve Langasek ]
   * ubuntu-build: support --batch with no package names to retry all
@@ -9,7 +9,7 @@ ubuntu-dev-tools (0.202) UNRELEASED; urgency=medium
   * ubuntu-build: Handling of proposed vs release pocket default for ppas
   * ubuntu-build: update manpage
 
- -- Gianfranco Costamagna <locutusofborg@debian.org>  Tue, 12 Mar 2024 10:37:09 +0100
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Tue, 12 Mar 2024 17:03:43 -0700
 
 ubuntu-dev-tools (0.201ubuntu1) noble; urgency=medium
 
