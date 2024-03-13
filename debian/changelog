@@ -1,3 +1,9 @@
+ubuntu-dev-tools (0.201ubuntu2~22.04.1) UNRELEASED; urgency=medium
+
+  * Backport current ubuntu-dev-tools to jammy.  LP: #2057716.
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Tue, 12 Mar 2024 17:38:26 -0700
+
 ubuntu-dev-tools (0.201ubuntu2) noble; urgency=medium
 
   [ Steve Langasek ]
