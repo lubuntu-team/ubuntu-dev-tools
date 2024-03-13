@@ -1,8 +1,8 @@
-ubuntu-dev-tools (0.201ubuntu2~23.10.1) UNRELEASED; urgency=medium
+ubuntu-dev-tools (0.201ubuntu2~23.10.1) mantic; urgency=medium
 
   * Backport current ubuntu-dev-tools to mantic.  LP: #2057716.
 
- -- Steve Langasek <steve.langasek@ubuntu.com>  Tue, 12 Mar 2024 17:38:26 -0700
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Tue, 12 Mar 2024 17:47:25 -0700
 
 ubuntu-dev-tools (0.201ubuntu2) noble; urgency=medium
 
