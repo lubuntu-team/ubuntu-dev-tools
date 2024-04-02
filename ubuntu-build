@@ -377,8 +377,12 @@ def main():
             if args.retry and build.can_be_retried:
                 Logger.info("Retrying build of %s on %s...",
                             build.source_package_name, build.arch_tag)
-                build.retry()
-                retry_count += 1
+                try:
+                    build.retry()
+                    retry_count += 1
+                except lazr.restfulclient.errors.BadRequest:
+                    Logger.info("Failed to retry build of %s on %s",
+                                build.source_package_name, build.arch_tag)
 
             if args.priority and can_rescore:
                 if build.can_be_rescored:
