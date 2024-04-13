@@ -1,4 +1,4 @@
-ubuntu-dev-tools (0.201ubuntu2) noble; urgency=medium
+ubuntu-dev-tools (0.202) unstable; urgency=medium
 
   [ Steve Langasek ]
   * ubuntu-build: support --batch with no package names to retry all
@@ -9,14 +9,11 @@ ubuntu-dev-tools (0.201ubuntu2) noble; urgency=medium
   * ubuntu-build: Handling of proposed vs release pocket default for ppas
   * ubuntu-build: update manpage
 
- -- Steve Langasek <steve.langasek@ubuntu.com>  Tue, 12 Mar 2024 17:03:43 -0700
-
-ubuntu-dev-tools (0.201ubuntu1) noble; urgency=medium
-
+  [ Chris Peterson ]
   * Replace Depends on python3-launchpadlib with Depends on
     python3-launchpadlib-desktop (LP: #2049217)
 
- -- Chris Peterson <chris.peterson@canonical.com>  Fri, 01 Mar 2024 14:08:07 -0800
+ -- Simon Quigley <tsimonq2@ubuntu.com>  Fri, 12 Apr 2024 23:33:14 -0500
 
 ubuntu-dev-tools (0.201) unstable; urgency=medium
 
