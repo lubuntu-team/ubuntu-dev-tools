@@ -27,7 +27,7 @@ Build-Depends:
  python3-debianbts,
  python3-distro-info,
  python3-httplib2,
- python3-launchpadlib-desktop,
+ python3-launchpadlib,
  python3-pytest,
  python3-requests <!nocheck>,
  python3-setuptools,
