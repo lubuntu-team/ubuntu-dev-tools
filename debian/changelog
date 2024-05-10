@@ -1,4 +1,4 @@
-ubuntu-dev-tools (0.201ubuntu2~23.10.2) mantic; urgency=medium
+ubuntu-dev-tools (0.201ubuntu2~23.10.3) mantic; urgency=medium
 
   * Backport current ubuntu-dev-tools to mantic.  LP: #2057716.
 
