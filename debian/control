@@ -141,7 +141,7 @@ Depends:
  python3-debian,
  python3-distro-info,
  python3-httplib2,
- python3-launchpadlib-desktop,
+ python3-launchpadlib,
  python3-lazr.restfulclient,
  python3-requests,
  sensible-utils,
