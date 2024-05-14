@@ -155,6 +155,7 @@ proxy="_unset_"
 DEBOOTSTRAP_NO_CHECK_GPG=0
 EATMYDATA=1
 CCACHE=0
+USE_PKGBINARYMANGLER=0
 
 while :; do
     case "$1" in
@@ -667,6 +668,7 @@ ubuntu)
     if ubuntu_dist_ge "$RELEASE" "edgy"; then
         # Add pkgbinarymangler (edgy and later)
         BUILD_PKGS="$BUILD_PKGS pkgbinarymangler"
+        USE_PKGBINARYMANGLER=1
         # Disable recommends for a smaller chroot (gutsy and later only)
         if ubuntu_dist_ge "$RELEASE" "gutsy"; then
             BUILD_PKGS="--no-install-recommends $BUILD_PKGS"
@@ -1046,6 +1048,25 @@ EOF
 EOM
 fi
 
+if [ "$USE_PKGBINARYMANGLER" = 1 ]; then
+    sudo bash -c "cat >> $MNT/finish.sh" <<EOM
+   mkdir -p /etc/pkgbinarymangler/
+   cat > /etc/pkgbinarymangler/maintainermangler.conf <<EOF
+# pkgmaintainermangler configuration file
+
+# pkgmaintainermangler will do nothing unless enable is set to "true"
+enable: true
+
+# Configure what happens if /CurrentlyBuilding is present, but invalid
+# (i. e. it does not contain a Package: field). If "ignore" (default),
+# the file is ignored (i. e. the Maintainer field is mangled) and a
+# warning is printed. If "fail" (or any other value), pkgmaintainermangler
+# exits with an error, which causes a package build to fail.
+invalid_currentlybuilding: ignore
+EOF
+EOM
+fi
+
 if [ -n "$TARGET_ARCH" ]; then
     sudo bash -c "cat >> $MNT/finish.sh" <<EOM
 # Configure target architecture
@@ -1064,7 +1085,7 @@ apt-get update || true
 echo set debconf/frontend Noninteractive | debconf-communicate
 echo set debconf/priority critical | debconf-communicate
 # Install basic build tool set, trying to match buildd
-apt-get -y --force-yes install $BUILD_PKGS
+apt-get -y --force-yes -o Dpkg::Options::="--force-confold" install $BUILD_PKGS
 # Set up expected /dev entries
 if [ ! -r /dev/stdin ];  then ln -s /proc/self/fd/0 /dev/stdin;  fi
 if [ ! -r /dev/stdout ]; then ln -s /proc/self/fd/1 /dev/stdout; fi
