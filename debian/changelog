@@ -1,3 +1,10 @@
+ubuntu-dev-tools (0.202ubuntu1) UNRELEASED; urgency=medium
+
+  * ubuntu-build: handle TOCTOU issue with the "can be retried" value on
+    builds.
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Sun, 26 May 2024 12:58:38 -0700
+
 ubuntu-dev-tools (0.202) unstable; urgency=medium
 
   [ Steve Langasek ]
