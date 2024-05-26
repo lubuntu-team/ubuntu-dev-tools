@@ -71,7 +71,7 @@ Recommends:
  genisoimage,
  lintian,
  patch,
- pbuilder | cowbuilder | sbuild,
+ sbuild | pbuilder | cowbuilder,
  python3-dns,
  quilt,
  reportbug (>= 3.39ubuntu1),
