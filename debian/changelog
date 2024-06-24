@@ -1,10 +1,14 @@
 ubuntu-dev-tools (0.202ubuntu1) UNRELEASED; urgency=medium
 
+  [ Steve Langasek ]
   * ubuntu-build: handle TOCTOU issue with the "can be retried" value on
     builds.
   * Recommend sbuild over pbuilder.  sbuild is the tool recommended by
     Ubuntu developers whose behavior most closely approximates Launchpad
     builds.
+
+  [ Florent 'Skia' Jacquet ]
+  * import-bug-from-debian: handle multipart message (Closes: #969510)
 
  -- Steve Langasek <steve.langasek@ubuntu.com>  Sun, 26 May 2024 12:58:38 -0700
 
