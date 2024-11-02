@@ -76,6 +76,7 @@ Files: doc/bitesize.1
        doc/check-mir.1
        doc/grab-merge.1
        doc/merge-changelog.1
+       doc/pm-helper.1
        doc/setup-packaging-environment.1
        doc/syncpackage.1
        bitesize
@@ -83,12 +84,14 @@ Files: doc/bitesize.1
        GPL-3
        grab-merge
        merge-changelog
+       pm-helper
        pyproject.toml
        run-linters
        running-autopkgtests
        setup-packaging-environment
        syncpackage
        ubuntutools/running_autopkgtests.py
+       ubuntutools/utils.py
 Copyright: 2010-2024, Benjamin Drung <bdrung@ubuntu.com>
            2007-2024, Canonical Ltd.
            2008,      Jonathan Patrick Davies <jpds@ubuntu.com>
