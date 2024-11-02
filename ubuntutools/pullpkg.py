@@ -464,8 +464,10 @@ class PullPkg:
 
                 Logger.warning(
                     "\nNOTICE: '%s' packaging is maintained in "
-                    "the '%s' version control system at:\n"
-                    " %s\n" % (package, vcs, uri)
+                    "the '%s' version control system at:\n %s\n",
+                    package,
+                    vcs,
+                    uri,
                 )
 
                 if vcs == "Bazaar":
@@ -475,9 +477,9 @@ class PullPkg:
 
                 if vcscmd:
                     Logger.info(
-                        f"Please use:\n{vcscmd}\n"
-                        "to retrieve the latest (possibly unreleased) "
-                        "updates to the package.\n"
+                        "Please use:\n%s\n"
+                        "to retrieve the latest (possibly unreleased) updates to the package.\n",
+                        vcscmd,
                     )
 
         if pull == PULL_LIST:
