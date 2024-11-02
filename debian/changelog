@@ -1,4 +1,4 @@
-ubuntu-dev-tools (0.202ubuntu1) UNRELEASED; urgency=medium
+ubuntu-dev-tools (0.203) unstable; urgency=medium
 
   [ Steve Langasek ]
   * ubuntu-build: handle TOCTOU issue with the "can be retried" value on
@@ -10,7 +10,16 @@ ubuntu-dev-tools (0.202ubuntu1) UNRELEASED; urgency=medium
   [ Florent 'Skia' Jacquet ]
   * import-bug-from-debian: handle multipart message (Closes: #969510)
 
- -- Steve Langasek <steve.langasek@ubuntu.com>  Sun, 26 May 2024 12:58:38 -0700
+  [ Benjamin Drung ]
+  * import-bug-from-debian: add type hints
+  * Bump Standards-Version to 4.7.0
+  * Bump year and add missing files to copyright
+  * setup.py: add pm-helper
+  * Format code with black and isort
+  * Address several issues pointed out by Pylint
+  * Depend on python3-yaml for pm-helper
+
+ -- Benjamin Drung <bdrung@debian.org>  Sat, 02 Nov 2024 18:19:24 +0100
 
 ubuntu-dev-tools (0.202) unstable; urgency=medium
 
