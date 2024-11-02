@@ -29,7 +29,6 @@ import argparse
 import sys
 
 import lazr.restfulclient.errors
-from launchpadlib.credentials import TokenAuthorizationException
 from launchpadlib.launchpad import Launchpad
 
 from ubuntutools import getLogger
@@ -152,8 +151,6 @@ def main():
     args = parser.parse_args()
 
     launchpad = Launchpad.login_with("ubuntu-dev-tools", "production", version="devel")
-    me = launchpad.me
-
     ubuntu = launchpad.distributions["ubuntu"]
 
     if args.batch:
@@ -222,7 +219,7 @@ def main():
                 source_name=package,
                 status="Published",
             )[0]
-        except IndexError as error:
+        except IndexError:
             Logger.error("No publication found for package %s", package)
             sys.exit(1)
         # Get list of builds for that package.
@@ -411,7 +408,7 @@ def main():
                 source_name=pkg,
                 status="Published",
             )[0]
-        except IndexError as error:
+        except IndexError:
             Logger.error("No publication found for package %s", pkg)
             continue
 
