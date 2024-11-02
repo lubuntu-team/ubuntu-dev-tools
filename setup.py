@@ -43,6 +43,7 @@ scripts = [
     "mk-sbuild",
     "pbuilder-dist",
     "pbuilder-dist-simple",
+    "pm-helper",
     "pull-pkg",
     "pull-debian-debdiff",
     "pull-debian-source",
