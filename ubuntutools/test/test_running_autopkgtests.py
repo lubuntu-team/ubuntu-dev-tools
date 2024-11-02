@@ -32,8 +32,17 @@ from ubuntutools.running_autopkgtests import (
 )
 
 # Cached binary response data from autopkgtest server
-RUN_DATA = b'{"pyatem": { "submit-time_2024-01-19 19:37:36;triggers_[\'python3-defaults/3.12.1-0ubuntu1\'];": {"noble": {"arm64": [{"triggers": ["python3-defaults/3.12.1-0ubuntu1"], "submit-time": "2024-01-19 19:37:36"}, 380, "<omitted log>"]}}}}'
-QUEUED_DATA = b'{"ubuntu": {"noble": {"arm64": ["libobject-accessor-perl {\\"requester\\": \\"someone\\", \\"submit-time\\": \\"2024-01-18 01:08:55\\", \\"triggers\\": [\\"perl/5.38.2-3\\", \\"liblocale-gettext-perl/1.07-6build1\\"]}"]}}}'
+RUN_DATA = (
+    b'{"pyatem": {'
+    b" \"submit-time_2024-01-19 19:37:36;triggers_['python3-defaults/3.12.1-0ubuntu1'];\":"
+    b' {"noble": {"arm64": [{"triggers": ["python3-defaults/3.12.1-0ubuntu1"],'
+    b' "submit-time": "2024-01-19 19:37:36"}, 380, "<omitted log>"]}}}}'
+)
+QUEUED_DATA = (
+    b'{"ubuntu": {"noble": {"arm64": ["libobject-accessor-perl {\\"requester\\": \\"someone\\",'
+    b' \\"submit-time\\": \\"2024-01-18 01:08:55\\",'
+    b' \\"triggers\\": [\\"perl/5.38.2-3\\", \\"liblocale-gettext-perl/1.07-6build1\\"]}"]}}}'
+)
 
 # Expected result(s) of parsing the above JSON data
 RUNNING_JOB = {
@@ -57,7 +66,9 @@ QUEUED_JOB = {
     "ubuntu": {
         "noble": {
             "arm64": [
-                'libobject-accessor-perl {"requester": "someone", "submit-time": "2024-01-18 01:08:55", "triggers": ["perl/5.38.2-3", "liblocale-gettext-perl/1.07-6build1"]}',
+                'libobject-accessor-perl {"requester": "someone",'
+                ' "submit-time": "2024-01-18 01:08:55",'
+                ' "triggers": ["perl/5.38.2-3", "liblocale-gettext-perl/1.07-6build1"]}'
             ]
         }
     }
@@ -68,9 +79,18 @@ PRIVATE_JOB = {"ppa": {"noble": {"arm64": ["private job"]}}}
 
 
 # Expected textual output of the program based on the above data
-RUNNING_OUTPUT = "R     0:06:20 pyatem                         -          noble    arm64    -                               python3-defaults/3.12.1-0ubuntu1 -\n"
-QUEUED_OUTPUT = "Q0001   -:-- libobject-accessor-perl        ubuntu     noble    arm64    -                               perl/5.38.2-3,liblocale-gettext-perl/1.07-6build1\n"
-PRIVATE_OUTPUT = "Q0001   -:-- private job                    ppa        noble    arm64    private job                     private job\n"
+RUNNING_OUTPUT = (
+    "R     0:06:20 pyatem                         -          noble    arm64"
+    "    -                               python3-defaults/3.12.1-0ubuntu1 -\n"
+)
+QUEUED_OUTPUT = (
+    "Q0001   -:-- libobject-accessor-perl        ubuntu     noble    arm64"
+    "    -                               perl/5.38.2-3,liblocale-gettext-perl/1.07-6build1\n"
+)
+PRIVATE_OUTPUT = (
+    "Q0001   -:-- private job                    ppa        noble    arm64"
+    "    private job                     private job\n"
+)
 
 
 class RunningAutopkgtestTestCase(unittest.TestCase):

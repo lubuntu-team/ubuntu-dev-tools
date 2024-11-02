@@ -23,7 +23,12 @@
 __example__ = """
 Display first listed test running on amd64 hardware:
   $ running-autopkgtests | grep amd64 | head -n1
-  R     0:01:40 systemd-upstream               -          focal    amd64    upstream-systemd-ci/systemd-ci  - ['CFLAGS=-O0', 'DEB_BUILD_PROFILES=noudeb', 'TEST_UPSTREAM=1', 'CONFFLAGS_UPSTREAM=--werror -Dslow-tests=true', 'UPSTREAM_PULL_REQUEST=23153', 'GITHUB_STATUSES_URL=https://api.github.com/repos/systemd/systemd/statuses/cfb0935923dff8050315b5dd22ce8ab06461ff0e']
+  R     0:01:40 systemd-upstream               -          focal    amd64\
+    upstream-systemd-ci/systemd-ci  - ['CFLAGS=-O0', 'DEB_BUILD_PROFILES=noudeb',\
+ 'TEST_UPSTREAM=1', 'CONFFLAGS_UPSTREAM=--werror -Dslow-tests=true',\
+ 'UPSTREAM_PULL_REQUEST=23153',\
+ 'GITHUB_STATUSES_URL=https://api.github.com/repos/\
+systemd/systemd/statuses/cfb0935923dff8050315b5dd22ce8ab06461ff0e']
 """
 
 import sys
@@ -46,16 +51,10 @@ def parse_args():
         formatter_class=RawDescriptionHelpFormatter,
     )
     parser.add_argument(
-        "-r",
-        "--running",
-        action="store_true",
-        help="Print runnning autopkgtests (default: true)",
+        "-r", "--running", action="store_true", help="Print runnning autopkgtests (default: true)"
     )
     parser.add_argument(
-        "-q",
-        "--queued",
-        action="store_true",
-        help="Print queued autopkgtests (default: true)",
+        "-q", "--queued", action="store_true", help="Print queued autopkgtests (default: true)"
     )
 
     options = parser.parse_args()

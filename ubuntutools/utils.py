@@ -15,47 +15,44 @@
 
 """Portions of archive related code that is re-used by various tools."""
 
-from datetime import datetime
 import os
 import re
 import urllib.request
+from datetime import datetime
 
 import dateutil.parser
 from dateutil.tz import tzutc
 
 
 def get_cache_dir():
-    cache_dir = os.environ.get('XDG_CACHE_HOME',
-                               os.path.expanduser(os.path.join('~', '.cache')))
-    uat_cache = os.path.join(cache_dir, 'ubuntu-archive-tools')
+    cache_dir = os.environ.get("XDG_CACHE_HOME", os.path.expanduser(os.path.join("~", ".cache")))
+    uat_cache = os.path.join(cache_dir, "ubuntu-archive-tools")
     os.makedirs(uat_cache, exist_ok=True)
     return uat_cache
 
 
 def get_url(url, force_cached):
-    ''' Return file to the URL, possibly caching it
-    '''
+    """Return file to the URL, possibly caching it"""
     cache_file = None
 
     # ignore bileto urls wrt caching, they're usually too small to matter
     # and we don't do proper cache expiry
-    m = re.search('ubuntu-archive-team.ubuntu.com/proposed-migration/'
-                  '([^/]*)/([^/]*)',
-                  url)
+    m = re.search("ubuntu-archive-team.ubuntu.com/proposed-migration/([^/]*)/([^/]*)", url)
     if m:
         cache_dir = get_cache_dir()
-        cache_file = os.path.join(cache_dir, '%s_%s' % (m.group(1), m.group(2)))
+        cache_file = os.path.join(cache_dir, "%s_%s" % (m.group(1), m.group(2)))
     else:
         # test logs can be cached, too
         m = re.search(
-            'https://autopkgtest.ubuntu.com/results/autopkgtest-[^/]*/([^/]*)/([^/]*)'
-            '/[a-z0-9]*/([^/]*)/([_a-f0-9]*)@/log.gz',
-            url)
+            "https://autopkgtest.ubuntu.com/results/autopkgtest-[^/]*/([^/]*)/([^/]*)"
+            "/[a-z0-9]*/([^/]*)/([_a-f0-9]*)@/log.gz",
+            url,
+        )
         if m:
             cache_dir = get_cache_dir()
             cache_file = os.path.join(
-                cache_dir, '%s_%s_%s_%s.gz' % (
-                    m.group(1), m.group(2), m.group(3), m.group(4)))
+                cache_dir, "%s_%s_%s_%s.gz" % (m.group(1), m.group(2), m.group(3), m.group(4))
+            )
 
     if cache_file:
         try:
@@ -65,18 +62,18 @@ def get_url(url, force_cached):
         prev_timestamp = datetime.fromtimestamp(prev_mtime, tz=tzutc())
         new_timestamp = datetime.now(tz=tzutc()).timestamp()
         if force_cached:
-            return open(cache_file, 'rb')
+            return open(cache_file, "rb")
 
     f = urllib.request.urlopen(url)
 
     if cache_file:
-        remote_ts = dateutil.parser.parse(f.headers['last-modified'])
+        remote_ts = dateutil.parser.parse(f.headers["last-modified"])
         if remote_ts > prev_timestamp:
-            with open('%s.new' % cache_file, 'wb') as new_cache:
+            with open("%s.new" % cache_file, "wb") as new_cache:
                 for line in f:
                     new_cache.write(line)
-            os.rename('%s.new' % cache_file, cache_file)
+            os.rename("%s.new" % cache_file, cache_file)
             os.utime(cache_file, times=(new_timestamp, new_timestamp))
         f.close()
-        f = open(cache_file, 'rb')
+        f = open(cache_file, "rb")
     return f

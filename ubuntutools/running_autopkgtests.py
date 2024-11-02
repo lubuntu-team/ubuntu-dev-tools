@@ -26,10 +26,7 @@ URL_QUEUED = "http://autopkgtest.ubuntu.com/queues.json"
 
 
 def _get_jobs(url: str) -> dict:
-    request = urllib.request.Request(
-        url,
-        headers={"Cache-Control": "max-age-0"},
-    )
+    request = urllib.request.Request(url, headers={"Cache-Control": "max-age-0"})
     with urllib.request.urlopen(request) as response:
         data = response.read()
         jobs = json.loads(data.decode("utf-8"))
@@ -52,7 +49,10 @@ def get_running():
                     env = jobinfo[0].get("env", "-")
                     time = str(datetime.timedelta(seconds=jobinfo[1]))
                     try:
-                        line = f"R     {time:6} {pkg:30} {'-':10} {series:8} {arch:8} {ppas:31} {triggers} {env}\n"
+                        line = (
+                            f"R     {time:6} {pkg:30} {'-':10} {series:8} {arch:8}"
+                            f" {ppas:31} {triggers} {env}\n"
+                        )
                         running.append((jobinfo[1], line))
                     except BrokenPipeError:
                         sys.exit(1)
@@ -86,7 +86,10 @@ def get_queued():
 
                     n = n + 1
                     try:
-                        output += f"Q{n:04d} {'-:--':>6} {pkg:30} {origin:10} {series:8} {arch:8} {ppas:31} {triggers}\n"
+                        output += (
+                            f"Q{n:04d} {'-:--':>6} {pkg:30} {origin:10} {series:8} {arch:8}"
+                            f" {ppas:31} {triggers}\n"
+                        )
                     except BrokenPipeError:
                         sys.exit(1)
     return output

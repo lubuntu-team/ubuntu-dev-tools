@@ -15,32 +15,30 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import lzma
-from argparse import ArgumentParser
 import sys
 import webbrowser
-import yaml
+from argparse import ArgumentParser
 
+import yaml
 from launchpadlib.launchpad import Launchpad
 
 from ubuntutools.utils import get_url
 
-
 # proposed-migration is only concerned with the devel series; unlike other
 # tools, don't make this configurable
-excuses_url = 'https://ubuntu-archive-team.ubuntu.com/proposed-migration/' \
-              + 'update_excuses.yaml.xz'
+excuses_url = "https://ubuntu-archive-team.ubuntu.com/proposed-migration/update_excuses.yaml.xz"
 
 
 def get_proposed_version(excuses, package):
-    for k in excuses['sources']:
-        if k['source'] == package:
-            return k.get('new-version')
+    for k in excuses["sources"]:
+        if k["source"] == package:
+            return k.get("new-version")
     return None
 
 
 def claim_excuses_bug(launchpad, bug, package):
     print("LP: #%d: %s" % (bug.id, bug.title))
-    ubuntu = launchpad.distributions['ubuntu']
+    ubuntu = launchpad.distributions["ubuntu"]
     series = ubuntu.current_series.fullseriesname
 
     for task in bug.bug_tasks:
@@ -58,10 +56,10 @@ def claim_excuses_bug(launchpad, bug, package):
     elif our_task.assignee:
         print("Currently assigned to %s" % our_task.assignee.name)
 
-    print('''Do you want to claim this bug? [yN] ''', end="")
+    print("""Do you want to claim this bug? [yN] """, end="")
     sys.stdout.flush()
     response = sys.stdin.readline()
-    if response.strip().lower().startswith('y'):
+    if response.strip().lower().startswith("y"):
         our_task.assignee = launchpad.me
         our_task.lp_save()
         return True
@@ -72,10 +70,10 @@ def claim_excuses_bug(launchpad, bug, package):
 def create_excuses_bug(launchpad, package, version):
     print("Will open a new bug")
     bug = launchpad.bugs.createBug(
-        title = 'proposed-migration for %s %s' % (package, version),
-        tags = ('update-excuse'),
-        target = 'https://api.launchpad.net/devel/ubuntu/+source/%s' % package,
-        description = '%s %s is stuck in -proposed.' % (package, version)
+        title="proposed-migration for %s %s" % (package, version),
+        tags=("update-excuse"),
+        target="https://api.launchpad.net/devel/ubuntu/+source/%s" % package,
+        description="%s %s is stuck in -proposed." % (package, version),
     )
 
     task = bug.bug_tasks[0]
@@ -88,12 +86,12 @@ def create_excuses_bug(launchpad, package, version):
 
 
 def has_excuses_bugs(launchpad, package):
-    ubuntu = launchpad.distributions['ubuntu']
+    ubuntu = launchpad.distributions["ubuntu"]
     pkg = ubuntu.getSourcePackage(name=package)
     if not pkg:
         raise ValueError(f"No such source package: {package}")
 
-    tasks = pkg.searchTasks(tags=['update-excuse'], order_by=['id'])
+    tasks = pkg.searchTasks(tags=["update-excuse"], order_by=["id"])
 
     bugs = [task.bug for task in tasks]
     if not bugs:
@@ -102,8 +100,7 @@ def has_excuses_bugs(launchpad, package):
     if len(bugs) == 1:
         print("There is 1 open update-excuse bug against %s" % package)
     else:
-        print("There are %d open update-excuse bugs against %s" \
-              % (len(bugs), package))
+        print("There are %d open update-excuse bugs against %s" % (len(bugs), package))
 
     for bug in bugs:
         if claim_excuses_bug(launchpad, bug, package):
@@ -114,17 +111,14 @@ def has_excuses_bugs(launchpad, package):
 
 def main():
     parser = ArgumentParser()
+    parser.add_argument("-l", "--launchpad", dest="launchpad_instance", default="production")
     parser.add_argument(
-        "-l", "--launchpad", dest="launchpad_instance", default="production")
-    parser.add_argument(
-        "-v", "--verbose", default=False, action="store_true",
-        help="be more verbose")
-    parser.add_argument(
-        'package', nargs='?', help="act on this package only")
+        "-v", "--verbose", default=False, action="store_true", help="be more verbose"
+    )
+    parser.add_argument("package", nargs="?", help="act on this package only")
     args = parser.parse_args()
 
-    args.launchpad = Launchpad.login_with(
-        "pm-helper", args.launchpad_instance, version="devel")
+    args.launchpad = Launchpad.login_with("pm-helper", args.launchpad_instance, version="devel")
 
     f = get_url(excuses_url, False)
     with lzma.open(f) as lzma_f:
@@ -137,13 +131,12 @@ def main():
                 if not proposed_version:
                     print("Package %s not found in -proposed." % args.package)
                     sys.exit(1)
-                create_excuses_bug(args.launchpad, args.package,
-                                   proposed_version)
+                create_excuses_bug(args.launchpad, args.package, proposed_version)
         except ValueError as e:
             sys.stderr.write(f"{e}\n")
     else:
-        pass # for now
+        pass  # for now
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

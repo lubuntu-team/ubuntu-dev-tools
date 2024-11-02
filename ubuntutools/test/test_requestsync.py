@@ -30,6 +30,4 @@ class BinaryTests(unittest.TestCase):
         try:
             import keyring  # noqa: F401
         except ModuleNotFoundError:
-            raise ModuleNotFoundError(
-                "package python3-keyring is not installed"
-            )
+            raise ModuleNotFoundError("package python3-keyring is not installed")

@@ -28,9 +28,9 @@
 import argparse
 import sys
 
+import lazr.restfulclient.errors
 from launchpadlib.credentials import TokenAuthorizationException
 from launchpadlib.launchpad import Launchpad
-import lazr.restfulclient.errors
 
 from ubuntutools import getLogger
 from ubuntutools.lp.udtexceptions import PocketDoesNotExistError
@@ -48,6 +48,7 @@ def getBuildStates(pkg, archs):
     msg = "\n".join(res)
     return f"Build state(s) for '{pkg.source_package_name}':\n{msg}"
 
+
 def rescoreBuilds(pkg, archs, score):
     res = []
 
@@ -61,16 +62,17 @@ def rescoreBuilds(pkg, archs, score):
                 res.append(f"  {arch}: done")
             except lazr.restfulclient.errors.Unauthorized:
                 Logger.error(
-                    "You don't have the permissions to rescore builds. Ignoring your rescore request."
+                    "You don't have the permissions to rescore builds."
+                    " Ignoring your rescore request."
                 )
                 return None
             except lazr.restfulclient.errors.BadRequest:
-                Logger.info("Cannot rescore build of %s on %s.",
-                    build.source_package_name, arch)
+                Logger.info("Cannot rescore build of %s on %s.", build.source_package_name, arch)
                 res.append(f"  {arch}: failed")
 
     msg = "\n".join(res)
     return f"Rescoring builds of '{pkg.source_package_name}' to {score}:\n{msg}"
+
 
 def retryBuilds(pkg, archs):
     res = []
@@ -94,16 +96,7 @@ def main():
 
     # Valid architectures.
     valid_archs = set(
-        [
-            "armhf",
-            "arm64",
-            "amd64",
-            "i386",
-            "powerpc",
-            "ppc64el",
-            "riscv64",
-            "s390x",
-        ]
+        ["armhf", "arm64", "amd64", "i386", "powerpc", "ppc64el", "riscv64", "s390x"]
     )
 
     # Prepare our option parser.
@@ -118,8 +111,7 @@ def main():
         f"include: {', '.join(valid_archs)}.",
     )
 
-    parser.add_argument("-A", "--archive", help="operate on ARCHIVE",
-                        default="ubuntu")
+    parser.add_argument("-A", "--archive", help="operate on ARCHIVE", default="ubuntu")
 
     # Batch processing options
     batch_options = parser.add_argument_group(
@@ -148,7 +140,9 @@ def main():
         help="Rescore builds to <priority>.",
     )
     batch_options.add_argument(
-        "--state", action="store", dest="state",
+        "--state",
+        action="store",
+        dest="state",
         help="Act on builds that are in the specified state",
     )
 
@@ -157,11 +151,10 @@ def main():
     # Parse our options.
     args = parser.parse_args()
 
-    launchpad = Launchpad.login_with("ubuntu-dev-tools", "production",
-                                     version="devel")
+    launchpad = Launchpad.login_with("ubuntu-dev-tools", "production", version="devel")
     me = launchpad.me
 
-    ubuntu = launchpad.distributions['ubuntu']
+    ubuntu = launchpad.distributions["ubuntu"]
 
     if args.batch:
         release = args.series
@@ -169,7 +162,7 @@ def main():
             # ppas don't have a proposed pocket so just use the release pocket;
             # but for the main archive we default to -proposed
             release = ubuntu.getDevelopmentSeries()[0].name
-            if args.archive == 'ubuntu':
+            if args.archive == "ubuntu":
                 release = release + "-proposed"
         try:
             (release, pocket) = split_release_pocket(release)
@@ -223,11 +216,12 @@ def main():
         # Get list of published sources for package in question.
         try:
             sources = archive.getPublishedSources(
-                          distro_series=distroseries,
-                          exact_match=True,
-                          pocket=pocket,
-                          source_name=package,
-                          status='Published')[0]
+                distro_series=distroseries,
+                exact_match=True,
+                pocket=pocket,
+                source_name=package,
+                status="Published",
+            )[0]
         except IndexError as error:
             Logger.error("No publication found for package %s", package)
             sys.exit(1)
@@ -243,11 +237,11 @@ def main():
         # are in place.
         if operation == "retry":
             necessary_privs = archive.checkUpload(
-                    component=sources.getComponent(),
-                    distroseries=distroseries,
-                    person=launchpad.me,
-                    pocket=pocket,
-                    sourcepackagename=sources.getPackageName(),
+                component=sources.getComponent(),
+                distroseries=distroseries,
+                person=launchpad.me,
+                pocket=pocket,
+                sourcepackagename=sources.getPackageName(),
             )
 
         if operation == "retry" and not necessary_privs:
@@ -288,7 +282,8 @@ def main():
                         build.rescore(score=priority)
                     except lazr.restfulclient.errors.Unauthorized:
                         Logger.error(
-                            "You don't have the permissions to rescore builds. Ignoring your rescore request."
+                            "You don't have the permissions to rescore builds."
+                            " Ignoring your rescore request."
                         )
                         break
                 else:
@@ -325,24 +320,22 @@ def main():
 
         if not args.state:
             if args.retry:
-                args.state='Failed to build'
+                args.state = "Failed to build"
             elif args.priority:
-                args.state='Needs building'
+                args.state = "Needs building"
         # there is no equivalent to series.getBuildRecords() for a ppa.
         # however, we don't want to have to traverse all build records for
         # all series when working on the main archive, so we use
         # series.getBuildRecords() for ubuntu and handle ppas separately
         series = ubuntu.getSeries(name_or_version=release)
-        if args.archive == 'ubuntu':
-            builds = series.getBuildRecords(build_state=args.state,
-                                            pocket=pocket)
+        if args.archive == "ubuntu":
+            builds = series.getBuildRecords(build_state=args.state, pocket=pocket)
         else:
             builds = []
-            for build in archive.getBuildRecords(build_state=args.state,
-                                                 pocket=pocket):
+            for build in archive.getBuildRecords(build_state=args.state, pocket=pocket):
                 if not build.current_source_publication:
                     continue
-                if build.current_source_publication.distro_series==series:
+                if build.current_source_publication.distro_series == series:
                     builds.append(build)
         for build in builds:
             if build.arch_tag not in archs:
@@ -361,28 +354,31 @@ def main():
             )
             if args.retry and not can_retry:
                 Logger.error(
-                    "You don't have the permissions to retry the "
-                    "build of '%s', skipping.",
-                    build.source_package_name
+                    "You don't have the permissions to retry the build of '%s', skipping.",
+                    build.source_package_name,
                 )
                 continue
             Logger.info(
                 "The source version for '%s' in '%s' (%s) is: %s",
-                 build.source_package_name,
-                 release,
-                 pocket,
-                 build.source_package_version
+                build.source_package_name,
+                release,
+                pocket,
+                build.source_package_version,
             )
 
             if args.retry and build.can_be_retried:
-                Logger.info("Retrying build of %s on %s...",
-                            build.source_package_name, build.arch_tag)
+                Logger.info(
+                    "Retrying build of %s on %s...", build.source_package_name, build.arch_tag
+                )
                 try:
                     build.retry()
                     retry_count += 1
                 except lazr.restfulclient.errors.BadRequest:
-                    Logger.info("Failed to retry build of %s on %s",
-                                build.source_package_name, build.arch_tag)
+                    Logger.info(
+                        "Failed to retry build of %s on %s",
+                        build.source_package_name,
+                        build.arch_tag,
+                    )
 
             if args.priority and can_rescore:
                 if build.can_be_rescored:
@@ -390,27 +386,31 @@ def main():
                         build.rescore(score=args.priority)
                     except lazr.restfulclient.errors.Unauthorized:
                         Logger.error(
-                            "You don't have the permissions to rescore builds. Ignoring your rescore request."
+                            "You don't have the permissions to rescore builds."
+                            " Ignoring your rescore request."
                         )
                         can_rescore = False
                     except lazr.restfulclient.errors.BadRequest:
-                        Logger.info("Cannot rescore build of %s on %s.",
-                            build.source_package_name, build.arch_tag)
+                        Logger.info(
+                            "Cannot rescore build of %s on %s.",
+                            build.source_package_name,
+                            build.arch_tag,
+                        )
 
             Logger.info("")
         if args.retry:
             Logger.info("%d package builds retried", retry_count)
         sys.exit(0)
 
-
     for pkg in args.packages:
         try:
             pkg = archive.getPublishedSources(
-                          distro_series=distroseries,
-                          exact_match=True,
-                          pocket=pocket,
-                          source_name=pkg,
-                          status='Published')[0]
+                distro_series=distroseries,
+                exact_match=True,
+                pocket=pocket,
+                source_name=pkg,
+                status="Published",
+            )[0]
         except IndexError as error:
             Logger.error("No publication found for package %s", pkg)
             continue
@@ -450,4 +450,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

@@ -294,7 +294,9 @@ class PbuilderDist:
 
         if self.target_distro in self._debian_distros:
             try:
-                codename = self.debian_distro_info.codename(self.target_distro, default=self.target_distro)
+                codename = self.debian_distro_info.codename(
+                    self.target_distro, default=self.target_distro
+                )
             except DistroDataOutdated as error:
                 Logger.warning(error)
             if codename in (self.debian_distro_info.devel(), "experimental"):
