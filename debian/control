@@ -31,6 +31,7 @@ Build-Depends:
  python3-pytest,
  python3-requests <!nocheck>,
  python3-setuptools,
+ python3-yaml <!nocheck>,
 Standards-Version: 4.7.0
 Rules-Requires-Root: no
 Vcs-Git: https://git.launchpad.net/ubuntu-dev-tools
@@ -57,6 +58,7 @@ Depends:
  python3-launchpadlib-desktop,
  python3-lazr.restfulclient,
  python3-ubuntutools (= ${binary:Version}),
+ python3-yaml,
  sensible-utils,
  sudo,
  tzdata,
