@@ -31,9 +31,9 @@ class Question:
 
     def get_options(self):
         if len(self.options) == 2:
-            options = self.options[0] + " or " + self.options[1]
+            options = f"{self.options[0]} or {self.options[1]}"
         else:
-            options = ", ".join(self.options[:-1]) + ", or " + self.options[-1]
+            options = f"{', '.join(self.options[:-1])}, or {self.options[-1]}"
         return options
 
     def ask(self, question, default=None):
@@ -67,7 +67,7 @@ class Question:
                     if selected == option[0]:
                         selected = option
             if selected not in self.options:
-                print("Please answer the question with " + self.get_options() + ".")
+                print(f"Please answer the question with {self.get_options()}.")
         return selected
 
 
@@ -170,7 +170,7 @@ class EditBugReport(EditFile):
     split_re = re.compile(r"^Summary.*?:\s+(.*?)\s+Description:\s+(.*)$", re.DOTALL | re.UNICODE)
 
     def __init__(self, subject, body, placeholders=None):
-        prefix = os.path.basename(sys.argv[0]) + "_"
+        prefix = f"{os.path.basename(sys.argv[0])}_"
         tmpfile = tempfile.NamedTemporaryFile(prefix=prefix, suffix=".txt", delete=False)
         tmpfile.write((f"Summary (one line):\n{subject}\n\nDescription:\n{body}").encode("utf-8"))
         tmpfile.close()

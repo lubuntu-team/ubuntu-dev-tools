@@ -255,7 +255,7 @@ class SourcePackage:
     def _changes_file(self):
         """Returns the file name of the .changes file."""
         return os.path.join(
-            self._workdir, f"{self._package}_{ strip_epoch(self._version)}_source.changes"
+            self._workdir, f"{self._package}_{strip_epoch(self._version)}_source.changes"
         )
 
     def check_target(self, upload, launchpad):

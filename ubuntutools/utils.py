@@ -40,7 +40,7 @@ def get_url(url, force_cached):
     m = re.search("ubuntu-archive-team.ubuntu.com/proposed-migration/([^/]*)/([^/]*)", url)
     if m:
         cache_dir = get_cache_dir()
-        cache_file = os.path.join(cache_dir, "%s_%s" % (m.group(1), m.group(2)))
+        cache_file = os.path.join(cache_dir, f"{m.group(1)}_{m.group(2)}")
     else:
         # test logs can be cached, too
         m = re.search(
@@ -51,7 +51,7 @@ def get_url(url, force_cached):
         if m:
             cache_dir = get_cache_dir()
             cache_file = os.path.join(
-                cache_dir, "%s_%s_%s_%s.gz" % (m.group(1), m.group(2), m.group(3), m.group(4))
+                cache_dir, f"{m.group(1)}_{m.group(2)}_{m.group(3)}_{m.group(4)}.gz"
             )
 
     if cache_file:
@@ -69,10 +69,10 @@ def get_url(url, force_cached):
     if cache_file:
         remote_ts = dateutil.parser.parse(f.headers["last-modified"])
         if remote_ts > prev_timestamp:
-            with open("%s.new" % cache_file, "wb") as new_cache:
+            with open(f"{cache_file}.new", "wb") as new_cache:
                 for line in f:
                     new_cache.write(line)
-            os.rename("%s.new" % cache_file, cache_file)
+            os.rename(f"{cache_file}.new", cache_file)
             os.utime(cache_file, times=(new_timestamp, new_timestamp))
         f.close()
         f = open(cache_file, "rb")

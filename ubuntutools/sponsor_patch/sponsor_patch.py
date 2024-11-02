@@ -39,7 +39,7 @@ def is_command_available(command, check_sbin=False):
     "Is command in $PATH?"
     path = os.environ.get("PATH", "/usr/bin:/bin").split(":")
     if check_sbin:
-        path += [directory[:-3] + "sbin" for directory in path if directory.endswith("/bin")]
+        path += [f"{directory[:-3]}sbin" for directory in path if directory.endswith("/bin")]
     return any(os.access(os.path.join(directory, command), os.X_OK) for directory in path)
 
 
@@ -303,7 +303,7 @@ def _download_and_change_into(task, dsc_file, patch, branch):
         extract_source(dsc_file, Logger.isEnabledFor(logging.DEBUG))
 
         # change directory
-        directory = task.package + "-" + task.get_version().upstream_version
+        directory = f"{task.package}-{task.get_version().upstream_version}"
         Logger.debug("cd %s", directory)
         os.chdir(directory)
 

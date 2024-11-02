@@ -72,17 +72,17 @@ class Control:
     def set_maintainer(self, maintainer):
         """Sets the value of the Maintainer field."""
         pattern = re.compile("^Maintainer: ?.*$", re.MULTILINE)
-        self._content = pattern.sub("Maintainer: " + maintainer, self._content)
+        self._content = pattern.sub(f"Maintainer: {maintainer}", self._content)
 
     def set_original_maintainer(self, original_maintainer):
         """Sets the value of the XSBC-Original-Maintainer field."""
-        original_maintainer = "XSBC-Original-Maintainer: " + original_maintainer
+        original_maintainer = f"XSBC-Original-Maintainer: {original_maintainer}"
         if self.get_original_maintainer():
             pattern = re.compile("^(?:[XSBC]*-)?Original-Maintainer:.*$", re.MULTILINE)
             self._content = pattern.sub(original_maintainer, self._content)
         else:
             pattern = re.compile("^(Maintainer:.*)$", re.MULTILINE)
-            self._content = pattern.sub(r"\1\n" + original_maintainer, self._content)
+            self._content = pattern.sub(f"\\1\\n{original_maintainer}", self._content)
 
     def remove_original_maintainer(self):
         """Strip out out the XSBC-Original-Maintainer line"""

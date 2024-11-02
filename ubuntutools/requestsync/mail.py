@@ -183,7 +183,7 @@ Content-Type: text/plain; charset=UTF-8
     backup = tempfile.NamedTemporaryFile(
         mode="w",
         delete=False,
-        prefix="requestsync-" + re.sub(r"[^a-zA-Z0-9_-]", "", bugtitle.replace(" ", "_")),
+        prefix=f"requestsync-{re.sub('[^a-zA-Z0-9_-]', '', bugtitle.replace(' ', '_'))}",
     )
     with backup:
         backup.write(mail)

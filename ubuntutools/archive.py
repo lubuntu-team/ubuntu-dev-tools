@@ -543,7 +543,7 @@ class SourcePackage(ABC):
         Return the debdiff filename.
         """
         cmd = ["debdiff", self.dsc_name, newpkg.dsc_name]
-        difffn = newpkg.dsc_name[:-3] + "debdiff"
+        difffn = f"{newpkg.dsc_name[:-3]}debdiff"
         Logger.debug("%s > %s", " ".join(cmd), difffn)
         with open(difffn, "w", encoding="utf-8") as f:
             if subprocess.call(cmd, stdout=f, cwd=str(self.workdir)) > 2:
@@ -1342,7 +1342,7 @@ class SnapshotSPPH:
                 self.getComponent(),
                 subdir,
                 name,
-                name + "_" + pkgversion,
+                f"{name}_{pkgversion}",
                 "changelog.txt",
             )
             try:

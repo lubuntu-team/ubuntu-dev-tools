@@ -71,8 +71,8 @@ class Pbuilder(Builder):
         cmd = [
             "sudo",
             "-E",
-            "ARCH=" + self.architecture,
-            "DIST=" + dist,
+            f"ARCH={self.architecture}",
+            f"DIST={dist}",
             self.name,
             "--build",
             "--architecture",
@@ -91,8 +91,8 @@ class Pbuilder(Builder):
         cmd = [
             "sudo",
             "-E",
-            "ARCH=" + self.architecture,
-            "DIST=" + dist,
+            f"ARCH={self.architecture}",
+            f"DIST={dist}",
             self.name,
             "--update",
             "--architecture",
@@ -140,7 +140,7 @@ class Sbuild(Builder):
         workdir = os.getcwd()
         Logger.debug("cd %s", result_directory)
         os.chdir(result_directory)
-        cmd = ["sbuild", "--arch-all", "--dist=" + dist, "--arch=" + self.architecture, dsc_file]
+        cmd = ["sbuild", "--arch-all", f"--dist={dist}", f"--arch={self.architecture}", dsc_file]
         Logger.debug(" ".join(cmd))
         returncode = subprocess.call(cmd)
         Logger.debug("cd %s", workdir)

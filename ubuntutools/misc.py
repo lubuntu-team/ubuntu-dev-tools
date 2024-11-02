@@ -385,7 +385,7 @@ class _StderrProgressBar:
         pctstr = f"{pct:>3}%"
         barlen = self.width * pct // 100
         barstr = "=" * barlen
-        barstr = barstr[:-1] + ">"
+        barstr = f"{barstr[:-1]}>"
         barstr = barstr.ljust(self.width)
         fullstr = f"\r[{barstr}]{pctstr}"
         sys.stderr.write(fullstr)

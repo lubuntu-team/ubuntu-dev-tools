@@ -163,7 +163,7 @@ def main():
             # but for the main archive we default to -proposed
             release = ubuntu.getDevelopmentSeries()[0].name
             if args.archive == "ubuntu":
-                release = release + "-proposed"
+                release = f"{release}-proposed"
         try:
             (release, pocket) = split_release_pocket(release)
         except PocketDoesNotExistError as error:

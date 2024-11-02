@@ -99,9 +99,9 @@ class UDTConfig:
         if default is None and key in self.defaults:
             default = self.defaults[key]
 
-        keys = [self.prefix + "_" + key]
+        keys = [f"{self.prefix}_{key}"]
         if key in self.defaults:
-            keys.append("UBUNTUTOOLS_" + key)
+            keys.append(f"UBUNTUTOOLS_{key}")
         keys += compat_keys
 
         for k in keys:
@@ -114,9 +114,9 @@ class UDTConfig:
                         else:
                             continue
                     if k in compat_keys:
-                        replacements = self.prefix + "_" + key
+                        replacements = f"{self.prefix}_{key}"
                         if key in self.defaults:
-                            replacements += "or UBUNTUTOOLS_" + key
+                            replacements += f"or UBUNTUTOOLS_{key}"
                         Logger.warning(
                             "Using deprecated configuration variable %s. You should use %s.",
                             k,
@@ -180,7 +180,7 @@ def ubu_email(name=None, email=None, export=True):
         mailname = socket.getfqdn()
         if os.path.isfile("/etc/mailname"):
             mailname = open("/etc/mailname", "r", encoding="utf-8").read().strip()
-        email = pwd.getpwuid(os.getuid()).pw_name + "@" + mailname
+        email = f"{pwd.getpwuid(os.getuid()).pw_name}@{mailname}"
 
     if export:
         os.environ["DEBFULLNAME"] = name

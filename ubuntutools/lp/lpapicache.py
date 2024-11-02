@@ -883,7 +883,7 @@ class SourcePackagePublishingHistory(BaseWrapper):
         """
         release = self.getSeriesName()
         if self.pocket != "Release":
-            release += "-" + self.pocket.lower()
+            release += f"-{self.pocket.lower()}"
         return release
 
     def getArchive(self):

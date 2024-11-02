@@ -37,24 +37,24 @@ def get_proposed_version(excuses, package):
 
 
 def claim_excuses_bug(launchpad, bug, package):
-    print("LP: #%d: %s" % (bug.id, bug.title))
+    print(f"LP: #{bug.id}: {bug.title}")
     ubuntu = launchpad.distributions["ubuntu"]
     series = ubuntu.current_series.fullseriesname
 
     for task in bug.bug_tasks:
         # targeting to a series doesn't make the default task disappear,
         # it just makes it useless
-        if task.bug_target_name == "%s (%s)" % (package, series):
+        if task.bug_target_name == f"{package} ({series})":
             our_task = task
             break
-        elif task.bug_target_name == "%s (Ubuntu)" % package:
+        elif task.bug_target_name == f"{package} (Ubuntu)":
             our_task = task
 
     if our_task.assignee == launchpad.me:
         print("Bug already assigned to you.")
         return True
     elif our_task.assignee:
-        print("Currently assigned to %s" % our_task.assignee.name)
+        print(f"Currently assigned to {our_task.assignee.name}")
 
     print("""Do you want to claim this bug? [yN] """, end="")
     sys.stdout.flush()
@@ -70,17 +70,17 @@ def claim_excuses_bug(launchpad, bug, package):
 def create_excuses_bug(launchpad, package, version):
     print("Will open a new bug")
     bug = launchpad.bugs.createBug(
-        title="proposed-migration for %s %s" % (package, version),
+        title=f"proposed-migration for {package} {version}",
         tags=("update-excuse"),
-        target="https://api.launchpad.net/devel/ubuntu/+source/%s" % package,
-        description="%s %s is stuck in -proposed." % (package, version),
+        target=f"https://api.launchpad.net/devel/ubuntu/+source/{package}",
+        description=f"{package} {version} is stuck in -proposed.",
     )
 
     task = bug.bug_tasks[0]
     task.assignee = launchpad.me
     task.lp_save()
 
-    print("Opening %s in browser" % bug.web_link)
+    print(f"Opening {bug.web_link} in browser")
     webbrowser.open(bug.web_link)
     return bug
 
@@ -98,9 +98,9 @@ def has_excuses_bugs(launchpad, package):
         return False
 
     if len(bugs) == 1:
-        print("There is 1 open update-excuse bug against %s" % package)
+        print(f"There is 1 open update-excuse bug against {package}")
     else:
-        print("There are %d open update-excuse bugs against %s" % (len(bugs), package))
+        print(f"There are {len(bugs)} open update-excuse bugs against {package}")
 
     for bug in bugs:
         if claim_excuses_bug(launchpad, bug, package):
@@ -129,7 +129,7 @@ def main():
             if not has_excuses_bugs(args.launchpad, args.package):
                 proposed_version = get_proposed_version(excuses, args.package)
                 if not proposed_version:
-                    print("Package %s not found in -proposed." % args.package)
+                    print(f"Package {args.package} not found in -proposed.")
                     sys.exit(1)
                 create_excuses_bug(args.launchpad, args.package, proposed_version)
         except ValueError as e:
