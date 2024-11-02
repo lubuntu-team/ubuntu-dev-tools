@@ -240,15 +240,14 @@ def main():
                 pocket=pocket,
                 sourcepackagename=sources.getPackageName(),
             )
-
-        if operation == "retry" and not necessary_privs:
-            Logger.error(
-                "You cannot perform the %s operation on a %s package as you"
-                " do not have the permissions to do this action.",
-                operation,
-                component,
-            )
-            sys.exit(1)
+            if not necessary_privs:
+                Logger.error(
+                    "You cannot perform the %s operation on a %s package as you"
+                    " do not have the permissions to do this action.",
+                    operation,
+                    component,
+                )
+                sys.exit(1)
 
         # Output details.
         Logger.info(
