@@ -29,6 +29,8 @@ import logging
 import re
 import sys
 import webbrowser
+from collections.abc import Iterable
+from email.message import EmailMessage
 
 import debianbts
 from launchpadlib.launchpad import Launchpad
@@ -40,7 +42,7 @@ Logger = getLogger()
 ATTACHMENT_MAX_SIZE = 2000
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-b",
@@ -73,7 +75,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def get_bug_numbers(bug_list):
+def get_bug_numbers(bug_list: Iterable[str]) -> list[int]:
     bug_re = re.compile(r"bug=(\d+)")
 
     bug_nums = []
@@ -92,7 +94,7 @@ def get_bug_numbers(bug_list):
     return bug_nums
 
 
-def walk_multipart_message(message):
+def walk_multipart_message(message: EmailMessage) -> tuple[str, list[tuple[int, EmailMessage]]]:
     summary = ""
     attachments = []
     i = 1
@@ -135,7 +137,13 @@ Faulty message part:
     return summary, attachments
 
 
-def process_bugs(bugs, launchpad, package, dry_run=True, browserless=False):
+def process_bugs(
+    bugs: Iterable[debianbts.Bugreport],
+    launchpad: Launchpad,
+    package: str,
+    dry_run: bool = True,
+    browserless: bool = False,
+) -> bool:
     debian = launchpad.distributions["debian"]
     ubuntu = launchpad.distributions["ubuntu"]
     lp_debbugs = launchpad.bug_trackers.getByName(name="debbugs")
@@ -149,11 +157,12 @@ def process_bugs(bugs, launchpad, package, dry_run=True, browserless=False):
         subject = bug.subject
         log = debianbts.get_bug_log(bug_num)
         message = log[0]["message"]
-        attachments = []
+        assert isinstance(message, EmailMessage)
+        attachments: list[tuple[int, EmailMessage]] = []
         if message.is_multipart():
             summary, attachments = walk_multipart_message(message)
         else:
-            summary = message.get_payload()
+            summary = str(message.get_payload())
 
         target = ubuntu.getSourcePackage(name=ubupackage)
         if target is None:
@@ -217,7 +226,7 @@ def process_bugs(bugs, launchpad, package, dry_run=True, browserless=False):
     return err
 
 
-def main():
+def main() -> None:
     options = parse_args()
 
     config = UDTConfig(options.no_conf)
