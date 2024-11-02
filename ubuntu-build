@@ -38,7 +38,7 @@ from ubuntutools.misc import split_release_pocket
 Logger = getLogger()
 
 
-def getBuildStates(pkg, archs):
+def get_build_states(pkg, archs):
     res = []
 
     for build in pkg.getBuilds():
@@ -48,7 +48,7 @@ def getBuildStates(pkg, archs):
     return f"Build state(s) for '{pkg.source_package_name}':\n{msg}"
 
 
-def rescoreBuilds(pkg, archs, score):
+def rescore_builds(pkg, archs, score):
     res = []
 
     for build in pkg.getBuilds():
@@ -73,7 +73,7 @@ def rescoreBuilds(pkg, archs, score):
     return f"Rescoring builds of '{pkg.source_package_name}' to {score}:\n{msg}"
 
 
-def retryBuilds(pkg, archs):
+def retry_builds(pkg, archs):
     res = []
     for build in pkg.getBuilds():
         arch = build.arch_tag
@@ -435,11 +435,11 @@ def main():
             pkg.source_package_version,
         )
 
-        Logger.info(getBuildStates(pkg, archs))
+        Logger.info(get_build_states(pkg, archs))
         if can_retry:
-            Logger.info(retryBuilds(pkg, archs))
+            Logger.info(retry_builds(pkg, archs))
         if args.priority:
-            Logger.info(rescoreBuilds(pkg, archs, args.priority))
+            Logger.info(rescore_builds(pkg, archs, args.priority))
 
         Logger.info("")
 
