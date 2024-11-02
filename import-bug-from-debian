@@ -154,7 +154,7 @@ def process_bugs(bugs, launchpad, package, dry_run=True, browserless=False):
         if message.is_multipart():
             summary, attachments = walk_multipart_message(message)
         else:
-            summary = log[0]["message"].get_payload()
+            summary = message.get_payload()
 
         target = ubuntu.getSourcePackage(name=ubupackage)
         if target is None:
