@@ -19,7 +19,7 @@ Files: backportpackage
        ubuntu-iso
        ubuntutools/requestsync/*.py
 Copyright: 2007,      Albert Damen <albrt@gmx.net>
-           2010-2022, Benjamin Drung <bdrung@ubuntu.com>
+           2010-2024, Benjamin Drung <bdrung@ubuntu.com>
            2007-2023, Canonical Ltd.
            2006-2007, Daniel Holbach <daniel.holbach@ubuntu.com>
            2010,      Evan Broder <evan@ebroder.net>
@@ -89,7 +89,7 @@ Files: doc/bitesize.1
        setup-packaging-environment
        syncpackage
        ubuntutools/running_autopkgtests.py
-Copyright: 2010,      Benjamin Drung <bdrung@ubuntu.com>
+Copyright: 2010-2024, Benjamin Drung <bdrung@ubuntu.com>
            2007-2024, Canonical Ltd.
            2008,      Jonathan Patrick Davies <jpds@ubuntu.com>
            2008-2010, Martin Pitt <martin.pitt@canonical.com>
@@ -179,7 +179,7 @@ Files: doc/pull-debian-debdiff.1
        ubuntutools/version.py
        update-maintainer
        .pylintrc
-Copyright: 2009-2023, Benjamin Drung <bdrung@ubuntu.com>
+Copyright: 2009-2024, Benjamin Drung <bdrung@ubuntu.com>
            2010,      Evan Broder <evan@ebroder.net>
            2008,      Siegfried-Angel Gevatter Pujals <rainct@ubuntu.com>
            2010-2011, Stefano Rivera <stefanor@ubuntu.com>
