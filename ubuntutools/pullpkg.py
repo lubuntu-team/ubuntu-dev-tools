@@ -453,7 +453,7 @@ class PullPkg:
             if key.startswith("vcs-"):
                 if key == "vcs-browser":
                     continue
-                elif key == "vcs-git":
+                if key == "vcs-git":
                     vcs = "Git"
                 elif key == "vcs-bzr":
                     vcs = "Bazaar"

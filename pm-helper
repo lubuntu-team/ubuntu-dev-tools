@@ -47,13 +47,13 @@ def claim_excuses_bug(launchpad, bug, package):
         if task.bug_target_name == f"{package} ({series})":
             our_task = task
             break
-        elif task.bug_target_name == f"{package} (Ubuntu)":
+        if task.bug_target_name == f"{package} (Ubuntu)":
             our_task = task
 
     if our_task.assignee == launchpad.me:
         print("Bug already assigned to you.")
         return True
-    elif our_task.assignee:
+    if our_task.assignee:
         print(f"Currently assigned to {our_task.assignee.name}")
 
     print("""Do you want to claim this bug? [yN] """, end="")
