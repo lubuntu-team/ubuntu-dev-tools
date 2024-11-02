@@ -87,8 +87,7 @@ def get_bug_numbers(bug_list):
                 sys.exit(1)
             bug_num = match.groups()[0]
         bug_num = bug_num.lstrip("#")
-        bug_num = int(bug_num)
-        bug_nums.append(bug_num)
+        bug_nums.append(int(bug_num))
 
     return bug_nums
 
