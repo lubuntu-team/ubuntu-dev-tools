@@ -31,7 +31,7 @@ Build-Depends:
  python3-pytest,
  python3-requests <!nocheck>,
  python3-setuptools,
-Standards-Version: 4.6.2
+Standards-Version: 4.7.0
 Rules-Requires-Root: no
 Vcs-Git: https://git.launchpad.net/ubuntu-dev-tools
 Vcs-Browser: https://git.launchpad.net/ubuntu-dev-tools
