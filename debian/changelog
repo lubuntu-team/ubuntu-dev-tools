@@ -1,6 +1,11 @@
 ubuntu-dev-tools (0.204) UNRELEASED; urgency=medium
 
+  [ Simon Quigley ]
   * Update Standards-Version to 4.7.1, no changes needed.
+
+  [ Julien Plissonneau Duquène ]
+  * Fix reverse-depends -b crash on packages that b-d on themselves
+    (Closes: #1087760).
 
  -- Simon Quigley <tsimonq2@debian.org>  Mon, 24 Feb 2025 18:26:09 -0600
 
