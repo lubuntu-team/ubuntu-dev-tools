@@ -340,6 +340,7 @@ class PullPkg:
 
         params = {}
         params["package"] = options["package"]
+        params["arch"] = options["arch"]
 
         if options["release"]:
             (release, version, pocket) = self.parse_release_and_version(

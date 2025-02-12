@@ -165,6 +165,7 @@ class SourcePackage(ABC):
         series = kwargs.get("series")
         pocket = kwargs.get("pocket")
         status = kwargs.get("status")
+        arch = kwargs.get("arch")
         verify_signature = kwargs.get("verify_signature", False)
         try_binary = kwargs.get("try_binary", True)
 
@@ -184,6 +185,7 @@ class SourcePackage(ABC):
         self._series = series
         self._pocket = pocket
         self._status = status
+        self._arch = arch
         # dscfile can be either a path or an URL.  misc.py's download() will
         # later fiture it out
         self._dsc_source = dscfile
@@ -252,6 +254,7 @@ class SourcePackage(ABC):
             )
 
             try:
+                params["archtag"] = self._arch
                 bpph = archive.getBinaryPackage(self.source, **params)
             except PackageNotFoundException as bpnfe:
                 # log binary lookup failure, in case it provides hints
