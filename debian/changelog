@@ -8,6 +8,8 @@ ubuntu-dev-tools (0.204) UNRELEASED; urgency=medium
   * Add a manpage for running-autopkgtests.
   * Add a large warning at the top of mk-sbuild encouraging the use of the
     unshare backend. This is to provide ample warning to users.
+  * Remove mail line from default ~/.sbuildrc, to resolve the undeclared
+    dependency on sendmail (Closes: #1074632).
 
   [ Julien Plissonneau Duquène ]
   * Fix reverse-depends -b crash on packages that b-d on themselves

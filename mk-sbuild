@@ -324,9 +324,6 @@ if [ ! -w /var/lib/sbuild ]; then
 
 # *** VERIFY AND UPDATE \$mailto and \$maintainer_name BELOW ***
 
-# Mail address where logs are sent to (mandatory, no default!)
-\$mailto = '$USER';
-
 # Name to use as override in .changes files for the Maintainer: field
 #\$maintainer_name='$USER <$USER@localhost>';
 
