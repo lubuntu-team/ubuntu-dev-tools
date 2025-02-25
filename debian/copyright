@@ -11,6 +11,7 @@ Files: backportpackage
        doc/check-symbols.1
        doc/requestsync.1
        doc/ubuntu-iso.1
+       doc/running-autopkgtests.1
        GPL-2
        README.updates
        requestsync
