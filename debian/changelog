@@ -2,6 +2,7 @@ ubuntu-dev-tools (0.204) UNRELEASED; urgency=medium
 
   [ Simon Quigley ]
   * Update Standards-Version to 4.7.1, no changes needed.
+  * Add several Lintian overrides related to .pyc files.
 
   [ Julien Plissonneau Duquène ]
   * Fix reverse-depends -b crash on packages that b-d on themselves

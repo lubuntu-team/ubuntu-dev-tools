@@ -1,0 +1,3 @@
+# pyc files are machine-generated; they're expected to have long lines and have unstated copyright
+source: file-without-copyright-information *.pyc [debian/copyright]
+source: very-long-line-length-in-source-file * > 512 [*.pyc:*]
