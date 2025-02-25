@@ -6,6 +6,8 @@ ubuntu-dev-tools (0.204) UNRELEASED; urgency=medium
   * Add my name to the copyright file.
   * Rename bitesize to lp-bitesize (Closes: #1076224).
   * Add a manpage for running-autopkgtests.
+  * Add a large warning at the top of mk-sbuild encouraging the use of the
+    unshare backend. This is to provide ample warning to users.
 
   [ Julien Plissonneau Duquène ]
   * Fix reverse-depends -b crash on packages that b-d on themselves

@@ -303,6 +303,25 @@ if [ ! -w /var/lib/sbuild ]; then
     # Prepare a usable default .sbuildrc
     if [ ! -e ~/.sbuildrc ]; then
         cat > ~/.sbuildrc <<EOM
+# *** THIS COMMAND IS DEPRECATED ***
+#
+# In sbuild 0.87.0 and later, the unshare backend is available. This is
+# expected to become the default in a future release.
+#
+# This is the new preferred way of building Debian packages, making the manual
+# creation of schroots no longer necessary. To retain the default behavior,
+# you may remove this comment block and continue.
+#
+# To test the unshare backend while retaining the default settings, run sbuild
+# with --chroot-mode=unshare like this:
+# $ sbuild --chroot-mode=unshare --dist=unstable hello
+#
+# To switch to the unshare backend by default (recommended), uncomment the
+# following lines and delete the rest of the file (with the exception of the
+# last two lines):
+#\$chroot_mode = 'unshare';
+#\$unshare_mmdebstrap_keep_tarball = 1;
+
 # *** VERIFY AND UPDATE \$mailto and \$maintainer_name BELOW ***
 
 # Mail address where logs are sent to (mandatory, no default!)
