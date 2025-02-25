@@ -73,14 +73,14 @@ License: GPL-2+
  On Debian systems, the complete text of the GNU General Public License
  version 2 can be found in the /usr/share/common-licenses/GPL-2 file.
 
-Files: doc/bitesize.1
+Files: doc/lp-bitesize.1
        doc/check-mir.1
        doc/grab-merge.1
        doc/merge-changelog.1
        doc/pm-helper.1
        doc/setup-packaging-environment.1
        doc/syncpackage.1
-       bitesize
+       lp-bitesize
        check-mir
        GPL-3
        grab-merge

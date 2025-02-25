@@ -4,6 +4,7 @@ ubuntu-dev-tools (0.204) UNRELEASED; urgency=medium
   * Update Standards-Version to 4.7.1, no changes needed.
   * Add several Lintian overrides related to .pyc files.
   * Add my name to the copyright file.
+  * Rename bitesize to lp-bitesize (Closes: #1076224).
 
   [ Julien Plissonneau Duquène ]
   * Fix reverse-depends -b crash on packages that b-d on themselves

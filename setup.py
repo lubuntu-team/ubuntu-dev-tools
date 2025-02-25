@@ -32,13 +32,13 @@ def make_pep440_compliant(version: str) -> str:
 
 scripts = [
     "backportpackage",
-    "bitesize",
     "check-mir",
     "check-symbols",
     "dch-repeat",
     "grab-merge",
     "grep-merges",
     "import-bug-from-debian",
+    "lp-bitesize",
     "merge-changelog",
     "mk-sbuild",
     "pbuilder-dist",
