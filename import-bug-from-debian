@@ -150,7 +150,7 @@ def process_bugs(
 
     err = False
     for bug in bugs:
-        ubupackage = package = bug.source
+        ubupackage = bug.source
         if package:
             ubupackage = package
         bug_num = bug.bug_num
