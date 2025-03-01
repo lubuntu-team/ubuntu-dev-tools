@@ -295,7 +295,7 @@ def fetch_source_pkg(package, dist, version, component, ubuntu_release, mirror):
             udtexceptions.SeriesNotFoundException,
         ) as e:
             Logger.error(str(e))
-            sys.exit(1)
+            return None
         if version is None:
             version = Version(debian_srcpkg.getVersion())
         try:
@@ -306,7 +306,7 @@ def fetch_source_pkg(package, dist, version, component, ubuntu_release, mirror):
             ubuntu_version = Version("~")
         except udtexceptions.SeriesNotFoundException as e:
             Logger.error(str(e))
-            sys.exit(1)
+            return None
         if ubuntu_version >= version:
             # The LP importer is maybe out of date
             debian_srcpkg = requestsync_mail_get_debian_srcpkg(package, dist)
@@ -320,7 +320,7 @@ def fetch_source_pkg(package, dist, version, component, ubuntu_release, mirror):
                     ubuntu_version,
                     ubuntu_release,
                 )
-                sys.exit(1)
+                return None
         if component is None:
             component = debian_srcpkg.getComponent()
 
@@ -712,6 +712,8 @@ def main():
             args.release,
             args.debian_mirror,
         )
+        if not src_pkg:
+            continue
 
         blacklisted, comments = is_blacklisted(src_pkg.source)
         blacklist_fail = False
