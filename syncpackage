@@ -754,7 +754,7 @@ def main():
                     Logger.info("  %s", line)
 
         if blacklist_fail:
-            sys.exit(1)
+            continue
 
         if args.lp:
             copy(src_pkg, args.release, args.bugs, sponsoree, args.simulate, args.force)

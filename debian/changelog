@@ -1,5 +1,8 @@
 ubuntu-dev-tools (0.205) UNRELEASED; urgency=medium
 
+  * [syncpackage] When syncing multiple packages, if one of the packages is in
+    the sync blocklist, do not exit, simply continue.
+
  -- Simon Quigley <tsimonq2@debian.org>  Sat, 01 Mar 2025 11:10:56 -0600
 
 ubuntu-dev-tools (0.204) unstable; urgency=medium
