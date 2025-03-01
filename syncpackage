@@ -329,7 +329,7 @@ def fetch_source_pkg(package, dist, version, component, ubuntu_release, mirror):
     return DebianSourcePackage(package, version.full_version, component, mirrors=mirrors)
 
 
-def copy(src_pkg, release, bugs, sponsoree=None, simulate=False, force=False):
+def copy(src_pkg, release, bugs, sponsoree=None, simulate=False, force=False, yes=False):
     """Copy a source package from Debian to Ubuntu using the Launchpad API."""
     ubuntu = Distribution("ubuntu")
     debian_archive = Distribution("debian").getArchive()
@@ -402,9 +402,10 @@ def copy(src_pkg, release, bugs, sponsoree=None, simulate=False, force=False):
 
     if sponsoree:
         Logger.info("Sponsoring this sync for %s (%s)", sponsoree.display_name, sponsoree.name)
-    answer = YesNoQuestion().ask("Sync this package", "no")
-    if answer != "yes":
-        return
+    if not yes:
+        answer = YesNoQuestion().ask("Sync this package", "no")
+        if answer != "yes":
+            return
 
     try:
         ubuntu_archive.copyPackage(
@@ -426,9 +427,12 @@ def copy(src_pkg, release, bugs, sponsoree=None, simulate=False, force=False):
     if bugs:
         Logger.info("Launchpad bugs to be closed: %s", ", ".join(str(bug) for bug in bugs))
         Logger.info("Please wait for the sync to be successful before closing bugs.")
-        answer = YesNoQuestion().ask("Close bugs", "yes")
-        if answer == "yes":
+        if yes:
             close_bugs(bugs, src_pkg.source, src_pkg.version.full_version, changes, sponsoree)
+        else:
+            answer = YesNoQuestion().ask("Close bugs", "yes")
+            if answer == "yes":
+                close_bugs(bugs, src_pkg.source, src_pkg.version.full_version, changes, sponsoree)
 
 
 def is_blacklisted(query):
@@ -508,6 +512,12 @@ def parse():
     epilog = f"See {os.path.basename(sys.argv[0])}(1) for more info."
     parser = argparse.ArgumentParser(usage=usage, epilog=epilog)
 
+    parser.add_argument(
+        "-y",
+        "--yes",
+        action="store_true",
+        help="Automatically sync without prompting. Use with caution and care."
+    )
     parser.add_argument("-d", "--distribution", help="Debian distribution to sync from.")
     parser.add_argument("-r", "--release", help="Specify target Ubuntu release.")
     parser.add_argument("-V", "--debian-version", help="Specify the version to sync from.")
@@ -759,7 +769,7 @@ def main():
             continue
 
         if args.lp:
-            copy(src_pkg, args.release, args.bugs, sponsoree, args.simulate, args.force)
+            copy(src_pkg, args.release, args.bugs, sponsoree, args.simulate, args.force, args.yes)
         else:
             os.environ["DEB_VENDOR"] = "Ubuntu"
             sync_dsc(

@@ -4,6 +4,8 @@ ubuntu-dev-tools (0.205) UNRELEASED; urgency=medium
     the sync blocklist, do not exit, simply continue.
   * [syncpackage] Within fetch_source_pkg, do not exit(1) on an error or
     exception, simply return None so we can continue to the next package.
+  * [syncpackage] Add support for -y or --yes, noted that it should be used
+    with care.
 
  -- Simon Quigley <tsimonq2@debian.org>  Sat, 01 Mar 2025 11:10:56 -0600
 
