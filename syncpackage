@@ -143,7 +143,7 @@ def sync_dsc(
     if ubuntu_ver.is_modified_in_ubuntu():
         if not force:
             Logger.error("--force is required to discard Ubuntu changes.")
-            sys.exit(1)
+            return None
 
         Logger.warning(
             "Overwriting modified Ubuntu version %s, setting current version to %s",
@@ -157,7 +157,7 @@ def sync_dsc(
         src_pkg.pull()
     except DownloadError as e:
         Logger.error("Failed to download: %s", str(e))
-        sys.exit(1)
+        return None
     src_pkg.unpack()
 
     needs_fakesync = not (need_orig or ubu_pkg.verify_orig())
@@ -166,13 +166,13 @@ def sync_dsc(
         Logger.warning("Performing a fakesync")
     elif not needs_fakesync and fakesync:
         Logger.error("Fakesync not required, aborting.")
-        sys.exit(1)
+        return None
     elif needs_fakesync and not fakesync:
         Logger.error(
             "The checksums of the Debian and Ubuntu packages "
             "mismatch. A fake sync using --fakesync is required."
         )
-        sys.exit(1)
+        return None
 
     if fakesync:
         # Download Ubuntu files (override Debian source tarballs)
@@ -180,7 +180,7 @@ def sync_dsc(
             ubu_pkg.pull()
         except DownloadError as e:
             Logger.error("Failed to download: %s", str(e))
-            sys.exit(1)
+            return None
 
     # change into package directory
     directory = src_pkg.source + "-" + new_ver.upstream_version
@@ -265,7 +265,7 @@ def sync_dsc(
         returncode = subprocess.call(cmd)
         if returncode != 0:
             Logger.error("Source-only build with debuild failed. Please check build log above.")
-            sys.exit(1)
+            return None
 
 
 def fetch_source_pkg(package, dist, version, component, ubuntu_release, mirror):
@@ -352,7 +352,7 @@ def copy(src_pkg, release, bugs, sponsoree=None, simulate=False, force=False, ye
             "Debian version %s has not been picked up by LP yet. Please try again later.",
             src_pkg.version,
         )
-        sys.exit(1)
+        return None
 
     try:
         ubuntu_spph = get_ubuntu_srcpkg(src_pkg.source, ubuntu_series, ubuntu_pocket)
@@ -373,7 +373,7 @@ def copy(src_pkg, release, bugs, sponsoree=None, simulate=False, force=False, ye
         base_version = ubuntu_version.get_related_debian_version()
         if not force and ubuntu_version.is_modified_in_ubuntu():
             Logger.error("--force is required to discard Ubuntu changes.")
-            sys.exit(1)
+            return None
 
         # Check whether a fakesync would be required.
         if not src_pkg.dsc.compare_dsc(ubuntu_pkg.dsc):
@@ -381,7 +381,7 @@ def copy(src_pkg, release, bugs, sponsoree=None, simulate=False, force=False, ye
                 "The checksums of the Debian and Ubuntu packages "
                 "mismatch. A fake sync using --fakesync is required."
             )
-            sys.exit(1)
+            return None
     except udtexceptions.PackageNotFoundException:
         base_version = Version("~")
         Logger.info(
@@ -420,7 +420,7 @@ def copy(src_pkg, release, bugs, sponsoree=None, simulate=False, force=False, ye
     except HTTPError as error:
         Logger.error("HTTP Error %s: %s", error.response.status, error.response.reason)
         Logger.error(error.content)
-        sys.exit(1)
+        return None
 
     Logger.info("Request succeeded; you should get an e-mail once it is processed.")
     bugs = sorted(set(bugs))
@@ -769,10 +769,11 @@ def main():
             continue
 
         if args.lp:
-            copy(src_pkg, args.release, args.bugs, sponsoree, args.simulate, args.force, args.yes)
+            if not copy(src_pkg, args.release, args.bugs, sponsoree, args.simulate, args.force, args.yes):
+                continue
         else:
             os.environ["DEB_VENDOR"] = "Ubuntu"
-            sync_dsc(
+            if not sync_dsc(
                 src_pkg,
                 args.distribution,
                 args.release,
@@ -784,7 +785,8 @@ def main():
                 args.simulate,
                 args.force,
                 args.fakesync,
-            )
+            ):
+                continue
 
 
 if __name__ == "__main__":

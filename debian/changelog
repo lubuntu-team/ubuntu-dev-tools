@@ -2,8 +2,9 @@ ubuntu-dev-tools (0.205) UNRELEASED; urgency=medium
 
   * [syncpackage] When syncing multiple packages, if one of the packages is in
     the sync blocklist, do not exit, simply continue.
-  * [syncpackage] Within fetch_source_pkg, do not exit(1) on an error or
-    exception, simply return None so we can continue to the next package.
+  * [syncpackage] Do not use exit(1) on an error or exception unless it
+    applies to all packages, instead return None so we can continue to the
+    next package.
   * [syncpackage] Add support for -y or --yes, noted that it should be used
     with care.
 
