@@ -928,8 +928,8 @@ if [ -n "$TEMP_PREFERENCES" ]; then
     sudo mv "$TEMP_PREFERENCES" $MNT/etc/apt/preferences.d/proposed.pref
 fi
 
-# Copy the timezone (comment this out if you want to leave the chroot at UTC)
-sudo cp -P --remove-destination /etc/localtime /etc/timezone "$MNT"/etc/
+# Copy the timezone (uncomment this if you want to use your local time zone)
+#sudo cp -P --remove-destination /etc/localtime /etc/timezone "$MNT"/etc/
 # Create a schroot entry for this chroot
 TEMP_SCHROOTCONF=`mktemp -t schrootconf-XXXXXX`
 TEMPLATE_SCHROOTCONF=~/.mk-sbuild.schroot.conf
