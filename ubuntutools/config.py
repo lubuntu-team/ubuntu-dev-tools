@@ -68,21 +68,19 @@ class UDTConfig:
         config = {}
         for filename in ("/etc/devscripts.conf", "~/.devscripts"):
             try:
-                f = open(os.path.expanduser(filename), "r", encoding="utf-8")
+                with open(os.path.expanduser(filename), "r", encoding="utf-8") as f:
+                    content = f.read()
             except IOError:
                 continue
-            for line in f:
-                parsed = shlex.split(line, comments=True)
-                if len(parsed) > 1:
-                    Logger.warning(
-                        "Cannot parse variable assignment in %s: %s",
-                        getattr(f, "name", "<config>"),
-                        line,
-                    )
-                if len(parsed) >= 1 and "=" in parsed[0]:
-                    key, value = parsed[0].split("=", 1)
+            try:
+                tokens = shlex.split(content, comments=True)
+            except ValueError as e:
+                Logger.error("Error parsing %s: %s", filename, e)
+                continue
+            for token in tokens:
+                if "=" in token:
+                    key, value = token.split("=", 1)
                     config[key] = value
-            f.close()
         return config
 
     def get_value(self, key, default=None, boolean=False, compat_keys=()):
