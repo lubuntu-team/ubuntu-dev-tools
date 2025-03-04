@@ -1,4 +1,4 @@
-ubuntu-dev-tools (0.206) UNRELEASED; urgency=medium
+ubuntu-dev-tools (0.206) unstable; urgency=medium
 
   [ Dan Bungert ]
   * mk-sbuild: enable pkgmaintainermangler
@@ -20,7 +20,7 @@ ubuntu-dev-tools (0.206) UNRELEASED; urgency=medium
     package (erring on the side of caution) if there is an error doing the
     download (LP: #1943286).
 
- -- Simon Quigley <tsimonq2@debian.org>  Tue, 04 Mar 2025 13:04:30 -0600
+ -- Simon Quigley <tsimonq2@debian.org>  Tue, 04 Mar 2025 13:43:15 -0600
 
 ubuntu-dev-tools (0.205) unstable; urgency=medium
 
