@@ -435,14 +435,14 @@ def copy(src_pkg, release, bugs, sponsoree=None, simulate=False, force=False, ye
                 close_bugs(bugs, src_pkg.source, src_pkg.version.full_version, changes, sponsoree)
 
 
-def is_blacklisted(query):
-    """Determine if package "query" is in the sync blacklist
-    Returns tuple of (blacklisted, comments)
-    blacklisted is one of False, 'CURRENT', 'ALWAYS'
+def is_blocklisted(query):
+    """Determine if package "query" is in the sync blocklist
+    Returns tuple of (blocklisted, comments)
+    blocklisted is one of False, 'CURRENT', 'ALWAYS'
     """
     series = Launchpad.distributions["ubuntu"].current_series
     lp_comments = series.getDifferenceComments(source_package_name=query)
-    blacklisted = False
+    blocklisted = False
     comments = [
         f"{c.body_text}\n  -- {c.comment_author.name}"
         f"  {c.comment_date.strftime('%a, %d %b %Y %H:%M:%S +0000')}"
@@ -450,13 +450,13 @@ def is_blacklisted(query):
     ]
 
     for diff in series.getDifferencesTo(source_package_name_filter=query):
-        if diff.status == "Blacklisted current version" and blacklisted != "ALWAYS":
-            blacklisted = "CURRENT"
+        if diff.status == "Blacklisted current version" and blocklisted != "ALWAYS":
+            blocklisted = "CURRENT"
         if diff.status == "Blacklisted always":
-            blacklisted = "ALWAYS"
+            blocklisted = "ALWAYS"
 
-    # Old blacklist:
-    url = "https://ubuntu-archive-team.ubuntu.com/sync-blacklist.txt"
+    # Old blocklist:
+    url = "https://ubuntu-archive-team.ubuntu.com/sync-blocklist.txt"
     with urllib.request.urlopen(url) as f:
         applicable_lines = []
         for line in f:
@@ -471,11 +471,11 @@ def is_blacklisted(query):
                 pass
             source = line.strip()
             if source and fnmatch.fnmatch(query, source):
-                comments += ["From sync-blacklist.txt:"] + applicable_lines
-                blacklisted = "ALWAYS"
+                comments += ["From sync-blocklist.txt:"] + applicable_lines
+                blocklisted = "ALWAYS"
                 break
 
-    return (blacklisted, comments)
+    return (blocklisted, comments)
 
 
 def close_bugs(bugs, package, version, changes, sponsoree):
@@ -725,35 +725,35 @@ def main():
         if not src_pkg:
             continue
 
-        blacklisted, comments = is_blacklisted(src_pkg.source)
-        blacklist_fail = False
-        if blacklisted:
+        blocklisted, comments = is_blocklisted(src_pkg.source)
+        blocklist_fail = False
+        if blocklisted:
             messages = []
 
-            if blacklisted == "CURRENT":
+            if blocklisted == "CURRENT":
                 Logger.debug(
-                    "Source package %s is temporarily blacklisted "
-                    "(blacklisted_current). "
+                    "Source package %s is temporarily blocklisted "
+                    "(blocklisted_current). "
                     "Ubuntu ignores these for now. "
                     "See also LP: #841372",
                     src_pkg.source,
                 )
             else:
                 if args.fakesync:
-                    messages += ["Doing a fakesync, overriding blacklist."]
+                    messages += ["Doing a fakesync, overriding blocklist."]
                 else:
-                    blacklist_fail = True
+                    blocklist_fail = True
                     messages += [
                         "If this package needs a fakesync, use --fakesync",
                         "If you think this package shouldn't be "
-                        "blacklisted, please file a bug explaining your "
+                        "blocklisted, please file a bug explaining your "
                         "reasoning and subscribe ~ubuntu-archive.",
                     ]
 
-            if blacklist_fail:
-                Logger.error("Source package %s is blacklisted.", src_pkg.source)
-            elif blacklisted == "ALWAYS":
-                Logger.info("Source package %s is blacklisted.", src_pkg.source)
+            if blocklist_fail:
+                Logger.error("Source package %s is blocklisted.", src_pkg.source)
+            elif blocklisted == "ALWAYS":
+                Logger.info("Source package %s is blocklisted.", src_pkg.source)
             if messages:
                 for message in messages:
                     for line in textwrap.wrap(message):
@@ -765,7 +765,7 @@ def main():
                 for line in textwrap.wrap(comment):
                     Logger.info("  %s", line)
 
-        if blacklist_fail:
+        if blocklist_fail:
             continue
 
         if args.lp:
