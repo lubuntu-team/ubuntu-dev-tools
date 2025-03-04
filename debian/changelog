@@ -3,6 +3,9 @@ ubuntu-dev-tools (0.206) UNRELEASED; urgency=medium
   [ Dan Bungert ]
   * mk-sbuild: enable pkgmaintainermangler
 
+  [ Shengjing Zhu ]
+  * import-bug-from-debian: package option is overridden and not used
+
  -- Simon Quigley <tsimonq2@debian.org>  Tue, 04 Mar 2025 13:04:30 -0600
 
 ubuntu-dev-tools (0.205) unstable; urgency=medium
