@@ -16,6 +16,9 @@ ubuntu-dev-tools (0.206) UNRELEASED; urgency=medium
   * syncpackage: s/syncblacklist/syncblocklist/g
   * syncpackage: Cache the sync blocklist in-memory, so it's not fetched
     multiple times when syncing more than one package.
+  * syncpackage: Catch exceptions cleanly, simply skipping to the next
+    package (erring on the side of caution) if there is an error doing the
+    download (LP: #1943286).
 
  -- Simon Quigley <tsimonq2@debian.org>  Tue, 04 Mar 2025 13:04:30 -0600
 

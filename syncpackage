@@ -459,8 +459,12 @@ def is_blocklisted(query):
     global cached_sync_blocklist
     if not cached_sync_blocklist:
         url = "https://ubuntu-archive-team.ubuntu.com/sync-blocklist.txt"
-        with urllib.request.urlopen(url) as f:
-            cached_sync_blocklist = f.read().decode("utf-8")
+        try:
+            with urllib.request.urlopen(url) as f:
+                cached_sync_blocklist = f.read().decode("utf-8")
+        except:
+            print("WARNING: unable to download the sync blocklist. Erring on the side of caution.")
+            return ("ALWAYS", "INTERNAL ERROR: Unable to fetch sync blocklist")
 
     applicable_lines = []
     for line in cached_sync_blocklist.splitlines():
