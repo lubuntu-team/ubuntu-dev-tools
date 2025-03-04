@@ -49,6 +49,7 @@ from ubuntutools.requestsync.mail import get_debian_srcpkg as requestsync_mail_g
 from ubuntutools.version import Version
 
 Logger = getLogger()
+cached_sync_blocklist = None
 
 
 def remove_signature(dscname):
@@ -455,25 +456,27 @@ def is_blocklisted(query):
         if diff.status == "Blacklisted always":
             blocklisted = "ALWAYS"
 
-    # Old blocklist:
-    url = "https://ubuntu-archive-team.ubuntu.com/sync-blocklist.txt"
-    with urllib.request.urlopen(url) as f:
-        applicable_lines = []
-        for line in f:
-            line = line.decode("utf-8")
-            if not line.strip():
-                applicable_lines = []
-                continue
-            applicable_lines.append(line)
-            try:
-                line = line[: line.index("#")]
-            except ValueError:
-                pass
-            source = line.strip()
-            if source and fnmatch.fnmatch(query, source):
-                comments += ["From sync-blocklist.txt:"] + applicable_lines
-                blocklisted = "ALWAYS"
-                break
+    global cached_sync_blocklist
+    if not cached_sync_blocklist:
+        url = "https://ubuntu-archive-team.ubuntu.com/sync-blocklist.txt"
+        with urllib.request.urlopen(url) as f:
+            cached_sync_blocklist = f.read().decode("utf-8")
+
+    applicable_lines = []
+    for line in cached_sync_blocklist.splitlines():
+        if not line.strip():
+            applicable_lines = []
+            continue
+        applicable_lines.append(line)
+        try:
+            line = line[:line.index("#")]
+        except ValueError:
+            pass
+        source = line.strip()
+        if source and fnmatch.fnmatch(query, source):
+            comments += ["From sync-blocklist.txt:"] + applicable_lines
+            blocklisted = "ALWAYS"
+            break
 
     return (blocklisted, comments)
 

@@ -14,6 +14,8 @@ ubuntu-dev-tools (0.206) UNRELEASED; urgency=medium
     variables (Closes: #725418).
   * mk-sbuild: default to using UTC for schroots (LP: #2097159).
   * syncpackage: s/syncblacklist/syncblocklist/g
+  * syncpackage: Cache the sync blocklist in-memory, so it's not fetched
+    multiple times when syncing more than one package.
 
  -- Simon Quigley <tsimonq2@debian.org>  Tue, 04 Mar 2025 13:04:30 -0600
 
