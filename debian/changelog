@@ -1,3 +1,9 @@
+ubuntu-dev-tools (0.207) UNRELEASED; urgency=medium
+
+  * Fix pull-lp-source --upload-queue (LP: #2110061)
+
+ -- Dan Streetman <ddstreet@ieee.org>  Tue, 06 May 2025 13:25:22 -0400
+
 ubuntu-dev-tools (0.206) unstable; urgency=medium
 
   [ Dan Bungert ]
