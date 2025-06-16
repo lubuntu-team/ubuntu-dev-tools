@@ -22,6 +22,7 @@ from argparse import ArgumentParser
 import yaml
 from launchpadlib.launchpad import Launchpad
 
+from ubuntutools.question import YesNoQuestion
 from ubuntutools.utils import get_url
 
 # proposed-migration is only concerned with the devel series; unlike other
@@ -56,10 +57,8 @@ def claim_excuses_bug(launchpad, bug, package):
     if our_task.assignee:
         print(f"Currently assigned to {our_task.assignee.name}")
 
-    print("""Do you want to claim this bug? [yN] """, end="")
-    sys.stdout.flush()
-    response = sys.stdin.readline()
-    if response.strip().lower().startswith("y"):
+    answer = YesNoQuestion().ask("Do you want to claim this bug?", "no")
+    if answer == "yes":
         our_task.assignee = launchpad.me
         our_task.lp_save()
         return True
@@ -131,7 +130,9 @@ def main():
                 if not proposed_version:
                     print(f"Package {args.package} not found in -proposed.")
                     sys.exit(1)
-                create_excuses_bug(args.launchpad, args.package, proposed_version)
+                answer = YesNoQuestion().ask("Do you want to create a bug?", "no")
+                if answer == "yes":
+                    create_excuses_bug(args.launchpad, args.package, proposed_version)
         except ValueError as e:
             sys.stderr.write(f"{e}\n")
     else:
