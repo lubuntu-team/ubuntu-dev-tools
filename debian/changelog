@@ -1,4 +1,6 @@
-ubuntu-dev-tools (0.207) UNRELEASED; urgency=medium
+ubuntu-dev-tools (0.207) unstable; urgency=medium
+
+  * Team upload.
 
   [ Dan Streetman ]
   * Fix pull-lp-source --upload-queue (LP: #2110061)
@@ -6,7 +8,7 @@ ubuntu-dev-tools (0.207) UNRELEASED; urgency=medium
   [ Colin Watson ]
   * Optimize Launchpad collection handling.
 
- -- Dan Streetman <ddstreet@ieee.org>  Tue, 06 May 2025 13:25:22 -0400
+ -- Colin Watson <cjwatson@debian.org>  Mon, 15 Sep 2025 15:58:34 +0100
 
 ubuntu-dev-tools (0.206) unstable; urgency=medium
 
