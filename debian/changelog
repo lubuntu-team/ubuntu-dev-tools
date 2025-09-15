@@ -1,6 +1,10 @@
 ubuntu-dev-tools (0.207) UNRELEASED; urgency=medium
 
+  [ Dan Streetman ]
   * Fix pull-lp-source --upload-queue (LP: #2110061)
+
+  [ Colin Watson ]
+  * Optimize Launchpad collection handling.
 
  -- Dan Streetman <ddstreet@ieee.org>  Tue, 06 May 2025 13:25:22 -0400
 

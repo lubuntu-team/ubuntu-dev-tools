@@ -290,9 +290,8 @@ class Distribution(BaseWrapper):
         Returns a list of all DistroSeries objects.
         """
         if not self._have_all_series:
-            for series in Launchpad.load(self.series_collection_link).entries:
-                series_link = DistroSeries(series["self_link"])
-                self._cache_series(series_link)
+            for series in self.series:
+                self._cache_series(DistroSeries(series))
             self._have_all_series = True
 
         allseries = filter(lambda s: s.active, self._series.values())
@@ -1406,10 +1405,7 @@ class PersonTeam(BaseWrapper, metaclass=MetaPersonTeam):
 
     def getPPAs(self):
         if self._ppas is None:
-            ppas = [
-                Archive(ppa["self_link"])
-                for ppa in Launchpad.load(self._lpobject.ppas_collection_link).entries
-            ]
+            ppas = [Archive(ppa) for ppa in self._lpobject.ppas]
             self._ppas = {ppa.name: ppa for ppa in ppas}
         return self._ppas
 
@@ -1434,10 +1430,7 @@ class Project(BaseWrapper):
         The list will be sorted by date_created, in descending order.
         """
         if not self._series:
-            series = [
-                ProjectSeries(s["self_link"])
-                for s in Launchpad.load(self._lpobject.series_collection_link).entries
-            ]
+            series = [ProjectSeries(s) for s in self._lpobject.series]
             self._series = sorted(series, key=lambda s: s.date_created, reverse=True)
         return self._series.copy()
 
