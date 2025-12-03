@@ -46,7 +46,7 @@ Logger = getLogger()
 #
 
 
-def main():
+def main() -> None:
     # Our usage options.
     usage = "%(prog)s [options] <source package> [<target release> [base version]]"
     parser = argparse.ArgumentParser(usage=usage)

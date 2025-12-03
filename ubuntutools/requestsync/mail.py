@@ -62,8 +62,17 @@ def get_debian_srcpkg(name, release):
     return DebianSourcePackage(package=name, series=release).lp_spph
 
 
-def get_ubuntu_srcpkg(name, release):
-    return UbuntuSourcePackage(package=name, series=release).lp_spph
+def get_ubuntu_srcpkg(name, release, pocket="Proposed"):
+    srcpkg = UbuntuSourcePackage(package=name, series=release, pocket=pocket)
+    try:
+        return srcpkg.lp_spph
+    except PackageNotFoundException:
+        if pocket != "Release":
+            parent_pocket = "Release"
+            if pocket == "Updates":
+                parent_pocket = "Proposed"
+            return get_ubuntu_srcpkg(name, release, parent_pocket)
+        raise
 
 
 def need_sponsorship(name, component, release):
