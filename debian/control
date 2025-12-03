@@ -8,12 +8,12 @@ Uploaders:
  Mattia Rizzolo <mattia@debian.org>,
  Simon Quigley <tsimonq2@debian.org>,
 Build-Depends:
- black <!nocheck>,
- dctrl-tools,
  debhelper-compat (= 13),
- devscripts (>= 2.11.0~),
  dh-make,
  dh-python,
+ black <!nocheck>,
+ dctrl-tools,
+ devscripts (>= 2.11.0~),
  distro-info (>= 0.2~),
  flake8,
  isort <!nocheck>,
@@ -39,12 +39,12 @@ Homepage: https://launchpad.net/ubuntu-dev-tools
 Package: ubuntu-dev-tools
 Architecture: all
 Depends:
+ dpkg-dev,
  binutils,
  dctrl-tools,
  devscripts (>= 2.11.0~),
  diffstat,
  distro-info (>= 0.2~),
- dpkg-dev,
  dput,
  lsb-release,
  python3,
@@ -71,10 +71,10 @@ Recommends:
  genisoimage,
  lintian,
  patch,
- sbuild | pbuilder | cowbuilder,
  python3-dns,
  quilt,
  reportbug (>= 3.39ubuntu1),
+ sbuild | pbuilder | cowbuilder,
  ubuntu-keyring | ubuntu-archive-keyring,
 Suggests:
  bzr | brz,
