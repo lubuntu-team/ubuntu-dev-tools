@@ -34,6 +34,7 @@ disable=fixme,locally-disabled,missing-docstring,useless-option-value,
   duplicate-code,
   too-many-instance-attributes,
   too-many-nested-blocks,
+  too-many-positional-arguments,
   too-many-lines,
 
 
