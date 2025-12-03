@@ -25,6 +25,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from typing import Any, NoReturn
 from urllib.parse import quote
 
 try:
@@ -50,7 +51,7 @@ from ubuntutools.question import YesNoQuestion
 Logger = getLogger()
 
 
-def error(msg, *args):
+def error(msg: str, *args: Any) -> NoReturn:
     Logger.error(msg, *args)
     sys.exit(1)
 

@@ -22,6 +22,7 @@
 # pylint: enable=invalid-name
 
 import sys
+from typing import NoReturn
 
 from debian.changelog import Changelog
 
@@ -30,7 +31,7 @@ from ubuntutools import getLogger
 Logger = getLogger()
 
 
-def usage(exit_code=1):
+def usage(exit_code: int = 1) -> NoReturn:
     Logger.info(
         """Usage: merge-changelog <left changelog> <right changelog>
 

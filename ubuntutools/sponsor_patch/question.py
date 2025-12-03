@@ -16,6 +16,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 import sys
+from typing import NoReturn
 
 from ubuntutools.question import Question, YesNoQuestion
 
@@ -42,7 +43,7 @@ def ask_for_manual_fixing():
         user_abort()
 
 
-def user_abort():
+def user_abort() -> NoReturn:
     """Print abort and quit the program."""
 
     print("User abort.")

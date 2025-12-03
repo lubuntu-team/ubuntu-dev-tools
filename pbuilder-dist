@@ -38,6 +38,7 @@ import shutil
 import subprocess
 import sys
 from contextlib import suppress
+from typing import NoReturn
 
 import debian.deb822
 from distro_info import DebianDistroInfo, DistroDataOutdated, UbuntuDistroInfo
@@ -411,7 +412,7 @@ class PbuilderDist:
         ] + arguments
 
 
-def show_help(exit_code=0):
+def show_help(exit_code: int = 0) -> NoReturn:
     """help() -> None
 
     Print a help message for pbuilder-dist, and exit with the given code.

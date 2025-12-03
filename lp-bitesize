@@ -23,6 +23,7 @@
 
 import argparse
 import sys
+from typing import Any, NoReturn
 
 from launchpadlib.errors import HTTPError
 from launchpadlib.launchpad import Launchpad
@@ -33,7 +34,7 @@ from ubuntutools.config import UDTConfig
 Logger = getLogger()
 
 
-def error_out(msg, *args):
+def error_out(msg: str, *args: Any) -> NoReturn:
     Logger.error(msg, *args)
     sys.exit(1)
 
