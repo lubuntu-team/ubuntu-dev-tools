@@ -26,6 +26,7 @@ import logging
 import os
 import re
 from copy import copy
+from typing import Any
 from urllib.error import URLError
 from urllib.parse import urlparse
 
@@ -1501,7 +1502,7 @@ class Packageset(BaseWrapper):  # pylint: disable=too-few-public-methods
 
     resource_type = "packageset"
     _lp_packagesets = None
-    _source_sets = {}
+    _source_sets: dict[tuple[str, str | None, bool], Any] = {}
 
     @classmethod
     def setsIncludingSource(cls, sourcepackagename, distroseries=None, direct_inclusion=False):

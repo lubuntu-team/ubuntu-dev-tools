@@ -50,7 +50,7 @@ class UDTConfig:
         "KEYID": None,
     }
     # Populated from the configuration files:
-    config = {}
+    config: dict[str, str] = {}
 
     def __init__(self, no_conf=False, prefix=None):
         self.no_conf = no_conf
@@ -61,7 +61,7 @@ class UDTConfig:
             self.config = self.parse_devscripts_config()
 
     @staticmethod
-    def parse_devscripts_config():
+    def parse_devscripts_config() -> dict[str, str]:
         """Read the devscripts configuration files, and return the values as a
         dictionary
         """
