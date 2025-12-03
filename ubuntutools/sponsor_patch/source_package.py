@@ -414,15 +414,9 @@ class SourcePackage:
         """
 
         # Determine whether to use the source or binary build for lintian
+        package_and_version = f"{self._package}_{strip_epoch(self._version)}"
         if self._build_log:
-            build_changes = (
-                self._package
-                + "_"
-                + strip_epoch(self._version)
-                + "_"
-                + self._builder.get_architecture()
-                + ".changes"
-            )
+            build_changes = f"{package_and_version}_{self._builder.get_architecture()}.changes"
             changes_for_lintian = os.path.join(self._buildresult, build_changes)
         else:
             changes_for_lintian = self._changes_file
@@ -430,9 +424,7 @@ class SourcePackage:
         # Check lintian
         assert os.path.isfile(changes_for_lintian), f"{changes_for_lintian} does not exist."
         cmd = ["lintian", "-IE", "--pedantic", "-q", "--profile", "ubuntu", changes_for_lintian]
-        lintian_filename = os.path.join(
-            self._workdir, self._package + "_" + strip_epoch(self._version) + ".lintian"
-        )
+        lintian_filename = os.path.join(self._workdir, f"{package_and_version}.lintian")
         Logger.debug("%s > %s", " ".join(cmd), lintian_filename)
         report = subprocess.check_output(cmd, encoding="utf-8")
 
