@@ -87,16 +87,12 @@ def retry_builds(pkg, archs):
     return f"Retrying builds of '{pkg.source_package_name}':\n{msg}"
 
 
-def main():
+def parse_args(argv: list[str], valid_archs: set[str]) -> argparse.Namespace:
+    """Parse command line arguments and return namespace."""
     # Usage.
     usage = "%(prog)s <srcpackage> <release> <operation>\n\n"
     usage += "Where operation may be one of: rescore, retry, or status.\n"
     usage += "Only Launchpad Buildd Admins may rescore package builds."
-
-    # Valid architectures.
-    valid_archs = set(
-        ["armhf", "arm64", "amd64", "amd64v3", "i386", "powerpc", "ppc64el", "riscv64", "s390x"]
-    )
 
     # Prepare our option parser.
     parser = argparse.ArgumentParser(usage=usage)
@@ -148,7 +144,23 @@ def main():
     parser.add_argument("packages", metavar="package", nargs="*", help=argparse.SUPPRESS)
 
     # Parse our options.
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
+
+    if not args.batch:
+        # Check we have the correct number of arguments.
+        if len(args.packages) < 3:
+            parser.error("Incorrect number of arguments.")
+
+    return args
+
+
+def main():
+    # Valid architectures.
+    valid_archs = set(
+        ["armhf", "arm64", "amd64", "amd64v3", "i386", "powerpc", "ppc64el", "riscv64", "s390x"]
+    )
+
+    args = parse_args(sys.argv[1:], valid_archs)
 
     launchpad = Launchpad.login_with("ubuntu-dev-tools", "production", version="devel")
     ubuntu = launchpad.distributions["ubuntu"]
@@ -167,17 +179,9 @@ def main():
             Logger.error(error)
             sys.exit(1)
     else:
-        # Check we have the correct number of arguments.
-        if len(args.packages) < 3:
-            parser.error("Incorrect number of arguments.")
-
-        try:
-            package = str(args.packages[0]).lower()
-            release = str(args.packages[1]).lower()
-            operation = str(args.packages[2]).lower()
-        except IndexError:
-            parser.print_help()
-            sys.exit(1)
+        package = str(args.packages[0]).lower()
+        release = str(args.packages[1]).lower()
+        operation = str(args.packages[2]).lower()
 
     archive = launchpad.archives.getByReference(reference=args.archive)
     try:
