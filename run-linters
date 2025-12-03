@@ -23,10 +23,18 @@ run_flake8() {
 
 run_pylint() {
     echo "Running pylint..."
-    pylint $(find * -name '*.py') $PYTHON_SCRIPTS
+    pylint "$@" $(find * -name '*.py') $PYTHON_SCRIPTS
 }
 
-run_black
-run_isort
-run_flake8
-run_pylint
+if test "${1-}" = "--errors-only"; then
+    # Run only linters that can detect real errors (ignore formatting)
+    run_black || true
+    run_isort || true
+    run_flake8 || true
+    run_pylint --errors-only
+else
+    run_black
+    run_isort
+    run_flake8
+    run_pylint
+fi
