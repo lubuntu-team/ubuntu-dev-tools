@@ -931,8 +931,8 @@ class UbuntuCloudArchiveSourcePackage(PersonalPackageArchiveSourcePackage):
 
 
 class _WebJSON:
-    def getHostUrl(self):  # pylint: disable=no-self-use
-        raise Exception("Not implemented")
+    def getHostUrl(self):
+        raise NotImplementedError(f"{self.__class__.__name__}.getHostUrl() is not implemented")
 
     def load(self, path=""):
         reader = codecs.getreader("utf-8")
