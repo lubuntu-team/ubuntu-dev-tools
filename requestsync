@@ -153,6 +153,7 @@ def main():
             import DNS  # pylint: disable=import-outside-toplevel
 
             DNS.DiscoverNameServers()
+            # imported earlier, pylint: disable-next=possibly-used-before-assignment
             mxlist = DNS.mxlookup(bug_mail_domain)
             firstmx = mxlist[0]
             mailserver_host = firstmx[1]
@@ -214,6 +215,7 @@ def main():
 
     if not args.release:
         if lpapi:
+            # imported earlier, pylint: disable-next=possibly-used-before-assignment
             args.release = Distribution("ubuntu").getDevelopmentSeries().name
         else:
             ubu_info = UbuntuDistroInfo()
@@ -377,6 +379,7 @@ def main():
         # Map status to the values expected by LP API
         mapping = {"new": "New", "confirmed": "Confirmed"}
         # Post sync request using LP API
+        # imported earlier, pylint: disable-next=possibly-used-before-assignment
         post_bug(srcpkg, subscribe, mapping[status], title, report)
     else:
         email_from = ubu_email(export=False)[1]
