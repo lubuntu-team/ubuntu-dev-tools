@@ -140,7 +140,7 @@ class BaseWrapper(metaclass=MetaWrapper):
     A base class from which other wrapper classes are derived.
     """
 
-    resource_type: str = None  # it's a base class after all
+    resource_type: str | tuple[str, str] = ""  # it's a base class after all
 
     def __new__(cls, data):
         if isinstance(data, str) and data.startswith(str(Launchpad._root_uri)):
