@@ -471,6 +471,7 @@ class PullPkg:
                     uri,
                 )
 
+                vcscmd = ""
                 if vcs == "Bazaar":
                     vcscmd = " $ bzr branch " + uri
                 elif vcs == "Git":
