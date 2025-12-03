@@ -1,3 +1,26 @@
+ubuntu-dev-tools (0.208) unstable; urgency=medium
+
+  [ Gianfranco Costamagna ]
+  * ubuntu-build: consider amd64v3 as valid architecture
+
+  [ Sebastien Bacher ]
+  * ubuntu-build: fix non batch mode errors.
+
+  [ Benjamin Drung ]
+  * Format code with black and isort
+  * ubuntutools/pullpkg.py: initialize vcscmd
+  * make pylint and mypy happy
+  * mark non-returning functions with typing.NoReturn
+  * run-linters: add --errors-only mode and run this during package build
+  * Drop Lintian overrides related to .pyc files
+  * Drop obsolete Rules-Requires-Root: no
+  * run mypy during package build
+  * sponsor-patch: stop checking for bzr being present
+  * Modernize SourcePackage._run_lintian()
+  * requestsync: support pocket parameter in get_ubuntu_srcpkg (LP: #2115990)
+
+ -- Benjamin Drung <bdrung@debian.org>  Wed, 03 Dec 2025 16:33:47 +0100
+
 ubuntu-dev-tools (0.207) unstable; urgency=medium
 
   * Team upload.
