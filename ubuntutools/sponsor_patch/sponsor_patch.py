@@ -46,11 +46,9 @@ def is_command_available(command, check_sbin=False):
 def check_dependencies():
     "Do we have all the commands we need for full functionality?"
     missing = []
-    for cmd in ("patch", "bzr", "quilt", "dput", "lintian"):
+    for cmd in ("patch", "quilt", "dput", "lintian"):
         if not is_command_available(cmd):
             missing.append(cmd)
-    if not is_command_available("bzr-buildpackage"):
-        missing.append("bzr-builddeb")
     if not any(
         is_command_available(cmd, check_sbin=True) for cmd in ("pbuilder", "sbuild", "cowbuilder")
     ):
