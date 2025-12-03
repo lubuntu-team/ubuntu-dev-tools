@@ -22,6 +22,7 @@
 
 import argparse
 import fnmatch
+import functools
 import logging
 import os
 import shutil
@@ -49,7 +50,6 @@ from ubuntutools.requestsync.mail import get_debian_srcpkg as requestsync_mail_g
 from ubuntutools.version import Version
 
 Logger = getLogger()
-cached_sync_blocklist = None
 
 
 def remove_signature(dscname):
@@ -436,6 +436,14 @@ def copy(src_pkg, release, bugs, sponsoree=None, simulate=False, force=False, ye
                 close_bugs(bugs, src_pkg.source, src_pkg.version.full_version, changes, sponsoree)
 
 
+@functools.lru_cache(maxsize=1)
+def _fetch_sync_blocklist() -> str:
+    url = "https://ubuntu-archive-team.ubuntu.com/sync-blocklist.txt"
+    with urllib.request.urlopen(url) as f:
+        sync_blocklist = f.read().decode("utf-8")
+    return sync_blocklist
+
+
 def is_blocklisted(query):
     """Determine if package "query" is in the sync blocklist
     Returns tuple of (blocklisted, comments)
@@ -456,18 +464,14 @@ def is_blocklisted(query):
         if diff.status == "Blacklisted always":
             blocklisted = "ALWAYS"
 
-    global cached_sync_blocklist
-    if not cached_sync_blocklist:
-        url = "https://ubuntu-archive-team.ubuntu.com/sync-blocklist.txt"
-        try:
-            with urllib.request.urlopen(url) as f:
-                cached_sync_blocklist = f.read().decode("utf-8")
-        except OSError:
-            print("WARNING: unable to download the sync blocklist. Erring on the side of caution.")
-            return ("ALWAYS", "INTERNAL ERROR: Unable to fetch sync blocklist")
+    try:
+        sync_blocklist = _fetch_sync_blocklist()
+    except OSError:
+        print("WARNING: unable to download the sync blocklist. Erring on the side of caution.")
+        return ("ALWAYS", "INTERNAL ERROR: Unable to fetch sync blocklist")
 
     applicable_lines = []
-    for line in cached_sync_blocklist.splitlines():
+    for line in sync_blocklist.splitlines():
         if not line.strip():
             applicable_lines = []
             continue
