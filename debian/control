@@ -32,7 +32,6 @@ Build-Depends:
  python3-setuptools,
  python3-yaml <!nocheck>,
 Standards-Version: 4.7.2
-Rules-Requires-Root: no
 Vcs-Git: https://git.launchpad.net/ubuntu-dev-tools
 Vcs-Browser: https://git.launchpad.net/ubuntu-dev-tools
 Homepage: https://launchpad.net/ubuntu-dev-tools
