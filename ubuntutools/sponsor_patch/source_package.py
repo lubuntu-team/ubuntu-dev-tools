@@ -17,6 +17,7 @@
 
 import logging
 import os
+import pathlib
 import re
 import subprocess
 import sys
@@ -407,7 +408,7 @@ class SourcePackage:
 
         return True
 
-    def _run_lintian(self):
+    def _run_lintian(self) -> str:
         """Runs lintian on either the source or binary changes file.
 
         Returns the filename of the created lintian output file.
@@ -424,16 +425,12 @@ class SourcePackage:
         # Check lintian
         assert os.path.isfile(changes_for_lintian), f"{changes_for_lintian} does not exist."
         cmd = ["lintian", "-IE", "--pedantic", "-q", "--profile", "ubuntu", changes_for_lintian]
-        lintian_filename = os.path.join(self._workdir, f"{package_and_version}.lintian")
-        Logger.debug("%s > %s", " ".join(cmd), lintian_filename)
-        report = subprocess.check_output(cmd, encoding="utf-8")
+        lintian_file = pathlib.Path(self._workdir) / f"{package_and_version}.lintian"
+        Logger.debug("%s > %s", " ".join(cmd), lintian_file)
+        with lintian_file.open("wb") as outfile:
+            subprocess.run(cmd, stdout=outfile, check=True)
 
-        # write lintian report file
-        lintian_file = open(lintian_filename, "w", encoding="utf-8")
-        lintian_file.writelines(report)
-        lintian_file.close()
-
-        return lintian_filename
+        return str(lintian_file)
 
     def sync(self, upload, series, bug_number, requester):
         """Does a sync of the source package."""
