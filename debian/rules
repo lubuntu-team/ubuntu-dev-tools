@@ -7,6 +7,7 @@ override_dh_auto_clean:
 
 override_dh_auto_test:
 ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
+	./run-linters --errors-only
 	python3 -m pytest -v ubuntutools
 endif
 
