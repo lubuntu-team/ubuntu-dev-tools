@@ -6,14 +6,27 @@ set -eu
 
 PYTHON_SCRIPTS=$(grep -l -r '^#! */usr/bin/python3$' .)
 
-echo "Running black..."
-black --check --diff . $PYTHON_SCRIPTS
+run_black() {
+    echo "Running black..."
+    black -C --check --diff . ${PYTHON_SCRIPTS}
+}
 
-echo "Running isort..."
-isort --check-only --diff .
+run_isort() {
+    echo "Running isort..."
+    isort --check-only --diff .
+}
 
-echo "Running flake8..."
-flake8 --max-line-length=99 --ignore=E203,W503 . $PYTHON_SCRIPTS
+run_flake8() {
+    echo "Running flake8..."
+    flake8 --max-line-length=99 --ignore=E203,W503 . $PYTHON_SCRIPTS
+}
 
-echo "Running pylint..."
-pylint $(find * -name '*.py') $PYTHON_SCRIPTS
+run_pylint() {
+    echo "Running pylint..."
+    pylint $(find * -name '*.py') $PYTHON_SCRIPTS
+}
+
+run_black
+run_isort
+run_flake8
+run_pylint
