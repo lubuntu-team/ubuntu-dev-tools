@@ -60,7 +60,7 @@ class ExamplePackage:
         with tempfile.TemporaryDirectory() as tmpdir:
             self._create(Path(tmpdir))
 
-    def _create(self, directory: Path):
+    def _create(self, directory: Path) -> None:
         pkgdir = directory / self.dirname
         pkgdir.mkdir()
         (pkgdir / self.content_filename).write_text(self.content_text)
