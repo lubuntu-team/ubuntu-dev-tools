@@ -667,20 +667,19 @@ class Archive(BaseWrapper):
                     rversion = getattr(record, "binary_package_version", None)
                 else:
                     rversion = getattr(record, "source_package_version", None)
-                skipmsg = f"Skipping version {rversion}: "
 
                 if record.pocket not in pockets:
                     err_msg = f"pocket {record.pocket} not in ({','.join(pockets)})"
-                    Logger.debug(skipmsg + err_msg)
+                    Logger.debug("Skipping version %s: %s", rversion, err_msg)
                     continue
                 if record.status not in statuses:
                     err_msg = f"status {record.status} not in ({','.join(statuses)})"
-                    Logger.debug(skipmsg + err_msg)
+                    Logger.debug("Skipping version %s: %s", rversion, err_msg)
                     continue
                 release = wrapper(record)
                 if binary and archtag and archtag != release.arch:
                     err_msg = f"arch {release.arch} does not match requested arch {archtag}"
-                    Logger.debug(skipmsg + err_msg)
+                    Logger.debug("Skipping version %s: %s", rversion, err_msg)
                     continue
                 # results are ordered so first is latest
                 cache[index] = release

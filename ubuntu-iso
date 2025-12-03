@@ -65,7 +65,7 @@ def main():
             err = True
             continue
 
-        Logger.info(prefix + version)
+        Logger.info("%s%s", prefix, version)
 
     if err:
         sys.exit(1)
