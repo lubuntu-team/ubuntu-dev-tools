@@ -4,3 +4,7 @@ line-length = 99
 [tool.isort]
 line_length = 99
 profile = "black"
+
+[tool.mypy]
+disallow_incomplete_defs = true
+ignore_missing_imports = true

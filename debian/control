@@ -18,6 +18,7 @@ Build-Depends:
  flake8,
  isort <!nocheck>,
  lsb-release,
+ mypy <!nocheck>,
  pylint <!nocheck>,
  python3-all,
  python3-apt,
@@ -30,6 +31,7 @@ Build-Depends:
  python3-pytest,
  python3-requests <!nocheck>,
  python3-setuptools,
+ python3-typeshed <!nocheck>,
  python3-yaml <!nocheck>,
 Standards-Version: 4.7.2
 Vcs-Git: https://git.launchpad.net/ubuntu-dev-tools

@@ -21,6 +21,12 @@ run_flake8() {
     flake8 --max-line-length=99 --ignore=E203,W503 . $PYTHON_SCRIPTS
 }
 
+run_mypy() {
+    echo "Running mypy..."
+    mypy .
+    mypy --scripts-are-modules $PYTHON_SCRIPTS
+}
+
 run_pylint() {
     echo "Running pylint..."
     pylint "$@" $(find * -name '*.py') $PYTHON_SCRIPTS
@@ -31,10 +37,12 @@ if test "${1-}" = "--errors-only"; then
     run_black || true
     run_isort || true
     run_flake8 || true
+    run_mypy
     run_pylint --errors-only
 else
     run_black
     run_isort
     run_flake8
+    run_mypy
     run_pylint
 fi
