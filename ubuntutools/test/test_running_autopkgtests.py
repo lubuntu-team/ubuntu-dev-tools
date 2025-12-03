@@ -12,7 +12,7 @@
 # LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
 # OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 # PERFORMANCE OF THIS SOFTWARE.
-""" Tests for running_autopkgtests
+"""Tests for running_autopkgtests
 Tests using cached data from autopkgtest servers.
 
 These tests only ensure code changes don't change parsing behavior

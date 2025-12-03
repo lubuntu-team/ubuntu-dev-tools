@@ -473,7 +473,7 @@ def is_blocklisted(query):
             continue
         applicable_lines.append(line)
         try:
-            line = line[:line.index("#")]
+            line = line[: line.index("#")]
         except ValueError:
             pass
         source = line.strip()
@@ -523,7 +523,7 @@ def parse():
         "-y",
         "--yes",
         action="store_true",
-        help="Automatically sync without prompting. Use with caution and care."
+        help="Automatically sync without prompting. Use with caution and care.",
     )
     parser.add_argument("-d", "--distribution", help="Debian distribution to sync from.")
     parser.add_argument("-r", "--release", help="Specify target Ubuntu release.")
@@ -776,7 +776,9 @@ def main():
             continue
 
         if args.lp:
-            if not copy(src_pkg, args.release, args.bugs, sponsoree, args.simulate, args.force, args.yes):
+            if not copy(
+                src_pkg, args.release, args.bugs, sponsoree, args.simulate, args.force, args.yes
+            ):
                 continue
         else:
             os.environ["DEB_VENDOR"] = "Ubuntu"

@@ -734,6 +734,7 @@ class PersonalPackageArchiveSourcePackage(UbuntuSourcePackage):
 
 class UbuntuCloudArchiveSourcePackage(PersonalPackageArchiveSourcePackage):
     "Download / unpack an Ubuntu Cloud Archive source package"
+
     TEAM = "ubuntu-cloud-archive"
     PROJECT = "cloud-archive"
     VALID_POCKETS = ["updates", "proposed", "staging"]
