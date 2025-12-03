@@ -340,11 +340,9 @@ class SourcePackage(ABC):
     def _archive_servers(self):
         "Generator for mirror and master servers"
         # Always provide the mirrors first
-        for server in self.mirrors:
-            yield server
+        yield from self.mirrors
         # Don't repeat servers that are in both mirrors and masters
-        for server in set(self.masters) - set(self.mirrors):
-            yield server
+        yield from set(self.masters) - set(self.mirrors)
 
     def _source_urls(self, name):
         "Generator of sources for name"
@@ -635,8 +633,7 @@ class DebianSourcePackage(SourcePackage):
 
     def _source_urls(self, name):
         "Generator of sources for name"
-        for url in super()._source_urls(name):
-            yield url
+        yield from super()._source_urls(name)
         if name in self.snapshot_files:
             yield self.snapshot_files[name]
 
