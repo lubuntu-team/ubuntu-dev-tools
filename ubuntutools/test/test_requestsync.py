@@ -28,6 +28,7 @@ class BinaryTests(unittest.TestCase):
     def test_keyring_installed(self):
         """Smoke test for required lp api dependencies"""
         try:
+            # pylint: disable-next=import-outside-toplevel,unused-import
             import keyring  # noqa: F401
-        except ModuleNotFoundError:
-            raise ModuleNotFoundError("package python3-keyring is not installed")
+        except ModuleNotFoundError as error:
+            raise ModuleNotFoundError("package python3-keyring is not installed") from error
