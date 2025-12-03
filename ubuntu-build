@@ -181,7 +181,7 @@ def main():
 
     archive = launchpad.archives.getByReference(reference=args.archive)
     try:
-        distroseries = ubuntu.getSeries(name_or_version=release)
+        distroseries = ubuntu.getSeries(name_or_version=release.split("-")[0])
     except lazr.restfulclient.errors.NotFound as error:
         Logger.error(error)
         sys.exit(1)
@@ -234,11 +234,11 @@ def main():
         # are in place.
         if operation == "retry":
             necessary_privs = archive.checkUpload(
-                component=sources.getComponent(),
+                component=component,
                 distroseries=distroseries,
                 person=launchpad.me,
                 pocket=pocket,
-                sourcepackagename=sources.getPackageName(),
+                sourcepackagename=sources.source_package_name,
             )
             if not necessary_privs:
                 Logger.error(
