@@ -1,3 +1,10 @@
+ubuntu-dev-tools (0.209) UNRELEASED; urgency=medium
+
+  * Demote sudo to Recommends, and indicate which tools need it in the
+    package description.
+
+ -- Colin Watson <cjwatson@debian.org>  Thu, 01 Jan 2026 16:05:08 +0000
+
 ubuntu-dev-tools (0.208) unstable; urgency=medium
 
   [ Gianfranco Costamagna ]

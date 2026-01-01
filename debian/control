@@ -60,7 +60,6 @@ Depends:
  python3-ubuntutools (= ${binary:Version}),
  python3-yaml,
  sensible-utils,
- sudo,
  tzdata,
  ${misc:Depends},
  ${perl:Depends},
@@ -77,6 +76,7 @@ Recommends:
  quilt,
  reportbug (>= 3.39ubuntu1),
  sbuild | pbuilder | cowbuilder,
+ sudo,
  ubuntu-keyring | ubuntu-archive-keyring,
 Suggests:
  bzr | brz,
@@ -93,7 +93,7 @@ Description: useful tools for Ubuntu developers
     willing to help fix it.
   - check-mir - check support status of build/binary dependencies
   - check-symbols - will compare and give you a diff of the exported symbols of
-    all .so files in a binary package.
+    all .so files in a binary package. [sudo]
   - dch-repeat - used to repeat a change log into an older release.
   - grab-merge - grabs a merge from merges.ubuntu.com easily.
   - grep-merges - search for pending merges from Debian.
@@ -101,9 +101,10 @@ Description: useful tools for Ubuntu developers
   - merge-changelog - manually merges two Debian changelogs with the same base
     version.
   - mk-sbuild - script to create LVM snapshot chroots via schroot and
-    sbuild.
+    sbuild. [sbuild, sudo]
   - pbuilder-dist, cowbuilder-dist - wrapper script for managing several build
     chroots (for different Ubuntu and Debian releases) on the same system.
+    [pbuilder | cowbuilder, sudo]
   - pull-debian-debdiff - attempts to find and download a specific version of
     a Debian package and its immediate parent to generate a debdiff.
   - pull-debian-source - downloads the latest source package available in
@@ -123,7 +124,7 @@ Description: useful tools for Ubuntu developers
     autopkgtests on the Ubuntu autopkgtest infrastructure
   - seeded-in-ubuntu - query if a package is safe to upload during a freeze.
   - setup-packaging-environment - assistant to get an Ubuntu installation
-    ready for packaging work.
+    ready for packaging work. [sudo]
   - sponsor-patch - Downloads a patch from a Launchpad bug, patches the source
     package, and uploads it (to Ubuntu or a PPA)
   - submittodebian - automatically send your changes to Debian as a bug report.
