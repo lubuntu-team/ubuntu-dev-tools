@@ -1,3 +1,14 @@
+ubuntu-dev-tools (0.209) UNRELEASED; urgency=medium
+
+  [ Colin Watson ]
+  * Demote sudo to Recommends, and indicate which tools need it in the
+    package description.
+
+  [ Florent 'Skia' Jacquet ]
+  * pm-helper: make use of YesNoQuestion
+
+ -- Mattia Rizzolo <mattia@debian.org>  Tue, 06 Jan 2026 17:55:43 +0100
+
 ubuntu-dev-tools (0.208) unstable; urgency=medium
 
   [ Gianfranco Costamagna ]
