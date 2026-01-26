@@ -1,3 +1,9 @@
+ubuntu-dev-tools (0.211) UNRELEASED; urgency=medium
+
+  * submittodebian: do no run bzr if it is not present
+
+ -- Athos Ribeiro <athos@ubuntu.com>  Thu, 30 Apr 2026 14:35:22 -0300
+
 ubuntu-dev-tools (0.210) unstable; urgency=medium
 
   * Team upload

@@ -74,10 +74,7 @@ Thanks for considering the patch.
 
 
 def build_source_package():
-    if os.path.isdir(".bzr"):
-        cmd = ["bzr", "bd", "--builder=dpkg-buildpackage", "-S", "--", "-uc", "-us", "-nc"]
-    else:
-        cmd = ["dpkg-buildpackage", "-S", "-uc", "-us", "-nc"]
+    cmd = ["dpkg-buildpackage", "-S", "-uc", "-us", "-nc"]
     env = os.environ.copy()
     # Unset DEBEMAIL in case there's an @ubuntu.com e-mail address
     env.pop("DEBEMAIL", None)
@@ -93,23 +90,19 @@ def gen_debdiff(tmpdir, changelog):
 
     debdiff = os.path.join(tmpdir, f"{pkg}_{newver}.debdiff")
 
-    diff_cmd = ["bzr", "diff", "-r", "tag:" + str(oldver)]
-    if call(diff_cmd, stdout=DEVNULL, stderr=DEVNULL) == 1:
-        Logger.info("Extracting bzr diff between %s and %s", oldver, newver)
-    else:
-        if oldver.epoch is not None:
-            oldver = str(oldver)[str(oldver).index(":") + 1 :]
-        if newver.epoch is not None:
-            newver = str(newver)[str(newver).index(":") + 1 :]
+    if oldver.epoch is not None:
+        oldver = str(oldver)[str(oldver).index(":") + 1 :]
+    if newver.epoch is not None:
+        newver = str(newver)[str(newver).index(":") + 1 :]
 
-        olddsc = f"../{pkg}_{oldver}.dsc"
-        newdsc = f"../{pkg}_{newver}.dsc"
+    olddsc = f"../{pkg}_{oldver}.dsc"
+    newdsc = f"../{pkg}_{newver}.dsc"
 
-        check_file(olddsc)
-        check_file(newdsc)
+    check_file(olddsc)
+    check_file(newdsc)
 
-        Logger.info("Generating debdiff between %s and %s", oldver, newver)
-        diff_cmd = ["debdiff", olddsc, newdsc]
+    Logger.info("Generating debdiff between %s and %s", oldver, newver)
+    diff_cmd = ["debdiff", olddsc, newdsc]
 
     with Popen(diff_cmd, stdout=PIPE, encoding="utf-8") as diff:
         with open(debdiff, "w", encoding="utf-8") as debdiff_f:
