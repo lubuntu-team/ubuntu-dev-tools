@@ -1,4 +1,4 @@
-ubuntu-dev-tools (0.209) UNRELEASED; urgency=medium
+ubuntu-dev-tools (0.209) unstable; urgency=medium
 
   [ Colin Watson ]
   * Demote sudo to Recommends, and indicate which tools need it in the
@@ -7,7 +7,13 @@ ubuntu-dev-tools (0.209) UNRELEASED; urgency=medium
   [ Florent 'Skia' Jacquet ]
   * pm-helper: make use of YesNoQuestion
 
- -- Mattia Rizzolo <mattia@debian.org>  Tue, 06 Jan 2026 17:55:43 +0100
+  [ Benjamin Drung ]
+  * setup.py: specify type of data_files (Closes: #1127543, LP: #2143232)
+  * Remove redundant Priority: optional field
+  * Update year in copyright
+  * Bump Standards-Version to 4.7.3
+
+ -- Benjamin Drung <bdrung@debian.org>  Wed, 04 Mar 2026 22:16:02 +0100
 
 ubuntu-dev-tools (0.208) unstable; urgency=medium
 
