@@ -3,6 +3,7 @@
 import glob
 import pathlib
 import re
+from collections.abc import Sequence
 
 from setuptools import setup
 
@@ -76,7 +77,7 @@ scripts = [
     "ubuntu-upload-permission",
     "update-maintainer",
 ]
-data_files = [
+data_files: list[tuple[str, Sequence[str]]] = [
     ("share/bash-completion/completions", glob.glob("bash_completion/*")),
     ("share/man/man1", glob.glob("doc/*.1")),
     ("share/man/man5", glob.glob("doc/*.5")),
