@@ -1,6 +1,5 @@
 Source: ubuntu-dev-tools
 Section: devel
-Priority: optional
 Maintainer: Ubuntu Developers <ubuntu-dev-tools@packages.debian.org>
 Uploaders:
  Benjamin Drung <bdrung@debian.org>,
