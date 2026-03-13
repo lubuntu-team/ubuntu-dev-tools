@@ -182,6 +182,9 @@ def display_verbose(package, values):
     if not values:
         Logger.info("No reverse dependencies found")
         return
+    if not values.get(package):
+        Logger.info("No reverse dependencies found with the current filters")
+        return
 
     def log_package(values, package, arch, dependency, visited, offset=0):
         line = f"{'  ' * offset}* {package}"
