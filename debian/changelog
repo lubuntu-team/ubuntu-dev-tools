@@ -1,3 +1,20 @@
+ubuntu-dev-tools (0.210) unstable; urgency=medium
+
+  * Team upload
+
+  [ Nick Rosbrook ]
+  * d/control: Depends: dput-ng instead of dput (LP: #2147656)
+
+  [ Nadzeya Hutsko ]
+  * reverse-depends: print message when results are filtered out
+    (LP: #2143989)
+
+  [ Benjamin Drung ]
+  * Format Python code with black 26
+  * Bump Standards-Version to 4.7.4
+
+ -- Nadzeya Hutsko <nadzeya.hutsko@canonical.com>  Thu, 16 Apr 2026 12:36:55 +0200
+
 ubuntu-dev-tools (0.209) unstable; urgency=medium
 
   [ Colin Watson ]
