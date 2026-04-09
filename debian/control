@@ -46,7 +46,7 @@ Depends:
  devscripts (>= 2.11.0~),
  diffstat,
  distro-info (>= 0.2~),
- dput,
+ dput-ng,
  lsb-release,
  python3,
  python3-apt,
