@@ -69,9 +69,7 @@ In Ubuntu, the attached patch was applied to achieve the following:
 %s
 
 Thanks for considering the patch.
-""" % (
-        "\n".join(entry.changes())
-    )
+""" % ("\n".join(entry.changes()))
     return msg
 
 

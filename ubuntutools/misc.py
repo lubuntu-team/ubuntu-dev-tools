@@ -169,7 +169,7 @@ def split_release_pocket(release, default="Release"):
         raise ValueError("No release name specified")
 
     if "-" in release:
-        (release, pocket) = release.rsplit("-", 1)
+        release, pocket = release.rsplit("-", 1)
         pocket = pocket.capitalize()
 
         if pocket not in POCKETS:
@@ -342,7 +342,7 @@ def download(src, dst, size=0, *, blocksize=DOWNLOAD_BLOCKSIZE_DEFAULT):
         shutil.copyfile(src, dst)
         return dst
 
-    (src, username, password) = extract_authentication(src)
+    src, username, password = extract_authentication(src)
     auth = (username, password) if username or password else None
 
     with tempfile.TemporaryDirectory() as tmpdir:

@@ -125,13 +125,11 @@ def walk_multipart_message(message: EmailMessage) -> tuple[str, list[tuple[int, 
             summary += f"Message part #{i}\n"
             summary += part.get_content() + "\n"
         else:
-            raise RuntimeError(
-                f"""Unknown message part
+            raise RuntimeError(f"""Unknown message part
 Your Debian bug is too weird to be imported in Launchpad, sorry.
 You can fix that by patching this script in ubuntu-dev-tools.
 Faulty message part:
-{part}"""
-            )
+{part}""")
         i += 1
 
     return summary, attachments

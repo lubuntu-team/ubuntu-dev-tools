@@ -158,7 +158,7 @@ class BaseWrapper(metaclass=MetaWrapper):
                 pass
 
         if isinstance(data, Entry):
-            (service_root, resource_type) = data.resource_type_link.split("#")
+            service_root, resource_type = data.resource_type_link.split("#")
             if service_root == str(Launchpad._root_uri) and resource_type in cls.resource_type:
                 # check if it's already cached
                 cached = cls._cache.get(data.self_link)
@@ -1043,9 +1043,9 @@ class SourcePackagePublishingHistory(BaseWrapper):
                 # strip out the URL leading text.
                 filename = os.path.basename(urlparse(url).path)
                 # strip the file suffix
-                (pkgname, _, extension) = filename.rpartition(".")
+                pkgname, _, extension = filename.rpartition(".")
                 # split into name, version, arch
-                (name_, _, arch_) = pkgname.rsplit("_", 2)
+                name_, _, arch_ = pkgname.rsplit("_", 2)
                 # arch 'all' has separate bpph for each real arch,
                 # but all point to the same binary url
                 if arch_ == "all":

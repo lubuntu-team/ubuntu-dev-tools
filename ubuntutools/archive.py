@@ -738,7 +738,7 @@ class UbuntuCloudArchiveSourcePackage(PersonalPackageArchiveSourcePackage):
 
     def __init__(self, *args, **kwargs):
         # Need to determine actual series/pocket ppa now, as it affects getArchive()
-        (series, pocket) = self._findReleaseAndPocketForPackage(
+        series, pocket = self._findReleaseAndPocketForPackage(
             kwargs.get("series"),
             kwargs.get("pocket"),
             kwargs.get("package"),
@@ -921,7 +921,7 @@ class UbuntuCloudArchiveSourcePackage(PersonalPackageArchiveSourcePackage):
             if version:
                 params["version"] = version
             if ppa.getPublishedSources(**params):
-                (ppa_release, _, ppa_pocket) = ppa.name.partition("-")
+                ppa_release, _, ppa_pocket = ppa.name.partition("-")
                 return (ppa_release, ppa_pocket)
         # package/version not found in any ppa
         return default

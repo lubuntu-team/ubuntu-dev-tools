@@ -266,7 +266,7 @@ class SourcePackage:
         wants to change something.
         """
 
-        (devel_series, supported_series) = _get_series(launchpad)
+        devel_series, supported_series = _get_series(launchpad)
 
         if upload == "ubuntu":
             allowed = (

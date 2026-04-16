@@ -313,7 +313,7 @@ def sponsor_patch(bug_number, build, builder, edit, keyid, lpinstance, update, u
     launchpad = Launchpad.login_with("sponsor-patch", lpinstance)
     bug = launchpad.bugs[bug_number]
 
-    (patch, branch) = get_patch_or_branch(bug)
+    patch, branch = get_patch_or_branch(bug)
     task = get_open_ubuntu_bug_task(launchpad, bug, branch)
 
     dsc_file = task.download_source()

@@ -264,7 +264,7 @@ class PullPkg:
             return UbuntuCloudArchiveSourcePackage.parseReleaseAndPocket(release)
 
         # Check if release[-pocket] is specified
-        (release, pocket) = split_release_pocket(release, default=None)
+        release, pocket = split_release_pocket(release, default=None)
         Logger.debug("Parsed release '%s' pocket '%s'", release, pocket)
 
         if distro == DISTRO_DEBIAN:
@@ -291,7 +291,7 @@ class PullPkg:
         # Verify specified release is valid, and params in correct order
         pocket = None
         try:
-            (release, pocket) = self.parse_release(distro, release)
+            release, pocket = self.parse_release(distro, release)
         except (SeriesNotFoundException, PocketDoesNotExistError):
             if try_swap:
                 Logger.debug("Param '%s' not valid series, must be version", release)
@@ -343,7 +343,7 @@ class PullPkg:
         params["arch"] = options["arch"]
 
         if options["release"]:
-            (release, version, pocket) = self.parse_release_and_version(
+            release, version, pocket = self.parse_release_and_version(
                 distro, options["release"], options["version"]
             )
             params["series"] = release

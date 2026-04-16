@@ -75,7 +75,7 @@ def get_queued():
                     if key == "private job":
                         pkg = triggers = ppas = "private job"
                     else:
-                        (pkg, json_data) = key.split(maxsplit=1)
+                        pkg, json_data = key.split(maxsplit=1)
                         try:
                             jobinfo = json.loads(json_data)
                             triggers = ",".join(jobinfo.get("triggers", "-"))

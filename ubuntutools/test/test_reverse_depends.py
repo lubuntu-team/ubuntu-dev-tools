@@ -59,9 +59,7 @@ class DisplayVerboseTestCase(unittest.TestCase):
         """Non-empty results are displayed without the 'not found' messages"""
         values = {
             "r-cran-bdgraph": {
-                "Reverse-Depends": [
-                    {"Package": "r-cran-qgraph", "Architectures": ["amd64"]},
-                ]
+                "Reverse-Depends": [{"Package": "r-cran-qgraph", "Architectures": ["amd64"]}]
             }
         }
         with mock.patch.object(reverse_depends.Logger, "info") as mock_info:

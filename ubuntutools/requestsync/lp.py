@@ -76,13 +76,11 @@ def need_sponsorship(name, component, release):
 
     need_sponsor = not PersonTeam.me.canUploadPackage(archive, distroseries, name, component)
     if need_sponsor:
-        print(
-            """You are not able to upload this package directly to Ubuntu.
+        print("""You are not able to upload this package directly to Ubuntu.
 Your sync request shall require an approval by a member of the appropriate
 sponsorship team, who shall be subscribed to this bug report.
 This must be done before it can be processed by a member of the Ubuntu Archive
-team."""
-        )
+team.""")
         confirmation_prompt()
 
     return need_sponsor

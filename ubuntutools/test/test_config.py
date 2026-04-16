@@ -68,9 +68,7 @@ class ConfigTestCase(unittest.TestCase):
                 del os.environ[k]
 
     def test_config_parsing(self):
-        self._config_files[
-            "user"
-        ] = """#COMMENT=yes
+        self._config_files["user"] = """#COMMENT=yes
 \tTAB_INDENTED=yes
  SPACE_INDENTED=yes
 SPACE_SUFFIX=yes
@@ -117,10 +115,7 @@ REPEAT=yes
         self.assertEqual(self.get_value("BUILDER", default="foo"), "foo")
 
     def test_scriptname_precedence(self):
-        self._config_files[
-            "user"
-        ] = """TEST_BUILDER=foo
-                                        UBUNTUTOOLS_BUILDER=bar"""
+        self._config_files["user"] = "TEST_BUILDER=foo\nUBUNTUTOOLS_BUILDER=bar\n"
         self.assertEqual(self.get_value("BUILDER"), "foo")
 
     def test_configfile_precedence(self):

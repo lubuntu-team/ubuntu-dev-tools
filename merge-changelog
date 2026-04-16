@@ -32,15 +32,13 @@ Logger = getLogger()
 
 
 def usage(exit_code: int = 1) -> NoReturn:
-    Logger.info(
-        """Usage: merge-changelog <left changelog> <right changelog>
+    Logger.info("""Usage: merge-changelog <left changelog> <right changelog>
 
 merge-changelog takes two changelogs that once shared a common source,
 merges them back together, and prints the merged result to stdout.  This
 is useful if you need to manually merge a ubuntu package with a new
 Debian release of the package.
-"""
-    )
+""")
     sys.exit(exit_code)
 
 
