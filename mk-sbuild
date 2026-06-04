@@ -764,7 +764,6 @@ fi
 [ "$proxy" = "_unset_" ] && proxy=""
 
 DEBOOTSTRAP_COMMAND=debootstrap
-# Use qemu-kvm-extras-static for foreign chroots
 if [ "$CHROOT_ARCH" != "$HOST_ARCH" ] ; then
     case "$CHROOT_ARCH-$HOST_ARCH" in
     # Sometimes we don't need qemu
@@ -772,9 +771,13 @@ if [ "$CHROOT_ARCH" != "$HOST_ARCH" ] ; then
         ;;
     # Sometimes we do
     *)
-        DEBOOTSTRAP_COMMAND=debootstrap
-        if ! which "qemu-x86_64-static"; then
+        # pick qemu-user-static if the package exists as real package
+        # if not use qemu-user that replaces qemu-user-static
+        if apt-cache show --no-all-versions qemu-user-static 2>/dev/null \
+            | grep -q '^Package: qemu-user-static$'; then
             sudo apt-get install qemu-user-static
+        else
+            sudo apt-get install qemu-user
         fi
         ;;
     esac
