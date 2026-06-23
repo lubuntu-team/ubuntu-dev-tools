@@ -1,8 +1,13 @@
-ubuntu-dev-tools (0.211) UNRELEASED; urgency=medium
+ubuntu-dev-tools (0.211) unstable; urgency=medium
 
+  [ Hector Cao ]
+  * mk-sbuild: install qemu-user if qemu-user-static does not exist
+    (LP: #2146418)
+
+  [ Athos Ribeiro ]
   * submittodebian: do no run bzr if it is not present
 
- -- Athos Ribeiro <athos@ubuntu.com>  Thu, 30 Apr 2026 14:35:22 -0300
+ -- Benjamin Drung <bdrung@debian.org>  Tue, 23 Jun 2026 17:43:08 +0200
 
 ubuntu-dev-tools (0.210) unstable; urgency=medium
 
