@@ -771,9 +771,15 @@ if [ "$CHROOT_ARCH" != "$HOST_ARCH" ] ; then
         ;;
     # Sometimes we do
     *)
+        # skip installation if qemu-user or qemu-user-static is already installed
+        if dpkg-query -W -f='${Status}' qemu-user 2>/dev/null \
+                | grep -q '^install ok installed$' \
+            || dpkg-query -W -f='${Status}' qemu-user-static 2>/dev/null \
+                | grep -q '^install ok installed$'; then
+            :
         # pick qemu-user-static if the package exists as real package
         # if not use qemu-user that replaces qemu-user-static
-        if apt-cache show --no-all-versions qemu-user-static 2>/dev/null \
+        elif apt-cache show --no-all-versions qemu-user-static 2>/dev/null \
             | grep -q '^Package: qemu-user-static$'; then
             sudo apt-get install qemu-user-static
         else
