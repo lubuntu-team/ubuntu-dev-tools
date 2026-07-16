@@ -578,6 +578,11 @@ def parse():
         action="store_true",
         help="Show what would be done, but don't actually do it.",
     )
+    parser.add_argument(
+        "--skip-blocklist-check",
+        action="store_true",
+        help="Skip checking if the packages are on the blocklist. Use this option with care!",
+    )
 
     no_lp = parser.add_argument_group(
         "Local sync preparation options",
@@ -780,7 +785,7 @@ def main():
         if not src_pkg:
             continue
 
-        if _check_if_blocklisted(src_pkg.source, args.fakesync):
+        if not args.skip_blocklist_check and _check_if_blocklisted(src_pkg.source, args.fakesync):
             continue
 
         if args.lp:
