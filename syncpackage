@@ -696,7 +696,7 @@ def _check_if_blocklisted(source: str, fakesync: bool) -> bool:
                     Logger.info(line)
 
     if comments:
-        Logger.info("Blacklist Comments:")
+        Logger.info("Blocklist Comments:")
         for comment in comments:
             for line in textwrap.wrap(comment):
                 Logger.info("  %s", line)
