@@ -1,3 +1,14 @@
+ubuntu-dev-tools (0.212) unstable; urgency=medium
+
+  [ Hector Cao ]
+  * mk-sbuild: Improve the installation of qemu-user package.
+
+  [ Benjamin Drung ]
+  * Switch to debhelper 14
+  * submittodebian: remove unused imports
+
+ -- Benjamin Drung <bdrung@debian.org>  Thu, 16 Jul 2026 17:03:04 +0200
+
 ubuntu-dev-tools (0.211) unstable; urgency=medium
 
   [ Hector Cao ]
