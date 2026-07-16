@@ -32,7 +32,7 @@ import os
 import re
 import shutil
 import sys
-from subprocess import DEVNULL, PIPE, Popen, call, check_call, run
+from subprocess import PIPE, Popen, check_call, run
 from tempfile import mkdtemp
 
 from debian.changelog import Changelog
