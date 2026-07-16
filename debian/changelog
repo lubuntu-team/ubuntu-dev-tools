@@ -1,3 +1,9 @@
+ubuntu-dev-tools (0.213) unstable; urgency=medium
+
+  * syncpackage: add --skip-blocklist-check option
+
+ -- Benjamin Drung <bdrung@debian.org>  Thu, 16 Jul 2026 19:16:42 +0200
+
 ubuntu-dev-tools (0.212) unstable; urgency=medium
 
   [ Hector Cao ]
