@@ -655,6 +655,50 @@ def parse():
     return args
 
 
+def _check_if_blocklisted(source: str, fakesync: bool) -> bool:
+    blocklisted, comments = is_blocklisted(source)
+    blocklist_fail = False
+    if blocklisted:
+        messages = []
+
+        if blocklisted == "CURRENT":
+            Logger.debug(
+                "Source package %s is temporarily blocklisted "
+                "(blocklisted_current). "
+                "Ubuntu ignores these for now. "
+                "See also LP: #841372",
+                source,
+            )
+        else:
+            if fakesync:
+                messages += ["Doing a fakesync, overriding blocklist."]
+            else:
+                blocklist_fail = True
+                messages += [
+                    "If this package needs a fakesync, use --fakesync",
+                    "If you think this package shouldn't be "
+                    "blocklisted, please file a bug explaining your "
+                    "reasoning and subscribe ~ubuntu-archive.",
+                ]
+
+        if blocklist_fail:
+            Logger.error("Source package %s is blocklisted.", source)
+        elif blocklisted == "ALWAYS":
+            Logger.info("Source package %s is blocklisted.", source)
+        if messages:
+            for message in messages:
+                for line in textwrap.wrap(message):
+                    Logger.info(line)
+
+    if comments:
+        Logger.info("Blacklist Comments:")
+        for comment in comments:
+            for line in textwrap.wrap(comment):
+                Logger.info("  %s", line)
+
+    return blocklist_fail
+
+
 def main():
     """Handle parameters and get the ball rolling"""
     args = parse()
@@ -736,47 +780,7 @@ def main():
         if not src_pkg:
             continue
 
-        blocklisted, comments = is_blocklisted(src_pkg.source)
-        blocklist_fail = False
-        if blocklisted:
-            messages = []
-
-            if blocklisted == "CURRENT":
-                Logger.debug(
-                    "Source package %s is temporarily blocklisted "
-                    "(blocklisted_current). "
-                    "Ubuntu ignores these for now. "
-                    "See also LP: #841372",
-                    src_pkg.source,
-                )
-            else:
-                if args.fakesync:
-                    messages += ["Doing a fakesync, overriding blocklist."]
-                else:
-                    blocklist_fail = True
-                    messages += [
-                        "If this package needs a fakesync, use --fakesync",
-                        "If you think this package shouldn't be "
-                        "blocklisted, please file a bug explaining your "
-                        "reasoning and subscribe ~ubuntu-archive.",
-                    ]
-
-            if blocklist_fail:
-                Logger.error("Source package %s is blocklisted.", src_pkg.source)
-            elif blocklisted == "ALWAYS":
-                Logger.info("Source package %s is blocklisted.", src_pkg.source)
-            if messages:
-                for message in messages:
-                    for line in textwrap.wrap(message):
-                        Logger.info(line)
-
-        if comments:
-            Logger.info("Blacklist Comments:")
-            for comment in comments:
-                for line in textwrap.wrap(comment):
-                    Logger.info("  %s", line)
-
-        if blocklist_fail:
+        if _check_if_blocklisted(src_pkg.source, args.fakesync):
             continue
 
         if args.lp:
