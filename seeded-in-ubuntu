@@ -40,7 +40,10 @@ def load_index(url):
     cachedir = os.path.expanduser("~/.cache/ubuntu-dev-tools")
     seeded = os.path.join(cachedir, "seeded.json.gz")
 
-    if not os.path.isfile(seeded) or time.time() - os.path.getmtime(seeded) > 60 * 60 * 2:
+    if (
+        not os.path.isfile(seeded)
+        or time.time() - os.path.getmtime(seeded) > 60 * 60 * 2
+    ):
         if not os.path.isdir(cachedir):
             os.makedirs(cachedir)
         urllib.request.urlretrieve(url, seeded)
@@ -50,7 +53,8 @@ def load_index(url):
             return json.load(f)
     except Exception as e:  # pylint: disable=broad-except
         Logger.error(
-            "Unable to parse seed data: %s. Deleting cached data, please try again.", str(e)
+            "Unable to parse seed data: %s. Deleting cached data, please try again.",
+            str(e),
         )
         os.unlink(seeded)
     return None
@@ -68,7 +72,9 @@ def resolve_binaries(sources):
         except PackageNotFoundException as e:
             Logger.error(str(e))
             continue
-        binaries[source] = sorted(set(bpph.getPackageName() for bpph in spph.getBinaries()))
+        binaries[source] = sorted(
+            set(bpph.getPackageName() for bpph in spph.getBinaries())
+        )
 
     return binaries
 
@@ -81,7 +87,9 @@ def present_on(appearences):
     for flavor, types in present.items():
         if len(types) > 1:
             types.discard("supported")
-    output = [f"  {flavor}: {', '.join(sorted(types))}" for flavor, types in present.items()]
+    output = [
+        f"  {flavor}: {', '.join(sorted(types))}" for flavor, types in present.items()
+    ]
     output.sort()
     return "\n".join(output)
 
@@ -133,7 +141,9 @@ def main():
         default=DATA_URL,
         help="URL for the seeded packages index. Default: UbuntuWire",
     )
-    parser.add_argument("packages", metavar="package", nargs="+", help=argparse.SUPPRESS)
+    parser.add_argument(
+        "packages", metavar="package", nargs="+", help=argparse.SUPPRESS
+    )
     args = parser.parse_args()
 
     # Login anonymously to LP
