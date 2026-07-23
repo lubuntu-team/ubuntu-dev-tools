@@ -18,49 +18,56 @@
 # pylint: enable=invalid-name
 
 import argparse
-import collections
 import gzip
 import json
 import os
 import time
+import urllib.error
 import urllib.request
 
+from distro_info import UbuntuDistroInfo
+
 from ubuntutools import getLogger
-from ubuntutools.lp.lpapicache import Distribution, Launchpad, PackageNotFoundException
+from ubuntutools.lp.lpapicache import Distribution, PackageNotFoundException
 
 Logger = getLogger()
+DEFAULT_DATA_URL_BASE = "https://static-reports.ubuntu.com/seeded-in-ubuntu/"
 
-DATA_URL = "http://qa.ubuntuwire.org/ubuntu-seeded-packages/seeded.json.gz"
+udi = UbuntuDistroInfo()
+_DEFAULT_SERIES = udi.devel()
+_DEFAULT_ARCH = "amd64"
 
 
-def load_index(url):
+def load_index(base_url, series, arch):
     """Download a new copy of the image contents index, if necessary,
     and read it.
     """
     cachedir = os.path.expanduser("~/.cache/ubuntu-dev-tools")
-    seeded = os.path.join(cachedir, "seeded.json.gz")
+    index_name = f"seeded-{series}-{arch}.json.gz"
+    index_path = os.path.join(cachedir, index_name)
+    url = f"{base_url.rstrip('/')}/{index_name}"
 
     if (
-        not os.path.isfile(seeded)
-        or time.time() - os.path.getmtime(seeded) > 60 * 60 * 2
+        not os.path.isfile(index_path)
+        or time.time() - os.path.getmtime(index_path) > 60 * 60 * 2
     ):
         if not os.path.isdir(cachedir):
             os.makedirs(cachedir)
-        urllib.request.urlretrieve(url, seeded)
+        urllib.request.urlretrieve(url, index_path)
 
     try:
-        with gzip.open(seeded, "r") as f:
+        with gzip.open(index_path, "r") as f:
             return json.load(f)
     except Exception as e:  # pylint: disable=broad-except
         Logger.error(
             "Unable to parse seed data: %s. Deleting cached data, please try again.",
             str(e),
         )
-        os.unlink(seeded)
+        os.unlink(index_path)
     return None
 
 
-def resolve_binaries(sources):
+def resolve_binaries(sources, series_codename, arch):
     """Return a dict of source:binaries for all binary packages built by
     sources
     """
@@ -68,43 +75,38 @@ def resolve_binaries(sources):
     binaries = {}
     for source in sources:
         try:
-            spph = archive.getSourcePackage(source)
+            spph = archive.getSourcePackage(source, series=series_codename)
         except PackageNotFoundException as e:
             Logger.error(str(e))
             continue
         binaries[source] = sorted(
-            set(bpph.getPackageName() for bpph in spph.getBinaries())
+            {bpph.getPackageName() for bpph in spph.getBinaries(arch=arch)}
         )
 
     return binaries
 
 
 def present_on(appearences):
-    """Format a list of (flavor, type) tuples into a human-readable string"""
-    present = collections.defaultdict(set)
-    for flavor, type_ in appearences:
-        present[flavor].add(type_)
-    for flavor, types in present.items():
-        if len(types) > 1:
-            types.discard("supported")
+    """Format a dict of {flavor, [type, ...]} into a human-readable string"""
     output = [
-        f"  {flavor}: {', '.join(sorted(types))}" for flavor, types in present.items()
+        f"  {flavor}: {', '.join(sorted(types))}"
+        for flavor, types in appearences.items()
     ]
     output.sort()
     return "\n".join(output)
 
 
-def output_binaries(index, binaries):
+def output_binaries(index, binaries, series):
     """Print binaries found in index"""
     for binary in binaries:
         if binary in index:
-            Logger.info("%s is seeded in:", binary)
+            Logger.info("%s is seeded for %s in:", binary, series)
             Logger.info(present_on(index[binary]))
         else:
-            Logger.info("%s is not seeded (and may not exist).", binary)
+            Logger.info("%s is not seeded (and may not exist) for %s.", binary, series)
 
 
-def output_by_source(index, by_source):
+def output_by_source(index, by_source, series):
     """Logger.Info(binaries found in index. Grouped by source"""
     for source, binaries in by_source.items():
         seen = False
@@ -118,43 +120,59 @@ def output_by_source(index, by_source):
         for binary in binaries:
             if binary in index:
                 seen = True
-                Logger.info("%s (from %s) is seeded in:", binary, source)
+                Logger.info("%s (from %s) is seeded for %s in:", binary, source, series)
                 Logger.info(present_on(index[binary]))
         if not seen:
-            Logger.info("%s's binaries are not seeded.", source)
+            Logger.info("%s's binaries are not seeded for %s.", source, series)
 
 
 def main():
     """Query which images the specified packages are on"""
     parser = argparse.ArgumentParser(usage="%(prog)s [options] package...")
     parser.add_argument(
+        "-a",
+        "--arch",
+        metavar="ARCH",
+        default=_DEFAULT_ARCH,
+        help=f"Architecture (e.g., amd64, amd64v3, riscv64). Default: {_DEFAULT_ARCH}.",
+    )
+    parser.add_argument(
         "-b",
         "--binary",
         default=False,
         action="store_true",
-        help="Binary packages are being specified, not source packages (fast)",
+        help="Binary packages are being specified, not source packages (faster)",
     )
     parser.add_argument(
         "-u",
         "--data-url",
         metavar="URL",
-        default=DATA_URL,
-        help="URL for the seeded packages index. Default: UbuntuWire",
+        default=DEFAULT_DATA_URL_BASE,
+        help=f"Base data URL containing the indexes. Default: {DEFAULT_DATA_URL_BASE}.",
+    )
+    parser.add_argument(
+        "-s",
+        "--series",
+        metavar="SERIES",
+        default=_DEFAULT_SERIES,
+        help=f"Ubuntu series (e.g., plucky, noble). Default: devel ({_DEFAULT_SERIES}).",
     )
     parser.add_argument(
         "packages", metavar="package", nargs="+", help=argparse.SUPPRESS
     )
     args = parser.parse_args()
 
-    # Login anonymously to LP
-    Launchpad.login_anonymously()
+    if args.series not in udi.all:
+        parser.error(
+            f"Unknown series '{args.series}'.\nValid series: {', '.join(udi.all)}"
+        )
 
-    index = load_index(args.data_url)
+    index = load_index(args.data_url, args.series, args.arch)
     if args.binary:
-        output_binaries(index, args.packages)
+        output_binaries(index, args.packages, args.series)
     else:
-        binaries = resolve_binaries(args.packages)
-        output_by_source(index, binaries)
+        binaries = resolve_binaries(args.packages, args.series, args.arch)
+        output_by_source(index, binaries, args.series)
 
 
 if __name__ == "__main__":
