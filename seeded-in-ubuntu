@@ -53,7 +53,11 @@ def load_index(base_url, series, arch):
     ):
         if not os.path.isdir(cachedir):
             os.makedirs(cachedir)
-        urllib.request.urlretrieve(url, index_path)
+        try:
+            urllib.request.urlretrieve(url, index_path)
+        except (urllib.error.HTTPError, OSError) as e:
+            Logger.error("Issue fetching index file: %s", e)
+            return None
 
     try:
         with gzip.open(index_path, "r") as f:
@@ -168,6 +172,9 @@ def main():
         )
 
     index = load_index(args.data_url, args.series, args.arch)
+    if not index:
+        Logger.warning("Missing or empty index")
+        return
     if args.binary:
         output_binaries(index, args.packages, args.series)
     else:
