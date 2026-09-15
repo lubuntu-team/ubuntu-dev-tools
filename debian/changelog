@@ -1,3 +1,10 @@
+ubuntu-dev-tools (0.214) unstable; urgency=medium
+
+  * Team upload
+  * seeded-in-ubuntu: update to use new per-series indexer (LP: #2160240)
+
+ -- Florent 'Skia' Jacquet <skia@ubuntu.com>  Fri, 11 Sep 2026 16:30:51 +0200
+
 ubuntu-dev-tools (0.213) unstable; urgency=medium
 
   * syncpackage: add --skip-blocklist-check option
