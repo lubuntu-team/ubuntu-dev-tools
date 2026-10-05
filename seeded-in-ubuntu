@@ -25,7 +25,7 @@ import time
 import urllib.error
 import urllib.request
 
-from distro_info import UbuntuDistroInfo
+from distro_info import DistroDataOutdated, UbuntuDistroInfo
 
 from ubuntutools import getLogger
 from ubuntutools.lp.lpapicache import Distribution, PackageNotFoundException
@@ -34,7 +34,11 @@ Logger = getLogger()
 DEFAULT_DATA_URL_BASE = "https://static-reports.ubuntu.com/seeded-in-ubuntu/"
 
 udi = UbuntuDistroInfo()
-_DEFAULT_SERIES = udi.devel()
+try:
+    _DEFAULT_SERIES = udi.devel()
+except DistroDataOutdated as e:
+    _DEFAULT_SERIES = udi.stable()
+    Logger.warning("Falling back default series to %s (%s)", _DEFAULT_SERIES, e)
 _DEFAULT_ARCH = "amd64"
 
 
